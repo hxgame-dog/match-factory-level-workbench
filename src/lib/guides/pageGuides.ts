@@ -16,14 +16,14 @@ export const pageGuides: Record<string, PageGuide> = {
         heading: "快速开始",
         bullets: [
           "先查看上方「推荐工作流」按步骤操作",
-          "在 AI 实验室确认 Gemini 连接与出图能力",
+          "在 AI 配置中心确认 Gemini 连接与出图能力",
           "通过各功能模块卡片进入对应工具",
         ],
       },
     ],
   },
   "/items": {
-    title: "道具库",
+    title: "道具库上传",
     sections: [
       {
         heading: "导入数据",
@@ -35,12 +35,12 @@ export const pageGuides: Record<string, PageGuide> = {
       },
       {
         heading: "管理道具",
-        bullets: ["使用筛选器按分类、颜色、尺寸过滤", "支持导出 Excel 备份", "导入前建议先导出一份当前数据"],
+        bullets: ["使用筛选器按分类、颜色、尺寸过滤", "支持导出 Excel 备份", "表格行末可删除单条道具"],
       },
     ],
   },
   "/ai-lab": {
-    title: "AI 实验室",
+    title: "AI 配置中心",
     sections: [
       {
         heading: "配置 Gemini",
@@ -62,14 +62,14 @@ export const pageGuides: Record<string, PageGuide> = {
       {
         heading: "生成流程",
         bullets: [
-          "填写主题、数量与难度意图",
+          "填写自定义描述与物品种类数",
           "配置 API Key 后将使用 Gemini 生成",
-          "生成后可编辑表格并保存为道具集",
+          "类别由 AI 自动分配，生成后可编辑并保存",
         ],
       },
       {
         heading: "提示",
-        bullets: ["建议先在道具库导入基础目录", "勾选「仅使用已有目录」可约束生成范围"],
+        bullets: ["与道具库上传独立，生成结果不会回写道具库", "种类数建议 4～40"],
       },
     ],
   },

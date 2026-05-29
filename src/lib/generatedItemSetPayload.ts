@@ -5,6 +5,7 @@ import type { generatedItemSetPayloadSchema } from "@/lib/validators/ai";
 export type GeneratedItemSetPayload = z.infer<typeof generatedItemSetPayloadSchema>;
 
 export function toDbGeneratedItemSetFields(payload: GeneratedItemSetPayload) {
+  const categories = [...new Set(payload.items.map((item) => item.category1))];
   return {
     name: payload.name,
     theme: payload.description,
@@ -14,7 +15,7 @@ export function toDbGeneratedItemSetFields(payload: GeneratedItemSetPayload) {
     targetCountEach: 1,
     distractorTypeCount: 0,
     difficultyIntent: "normal",
-    constraints: JSON.stringify({ categories: payload.categories, mode: "ai_free" }),
+    constraints: JSON.stringify({ categories, mode: "ai_free" }),
     summary: payload.summary,
   };
 }

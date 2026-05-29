@@ -16,11 +16,11 @@ export function finalizeFreeGeneratedItems(result: GenerateItemsResult): Generat
 export function buildMockFreeItems(input: GenerateItemsInput): GenerateItemsResult {
   const count = Math.min(input.itemCount, 12);
   const items = Array.from({ length: count }, (_, index) => {
-    const category = input.categories[index % input.categories.length];
+    const category = "mock_category";
     const slug = `item_${index + 1}`;
     return {
       name: slug,
-      displayName: `${category}道具${index + 1}`,
+      displayName: `示例道具${index + 1}`,
       category1: category,
       role: "target" as const,
       count: 9,
@@ -32,7 +32,7 @@ export function buildMockFreeItems(input: GenerateItemsInput): GenerateItemsResu
   });
 
   return {
-    summary: `Mock 模式：已生成 ${items.length} 种「${input.categories.join("、")}」类道具（目标 ${input.itemCount} 种）。`,
+    summary: `Mock 模式：已生成 ${items.length} 种道具（目标 ${input.itemCount} 种）。`,
     warnings: ["当前为 Mock 输出，未调用 Gemini。"],
     items,
   };

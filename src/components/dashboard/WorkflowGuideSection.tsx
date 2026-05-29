@@ -6,17 +6,19 @@ const workflowSteps = [
   {
     step: 1,
     title: "准备数据",
-    bullets: ["在道具库导入 CSV 或 Excel 道具表", "在 AI 实验室配置 Gemini API 并测试连接"],
-    links: [
-      { href: "/items", label: "道具库" },
-      { href: "/ai-lab", label: "AI 实验室" },
-    ],
+    bullets: ["在 AI 配置中心配置 Gemini API 并测试连接"],
+    links: [{ href: "/ai-lab", label: "AI 配置中心" }],
   },
   {
     step: 2,
     title: "生成内容",
-    bullets: ["用 AI 道具表生成器按主题生成道具集", "在资源工作室批量生成 Prompt 与图片"],
+    bullets: [
+      "可选：在道具库上传导入 CSV / Excel",
+      "用 AI 道具表生成器按描述生成道具集",
+      "在资源工作室批量生成 Prompt 与图片",
+    ],
     links: [
+      { href: "/items", label: "道具库上传" },
       { href: "/item-generator", label: "道具表生成器" },
       { href: "/asset-studio", label: "资源工作室" },
     ],
@@ -55,7 +57,7 @@ export function WorkflowGuideSection() {
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-serif text-lg text-gray-900">推荐工作流</h2>
         <Link href="/ai-lab" className="text-sm text-blue-600 hover:underline">
-          先在 AI 实验室检查连接 →
+          先在 AI 配置中心检查连接 →
         </Link>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

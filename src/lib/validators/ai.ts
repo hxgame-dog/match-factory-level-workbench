@@ -27,7 +27,6 @@ const generatedItemSchema = z.object({
 export const generateItemsInputSchema = z.object({
   setName: z.string().min(1, "道具集名称不能为空"),
   description: z.string().min(1, "请填写生成描述"),
-  categories: z.array(z.string().min(1)).min(1, "请至少选择一个物品类别"),
   itemCount: z.number().int().min(1).max(80),
 });
 
@@ -37,9 +36,7 @@ export const generateItemsResultSchema = z.object({
   items: z.array(generatedItemSchema).min(1, "items 不能为空"),
 });
 
-export function createGenerateItemsResultSchema(itemCount: number, categories: string[]) {
-  const categorySet = new Set(categories.map((c) => c.toLowerCase()));
-
+export function createGenerateItemsResultSchema(itemCount: number) {
   return generateItemsResultSchema.superRefine((result, ctx) => {
     const minItems = Math.max(1, Math.floor(itemCount * 0.75));
     const maxItems = Math.ceil(itemCount * 1.25);
@@ -65,21 +62,12 @@ export function createGenerateItemsResultSchema(itemCount: number, categories: s
       });
     }
 
-    result.items.forEach((item, index) => {
-      if (!categorySet.has(item.category1.toLowerCase())) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `第 ${index + 1} 项 category1「${item.category1}」不在所选类别内`,
-        });
-      }
-    });
   });
 }
 
 export const generatedItemSetPayloadSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
-  categories: z.array(z.string().min(1)).min(1),
   itemCount: z.number().int().positive(),
   summary: z.string().optional(),
   warnings: z.array(z.string()).default([]),

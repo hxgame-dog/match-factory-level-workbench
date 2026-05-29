@@ -5,8 +5,8 @@ export const zh = {
   },
   nav: {
     dashboard: "工作台",
-    items: "道具库",
-    aiLab: "AI 实验室",
+    items: "道具库上传",
+    aiLab: "AI 配置中心",
     itemGenerator: "AI 道具表生成器",
     assetStudio: "资源工作室",
     levelGenerator: "关卡生成器",
@@ -33,32 +33,29 @@ export const zh = {
       description: "用于生成、管理、诊断 Match 3D 类手游关卡配置",
     },
     items: {
-      title: "道具库",
-      description: "导入、筛选与管理基础道具目录（支持 CSV / Excel）",
+      title: "道具库上传",
+      description: "上传 CSV / Excel 管理基础道具目录，支持筛选、导出与删除",
     },
     aiLab: {
-      title: "AI 实验室",
+      title: "AI 配置中心",
       description: "配置 Gemini API、测试文本与图片生成连接",
     },
     itemGenerator: {
       title: "AI 道具表生成器",
-      description: "根据描述与类别由 Gemini 自动生成道具表（与道具库独立，不回写库）",
+      description: "根据描述由 Gemini 自动生成道具表（与道具库独立，不回写库）",
       configTitle: "生成配置",
       configDesc: "填写描述、选择类别与种类数后生成；结果在下方预览，可编辑并保存为道具集",
       previewTitle: "道具列表预览",
       previewEmptyTitle: "尚未生成道具表",
       previewEmptyDesc: "填写配置后点击「生成道具表」，AI 将原创生成道具列表",
-      categoryHint: "类别来自道具库的 category1 字段，也可手动添加新类别",
       historyTitle: "历史生成记录",
       fields: {
         setName: { label: "道具集名称", hint: "保存到数据库时使用的名称" },
         description: {
           label: "自定义描述",
-          hint: "主题、风格、物种范围等，如「海里河里的鱼、虾、贝类，卡通 3D 风格」",
+          hint: "主题、风格、物种范围等；类别（category1）由 AI 根据描述自动分配",
         },
-        categories: { label: "物品类别", hint: "多选 category1，生成结果的 category1 必须属于所选类别" },
         itemCount: { label: "物品种类数", hint: "需要生成多少种不同道具（表格行数），建议 4～40" },
-        customCategory: { label: "添加自定义类别" },
       },
       actions: {
         generate: "生成道具表",

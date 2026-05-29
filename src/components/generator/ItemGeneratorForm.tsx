@@ -10,11 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { parseStoredCategories } from "@/lib/generatedItemSetPayload";
 import { zh } from "@/lib/i18n/zh";
 import type { GenerateItemsResult } from "@/types/ai";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
-import { cn } from "@/lib/utils";
 
 import { FormField } from "./FormField";
 import { GeneratedItemSetHistory } from "./GeneratedItemSetHistory";
@@ -23,18 +21,12 @@ import { GeneratedItemsTable } from "./GeneratedItemsTable";
 const t = zh.pages.itemGenerator;
 
 type Props = {
-  /** 来自道具库的去重 category1，仅作多选建议 */
-  categoryOptions: string[];
   initialHistory: GeneratedItemSetListItem[];
 };
 
-export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
+export function ItemGeneratorForm({ initialHistory }: Props) {
   const [setName, setSetName] = useState("海洋生物道具集");
   const [description, setDescription] = useState("海里、河里的鱼、虾、贝类等，卡通 3D 风格，适合三消关卡");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(() =>
-    categoryOptions.length > 0 ? [categoryOptions[0]] : ["sea"],
-  );
-  const [customCategory, setCustomCategory] = useState("");
   const [itemCount, setItemCount] = useState(12);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -44,25 +36,7 @@ export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
   const [dirty, setDirty] = useState(false);
   const [savedSetId, setSavedSetId] = useState<string | null>(null);
 
-  const allCategoryChoices = useMemo(() => {
-    const set = new Set([...categoryOptions, ...selectedCategories]);
-    return [...set].sort((a, b) => a.localeCompare(b, "zh-CN"));
-  }, [categoryOptions, selectedCategories]);
-
   const summary = useMemo(() => result?.summary ?? "", [result]);
-
-  function toggleCategory(category: string) {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category],
-    );
-  }
-
-  function addCustomCategory() {
-    const value = customCategory.trim();
-    if (!value) return;
-    setSelectedCategories((prev) => (prev.includes(value) ? prev : [...prev, value]));
-    setCustomCategory("");
-  }
 
   async function loadHistory() {
     const response = await fetch("/api/generated-item-sets");
@@ -73,10 +47,6 @@ export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
   }
 
   async function onGenerate() {
-    if (selectedCategories.length === 0) {
-      setError("请至少选择一个物品类别");
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
@@ -86,7 +56,6 @@ export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
         body: JSON.stringify({
           setName,
           description,
-          categories: selectedCategories,
           itemCount,
         }),
       });
@@ -112,7 +81,6 @@ export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
       const body = {
         name: setName,
         description,
-        categories: selectedCategories,
         itemCount,
         summary: result.summary,
         warnings: result.warnings,
@@ -143,7 +111,6 @@ export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
     setSavedSetId(set.id);
     setSetName(set.name);
     setDescription(set.theme ?? set.prompt ?? "");
-    setSelectedCategories(parseStoredCategories(set.constraints));
     setItemCount(set.totalItemCount || set.items?.length || 12);
     setResult({
       summary: set.summary ?? "",
@@ -231,56 +198,6 @@ export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
               className="min-h-24"
               placeholder="描述你想要的道具主题、风格、物种范围…"
             />
-          </FormField>
-
-          <FormField label={t.fields.categories.label} hint={`${t.fields.categories.hint}。${t.categoryHint}`}>
-            <div className="flex flex-wrap gap-2">
-              {allCategoryChoices.map((category) => {
-                const active = selectedCategories.includes(category);
-                return (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => toggleCategory(category)}
-                    className={cn(
-                      "rounded-md border px-2.5 py-1 text-sm transition-colors",
-                      active
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {category}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-2 flex gap-2">
-              <Input
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                placeholder={t.fields.customCategory.label}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addCustomCategory();
-                  }
-                }}
-              />
-              <Button type="button" variant="outline" onClick={addCustomCategory}>
-                添加
-              </Button>
-            </div>
-            {selectedCategories.length > 0 ? (
-              <p className="text-xs text-muted-foreground">
-                已选：{selectedCategories.map((c) => (
-                  <Badge key={c} variant="secondary" className="mr-1">
-                    {c}
-                  </Badge>
-                ))}
-              </p>
-            ) : (
-              <p className="text-xs text-amber-700">请至少选择一个类别</p>
-            )}
           </FormField>
 
           <FormField label={t.fields.itemCount.label} hint={t.fields.itemCount.hint}>

@@ -3,7 +3,6 @@ import type { GenerateItemsResult } from "@/types/ai";
 export type GeneratedItemSetPayload = {
   name: string;
   description: string;
-  categories: string[];
   itemCount: number;
   summary?: string;
   warnings?: string[];

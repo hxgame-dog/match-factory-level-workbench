@@ -1,7 +1,6 @@
 export type GenerateItemsInput = {
   setName: string;
   description: string;
-  categories: string[];
   itemCount: number;
 };
 

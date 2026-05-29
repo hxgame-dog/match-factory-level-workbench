@@ -8,8 +8,7 @@ import { zh } from "@/lib/i18n/zh";
 import { prisma } from "@/lib/prisma";
 
 export default async function ItemGeneratorPage() {
-  const [catalogRows, historyRows, aiStatus] = await Promise.all([
-    prisma.itemCatalog.findMany({ select: { category1: true } }),
+  const [historyRows, aiStatus] = await Promise.all([
     prisma.generatedItemSet.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
@@ -17,10 +16,6 @@ export default async function ItemGeneratorPage() {
     }),
     getAiStatus(),
   ]);
-
-  const categoryOptions = [...new Set(catalogRows.map((r) => r.category1).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b, "zh-CN"),
-  );
 
   return (
     <AppShell>
@@ -32,7 +27,6 @@ export default async function ItemGeneratorPage() {
           available={aiStatus.hasGeminiKey && !aiStatus.mockMode}
         />
         <ItemGeneratorForm
-          categoryOptions={categoryOptions}
           initialHistory={historyRows.map((set) => ({
             id: set.id,
             name: set.name,

@@ -25,6 +25,7 @@ type ItemTableProps = {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
+  onDelete: (id: string) => Promise<void>;
 };
 
 export function ItemTable({
@@ -33,20 +34,38 @@ export function ItemTable({
   pageSize,
   total,
   onPageChange,
+  onDelete,
 }: ItemTableProps) {
   const columns = useMemo<ColumnDef<ItemCatalogRow>[]>(
     () => [
-      { accessorKey: "itemId", header: "ItemId" },
-      { accessorKey: "name", header: "Name" },
-      { accessorKey: "category1", header: "Category1" },
-      { accessorKey: "category2", header: "Category2" },
-      { accessorKey: "color1", header: "Color1" },
-      { accessorKey: "color2", header: "Color2" },
-      { accessorKey: "shape", header: "Shape" },
-      { accessorKey: "size", header: "Size" },
-      { accessorKey: "targetScale", header: "Target Scale" },
+      { accessorKey: "itemId", header: "道具 ID" },
+      { accessorKey: "name", header: "名称" },
+      { accessorKey: "category1", header: "一级分类" },
+      { accessorKey: "category2", header: "二级分类" },
+      { accessorKey: "color1", header: "主色" },
+      { accessorKey: "color2", header: "辅色" },
+      { accessorKey: "shape", header: "形状" },
+      { accessorKey: "size", header: "尺寸" },
+      { accessorKey: "targetScale", header: "目标缩放" },
+      {
+        id: "actions",
+        header: "操作",
+        cell: ({ row }) => (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={() => {
+              if (!window.confirm(`确定删除「${row.original.name}」？`)) return;
+              void onDelete(row.original.id);
+            }}
+          >
+            删除
+          </Button>
+        ),
+      },
     ],
-    [],
+    [onDelete],
   );
   const table = useReactTable({
     data: rows,
@@ -83,7 +102,7 @@ export function ItemTable({
           ))}
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center text-gray-500">
+              <TableCell colSpan={10} className="text-center text-gray-500">
                 暂无数据
               </TableCell>
             </TableRow>

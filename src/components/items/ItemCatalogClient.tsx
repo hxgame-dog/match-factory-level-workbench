@@ -48,6 +48,16 @@ export function ItemCatalogClient({
   const [size, setSize] = useState("");
   const [options, setOptions] = useState(initialFilters);
 
+  async function deleteRow(id: string) {
+    const response = await fetch(`/api/items/${id}`, { method: "DELETE" });
+    const payload = await response.json();
+    if (!payload.success) {
+      window.alert(payload.error ?? "删除失败");
+      return;
+    }
+    await loadRows({ page: rows.length <= 1 && page > 1 ? page - 1 : page });
+  }
+
   async function loadRows(next?: Partial<Record<"page" | "search" | "category1" | "color1" | "size", string | number>>) {
     const nextPage = typeof next?.page === "number" ? next.page : page;
     const nextSearch = typeof next?.search === "string" ? next.search : search;
@@ -78,7 +88,7 @@ export function ItemCatalogClient({
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">道具表预览</CardTitle>
           <a href="/api/items/export">
-            <Button variant="outline">Export Excel</Button>
+            <Button variant="outline">导出 Excel</Button>
           </a>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -112,6 +122,7 @@ export function ItemCatalogClient({
               setPage(nextPage);
               void loadRows({ page: nextPage });
             }}
+            onDelete={deleteRow}
           />
         </CardContent>
       </Card>

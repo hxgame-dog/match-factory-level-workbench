@@ -178,7 +178,7 @@ export async function generateText(
     return `Mock 模式返回：${prompt.slice(0, 60)}`;
   }
   if (!runtime.apiKey) {
-    throw new Error("未配置 Gemini API Key。请在 AI 实验室保存 Key（仅存于服务端 HttpOnly Cookie）或设置环境变量 GEMINI_API_KEY。");
+    throw new Error("未配置 Gemini API Key。请在 AI 配置中心保存 Key（仅存于服务端 HttpOnly Cookie）或设置环境变量 GEMINI_API_KEY。");
   }
 
   const client = createClient(runtime.apiKey);
@@ -198,7 +198,7 @@ export async function generateItemTable(
   input: GenerateItemsInput,
 ): Promise<GenerateItemsResult> {
   const validInput = generateItemsInputSchema.parse(input);
-  const resultSchema = createGenerateItemsResultSchema(validInput.itemCount, validInput.categories);
+  const resultSchema = createGenerateItemsResultSchema(validInput.itemCount);
 
   try {
     const runtime = await resolveRuntime();

@@ -2,7 +2,10 @@ import * as XLSX from "xlsx";
 
 import type { GeneratedItemSetPayload } from "@/types/generatedItemSet";
 
-export function buildGeneratedItemSetWorkbook(payload: GeneratedItemSetPayload): Buffer {
+export function buildGeneratedItemSetWorkbook(
+  payload: GeneratedItemSetPayload & { categories?: string[] },
+): Buffer {
+  const categories = payload.categories ?? [...new Set(payload.items.map((i) => i.category1))];
   const wb = XLSX.utils.book_new();
 
   const generatedItems = payload.items.map((item) => ({
@@ -28,7 +31,7 @@ export function buildGeneratedItemSetWorkbook(payload: GeneratedItemSetPayload):
     {
       SetName: payload.name,
       Description: payload.description,
-      Categories: payload.categories.join(", "),
+      Categories: categories.join(", "),
       ItemCount: payload.itemCount,
       CreatedAt: new Date().toISOString(),
     },

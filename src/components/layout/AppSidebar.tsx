@@ -39,8 +39,8 @@ const iconMap: Record<string, LucideIcon> = {
 
 const navGroups: { label: string; keys: NavKey[] }[] = [
   { label: "概览", keys: ["dashboard"] },
-  { label: "数据准备", keys: ["items", "aiLab"] },
-  { label: "内容生成", keys: ["itemGenerator", "assetStudio"] },
+  { label: "工作台配置", keys: ["aiLab"] },
+  { label: "内容生成", keys: ["items", "itemGenerator", "assetStudio"] },
   { label: "关卡设计", keys: ["levelGenerator", "levelEditor", "formulaLab", "autoLevelGenerator"] },
   { label: "验证交付", keys: ["playtestSimulator", "analyticsFeedback", "pipeline"] },
 ];
