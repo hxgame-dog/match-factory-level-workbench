@@ -1,4 +1,4 @@
-import { AiStatusCard } from "@/components/ai/AiStatusCard";
+import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
 import { ItemGeneratorForm } from "@/components/generator/ItemGeneratorForm";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
@@ -31,9 +31,12 @@ export default async function ItemGeneratorPage() {
     <AppShell>
       <AppHeader title={zh.pages.itemGenerator.title} description={zh.pages.itemGenerator.description} />
       <PageContent className="space-y-4">
-        <AiStatusCard {...aiStatus} />
+        <GeminiStatusCompact
+          mode="text"
+          textModel={aiStatus.textModel}
+          available={aiStatus.hasGeminiKey && !aiStatus.mockMode}
+        />
         <ItemGeneratorForm
-          aiStatus={aiStatus}
           catalogContext={{
             total: rows.length,
             categories: countBy("category1"),

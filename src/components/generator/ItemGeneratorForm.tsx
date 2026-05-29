@@ -11,8 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { GenerateItemsResult } from "@/types/ai";
-import type { ComponentProps } from "react";
-import type { AiStatusCard } from "@/components/ai/AiStatusCard";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
 
 import { GeneratedItemSetHistory } from "./GeneratedItemSetHistory";
@@ -27,12 +25,11 @@ type CatalogContext = {
 };
 
 type Props = {
-  aiStatus: ComponentProps<typeof AiStatusCard>;
   catalogContext: CatalogContext;
   initialHistory: GeneratedItemSetListItem[];
 };
 
-export function ItemGeneratorForm({ aiStatus, catalogContext, initialHistory }: Props) {
+export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
   const [setName, setSetName] = useState("早餐关卡组合A");
   const [theme, setTheme] = useState("早餐主题");
   const [totalItemCount, setTotalItemCount] = useState(40);
@@ -191,22 +188,9 @@ export function ItemGeneratorForm({ aiStatus, catalogContext, initialHistory }: 
     setDirty(false);
   }
 
-  const generationMode =
-    aiStatus.hasGeminiKey && !aiStatus.mockMode
-      ? "Gemini 真实生成"
-      : aiStatus.hasGeminiKey
-        ? "Gemini（Mock 模式开启时将回退 Mock）"
-        : "Mock 模式（请先配置 API Key）";
-
   return (
     <div className="space-y-4">
-      <Alert>
-        <AlertTitle>当前生成模式：{generationMode}</AlertTitle>
-        <AlertDescription>
-          已配置 Key 时将调用 Gemini 生成道具表。可在 AI 实验室配置 API Key 与模型。
-        </AlertDescription>
-      </Alert>
-      <Card className="border border-gray-200 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">输入配置区</CardTitle>
         </CardHeader>

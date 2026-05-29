@@ -13,7 +13,7 @@ import { AssetBatchHistory } from "./AssetBatchHistory";
 import { AssetGrid } from "./AssetGrid";
 import { AssetPromptDialog } from "./AssetPromptDialog";
 import { AssetPromptPanel } from "./AssetPromptPanel";
-import { GeminiSettingsPanel } from "@/components/ai/GeminiSettingsPanel";
+import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
 import { ItemSetSelector } from "./ItemSetSelector";
 
 type LoadedItem = {
@@ -56,8 +56,7 @@ type Batch = {
 type Props = {
   itemSets: GeneratedItemSetListItem[];
   batches: Batch[];
-  mockMode: boolean;
-  hasGeminiKey: boolean;
+  imageModel: string;
   imageGenerationReady: boolean;
 };
 
@@ -69,8 +68,7 @@ const DEFAULT_NEGATIVE =
 export function AssetStudioPage({
   itemSets: initSets,
   batches: initBatches,
-  mockMode,
-  hasGeminiKey,
+  imageModel,
   imageGenerationReady,
 }: Props) {
   const [itemSets, setItemSets] = useState(initSets);
@@ -87,14 +85,6 @@ export function AssetStudioPage({
   const [error, setError] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState({ total: 0, done: 0, failed: 0 });
-
-  const modeText = imageGenerationReady
-    ? "Gemini 真实出图"
-    : mockMode
-      ? "AI Mock 模式"
-      : hasGeminiKey
-        ? "Gemini（已配置 Key）"
-        : "待配置 Gemini Key";
 
   async function refreshItemSets() {
     const response = await fetch("/api/generated-item-sets");
@@ -309,11 +299,7 @@ export function AssetStudioPage({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Badge>{modeText}</Badge>
-        {!mockMode && !hasGeminiKey ? <Badge variant="destructive">未配置 Gemini Key</Badge> : null}
-      </div>
-      <GeminiSettingsPanel compact />
+      <GeminiStatusCompact mode="image" imageModel={imageModel} available={imageGenerationReady} />
 
       {error ? (
         <Alert variant="destructive">

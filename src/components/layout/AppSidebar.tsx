@@ -67,8 +67,8 @@ export function AppSidebar() {
             <p className="text-xs text-muted-foreground">{zh.brand.subtitle}</p>
           </>
         ) : (
-          <p className="text-center font-serif text-sm font-medium" title={zh.brand.title}>
-            MF
+          <p className="text-center font-serif text-xs font-medium" title={zh.brand.title}>
+            LW
           </p>
         )}
       </div>

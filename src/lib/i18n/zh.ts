@@ -1,6 +1,6 @@
 export const zh = {
   brand: {
-    title: "MF 工作台",
+    title: "Level-Work",
     subtitle: "关卡设计工作台",
   },
   nav: {

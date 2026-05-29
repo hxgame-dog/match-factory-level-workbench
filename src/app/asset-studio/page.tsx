@@ -42,8 +42,7 @@ export default async function AssetStudio() {
             status: batch.status,
             createdAt: batch.createdAt.toISOString(),
           }))}
-          mockMode={aiStatus.mockMode}
-          hasGeminiKey={aiStatus.hasGeminiKey}
+          imageModel={aiStatus.imageModel}
           imageGenerationReady={Boolean(aiStatus.imageGenerationReady)}
         />
       </PageContent>
