@@ -1,0 +1,398 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ItemCatalog {
+  id          String   @id @default(cuid())
+  itemId      Int?     @unique
+  name        String
+  category1   String
+  category2   String?
+  color1      String?
+  color2      String?
+  shape       String?
+  size        String?
+  col7        String?
+  targetScale Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AiGenerationLog {
+  id         String   @id @default(cuid())
+  type       String
+  provider   String
+  model      String?
+  prompt     String
+  resultJson String?
+  status     String
+  error      String?
+  createdAt  DateTime @default(now())
+}
+
+model GeneratedItemSet {
+  id                  String          @id @default(cuid())
+  name                String
+  theme               String
+  prompt              String
+  totalItemCount      Int
+  targetTypeCount     Int
+  targetCountEach     Int
+  distractorTypeCount Int
+  difficultyIntent    String?
+  constraints         String?
+  summary             String?
+  warningsJson        String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  items               GeneratedItem[]
+}
+
+model GeneratedItem {
+  id            String           @id @default(cuid())
+  setId         String
+  set           GeneratedItemSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  sourceItemId  Int?
+  catalogItemId String?
+  name          String
+  displayName   String?
+  category1     String
+  category2     String?
+  color1        String?
+  color2        String?
+  shape         String?
+  size          String?
+  targetScale   Float?
+
+  role          String
+  count         Int
+  isNew         Boolean          @default(false)
+
+  imagePrompt   String?
+  reason        String?
+  riskTagsJson  String?
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model AssetGenerationBatch {
+  id             String           @id @default(cuid())
+  itemSetId      String
+  itemSetName    String
+  name           String
+  globalArtStyle String?
+  provider       String
+  model          String?
+  status         String
+  totalCount     Int
+  successCount   Int              @default(0)
+  failedCount    Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  assets         GeneratedAsset[]
+}
+
+model GeneratedAsset {
+  id              String               @id @default(cuid())
+  batchId         String
+  batch           AssetGenerationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  generatedItemId String?
+  sourceItemId    Int?
+  catalogItemId   String?
+  name            String
+  displayName     String?
+  category1       String
+  category2       String?
+  color1          String?
+  color2          String?
+  shape           String?
+  size            String?
+  role            String?
+  count           Int?
+
+  prompt          String
+  negativePrompt  String?
+  provider        String
+  model           String?
+  imageUrl        String?
+  localPath       String?
+  status          String
+  error           String?
+  retryCount      Int                  @default(0)
+
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model GeneratedLevel {
+  id               String   @id @default(cuid())
+  name             String
+  levelIndex       Int?
+  theme            String?
+  itemSetId        String
+  itemSetName      String
+  assetBatchId     String?
+  assetBatchName   String?
+
+  timeLimitSec     Int
+  slotCount        Int
+  boardWidth       Int
+  boardHeight      Int
+  layerCount       Int
+
+  targetDifficulty String?
+  generatorRuleId  String
+  refreshRuleId    String
+
+  levelJson        String
+  summary          String?
+  warningsJson     String?
+  validationJson   String?
+
+  status           String   @default("draft")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model FormulaPreset {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  configJson  String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DifficultyDiagnosisRun {
+  id             String   @id @default(cuid())
+  levelId        String?
+  levelName      String?
+  formulaPresetId String?
+  formulaName    String?
+  resultJson     String
+  aiAdviceJson   String?
+  createdAt      DateTime @default(now())
+}
+
+model AutoLevelGenerationRun {
+  id                 String                       @id @default(cuid())
+  name               String
+  description        String?
+  sourceLevelIdsJson String
+  formulaPresetId    String?
+  formulaPresetName  String?
+  generateCount      Int
+  candidatesPerLevel Int
+  curveType          String
+  targetStartIndex   Int?
+  configJson         String
+  resultJson         String?
+  status             String                       @default("draft")
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  candidates         AutoGeneratedLevelCandidate[]
+}
+
+model AutoGeneratedLevelCandidate {
+  id                    String                  @id @default(cuid())
+  runId                 String
+  run                   AutoLevelGenerationRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  targetLevelIndex      Int
+  candidateRank         Int
+  targetP               Float
+  actualP               Float?
+  distance              Float?
+  levelName             String
+  levelJson             String
+  diagnosisJson         String?
+  validationJson        String?
+  aiReason              String?
+  status                String                  @default("candidate")
+  savedGeneratedLevelId String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+}
+
+model ProductionPackage {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  version          String
+  status           String   @default("draft")
+  levelIdsJson     String
+  assetBatchIdsJson String?
+  formulaPresetId  String?
+  manifestJson     String?
+  validationJson   String?
+  exportPath       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model LevelSnapshot {
+  id            String   @id @default(cuid())
+  levelId       String
+  levelName     String
+  levelIndex    Int?
+  snapshotName  String
+  levelJson     String
+  diagnosisJson String?
+  note          String?
+  createdAt     DateTime @default(now())
+}
+
+model ImportJob {
+  id             String   @id @default(cuid())
+  type           String
+  status         String   @default("pending")
+  fileName       String?
+  source         String?
+  summaryJson    String?
+  validationJson String?
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ExportJob {
+  id         String   @id @default(cuid())
+  type       String
+  status     String   @default("pending")
+  name       String
+  configJson String?
+  resultJson String?
+  filePath   String?
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model PlaytestSimulationRun {
+  id                  String              @id @default(cuid())
+  name                String
+  description         String?
+  levelIdsJson        String
+  simulatorConfigJson String
+  formulaPresetId     String?
+  status              String              @default("pending")
+  summaryJson         String?
+  resultJson          String?
+  aiAdviceJson        String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  results             PlaytestLevelResult[]
+}
+
+model PlaytestLevelResult {
+  id                     String                @id @default(cuid())
+  runId                  String
+  run                    PlaytestSimulationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  levelId                String
+  levelName              String
+  levelIndex             Int?
+  status                 String                @default("completed")
+  passRate               Float?
+  avgCompletionTime      Float?
+  avgRemainingTime       Float?
+  avgMoves               Float?
+  avgSlotPressure        Float?
+  failReasonsJson        String?
+  qaIssuesJson           String?
+  balanceSuggestionsJson String?
+  simulationJson         String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+}
+
+model AnalyticsImportBatch {
+  id               String              @id @default(cuid())
+  name             String
+  source           String?
+  fileName         String?
+  dataType         String              @default("level_metrics")
+  status           String              @default("pending")
+  fieldMappingJson String?
+  summaryJson      String?
+  validationJson   String?
+  error            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  rows             LevelAnalyticsRow[]
+}
+
+model LevelAnalyticsRow {
+  id                  String               @id @default(cuid())
+  batchId             String
+  batch               AnalyticsImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  levelId             String?
+  levelIndex          Int?
+  levelName           String?
+  users               Int?
+  starts              Int?
+  completes           Int?
+  fails               Int?
+  quits               Int?
+  retries             Int?
+  passRate            Float?
+  failRate            Float?
+  quitRate            Float?
+  retryRate           Float?
+  avgDurationSec      Float?
+  avgRemainingTimeSec Float?
+  avgMoves            Float?
+  avgBoostersUsed     Float?
+  avgHintsUsed        Float?
+  avgShuffleUsed      Float?
+  revenue             Float?
+  adImpressions       Int?
+  iapPurchases        Int?
+  rawJson             String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+}
+
+model LevelFeedbackDiagnosis {
+  id               String   @id @default(cuid())
+  levelId          String?
+  levelIndex       Int?
+  levelName        String?
+  analyticsBatchId String?
+  formulaPresetId  String?
+  resultJson       String
+  aiAdviceJson     String?
+  status           String   @default("completed")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model LevelOptimizationProposal {
+  id                String   @id @default(cuid())
+  levelId           String
+  levelName         String?
+  levelIndex        Int?
+  sourceDiagnosisId String?
+  proposalName      String
+  proposalJson      String
+  diffJson          String?
+  aiReasonJson      String?
+  status            String   @default("draft")
+  savedLevelId      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

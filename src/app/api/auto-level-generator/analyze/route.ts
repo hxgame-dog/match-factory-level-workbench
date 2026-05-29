@@ -1,0 +1,31 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { analyzeSourceLevels } from "@/lib/auto-level/analyzeSourceLevels";
+import { defaultFormulaConfig } from "@/lib/difficulty/defaultFormulaConfig";
+import { diagnoseLevelDifficulty } from "@/lib/difficulty/diagnoseLevelDifficulty";
+import { prisma } from "@/lib/prisma";
+import { levelConfigSchema } from "@/lib/validators/level";
+
+const schema = z.object({
+  sourceLevelIds: z.array(z.string()).min(1),
+  formulaPresetId: z.string().optional(),
+});
+
+export async function POST(request: Request) {
+  try {
+    const payload = schema.parse(await request.json());
+    const rows = await prisma.generatedLevel.findMany({ where: { id: { in: payload.sourceLevelIds } } });
+    const formulaPreset = payload.formulaPresetId
+      ? await prisma.formulaPreset.findUnique({ where: { id: payload.formulaPresetId } })
+      : await prisma.formulaPreset.findFirst({ where: { isDefault: true } });
+    const formulaConfig = formulaPreset?.configJson ? JSON.parse(formulaPreset.configJson) : defaultFormulaConfig;
+    const levels = rows.map((row) => levelConfigSchema.parse(JSON.parse(row.levelJson)));
+    const diagnoses = levels.map((level) => diagnoseLevelDifficulty({ level, formulaConfig }));
+    const data = analyzeSourceLevels({ levels, diagnoses });
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "分析参考关卡失败";
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
+  }
+}
