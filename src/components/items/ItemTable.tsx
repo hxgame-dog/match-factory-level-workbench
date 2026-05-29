@@ -25,7 +25,7 @@ type ItemTableProps = {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
-  onDelete: (id: string) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
 };
 
 export function ItemTable({
@@ -36,8 +36,8 @@ export function ItemTable({
   onPageChange,
   onDelete,
 }: ItemTableProps) {
-  const columns = useMemo<ColumnDef<ItemCatalogRow>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<ItemCatalogRow>[]>(() => {
+    const cols: ColumnDef<ItemCatalogRow>[] = [
       { accessorKey: "itemId", header: "道具 ID" },
       { accessorKey: "name", header: "名称" },
       { accessorKey: "category1", header: "一级分类" },
@@ -47,7 +47,9 @@ export function ItemTable({
       { accessorKey: "shape", header: "形状" },
       { accessorKey: "size", header: "尺寸" },
       { accessorKey: "targetScale", header: "目标缩放" },
-      {
+    ];
+    if (onDelete) {
+      cols.push({
         id: "actions",
         header: "操作",
         cell: ({ row }) => (
@@ -63,10 +65,10 @@ export function ItemTable({
             删除
           </Button>
         ),
-      },
-    ],
-    [onDelete],
-  );
+      });
+    }
+    return cols;
+  }, [onDelete]);
   const table = useReactTable({
     data: rows,
     columns,
@@ -102,7 +104,7 @@ export function ItemTable({
           ))}
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="text-center text-gray-500">
+              <TableCell colSpan={columns.length} className="text-center text-gray-500">
                 暂无数据
               </TableCell>
             </TableRow>

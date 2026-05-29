@@ -5,7 +5,6 @@ export const zh = {
   },
   nav: {
     dashboard: "工作台",
-    items: "道具库上传",
     aiLab: "AI 配置中心",
     itemGenerator: "AI 道具表生成器",
     assetStudio: "资源工作室",
@@ -42,20 +41,36 @@ export const zh = {
     },
     itemGenerator: {
       title: "AI 道具表生成器",
-      description: "根据描述由 Gemini 自动生成道具表（与道具库独立，不回写库）",
+      description: "支持 AI 生成道具表或上传 Excel/CSV；生成与上传数据相互独立",
+      tabs: {
+        generate: "生成道具表",
+        upload: "上传道具表",
+      },
       configTitle: "生成配置",
-      configDesc: "填写描述、选择类别与种类数后生成；结果在下方预览，可编辑并保存为道具集",
-      previewTitle: "道具列表预览",
+      configDesc: "填写描述与数量；右侧为主要预览区",
+      previewTitle: "道具表预览",
       previewEmptyTitle: "尚未生成道具表",
-      previewEmptyDesc: "填写配置后点击「生成道具表」，AI 将原创生成道具列表",
+      previewEmptyDesc: "填写左侧配置后点击「生成道具表」",
       historyTitle: "历史生成记录",
+      upload: {
+        catalogTitle: "已上传道具库",
+        catalogDesc: "上传的 Excel/CSV 保存在道具库，可一键清空",
+        clearAll: "清空道具库",
+      },
       fields: {
-        setName: { label: "道具集名称", hint: "保存到数据库时使用的名称" },
+        setName: { label: "道具集名称", hint: "保存 AI 生成结果时使用的名称" },
         description: {
           label: "自定义描述",
-          hint: "主题、风格、物种范围等；类别（category1）由 AI 根据描述自动分配",
+          hint: "主题、风格、物种范围等；category1 由 AI 自动分配",
         },
-        itemCount: { label: "物品种类数", hint: "需要生成多少种不同道具（表格行数），建议 4～40" },
+        itemTypeCount: {
+          label: "物品种类数",
+          hint: "有多少种不同造型（如 100 种鱼）",
+        },
+        colorCount: {
+          label: "颜色数量",
+          hint: "每种造型展开几种颜色（标准色板前 N 色：红橙黄绿蓝紫粉灰）",
+        },
       },
       actions: {
         generate: "生成道具表",
@@ -115,7 +130,6 @@ export type NavKey = keyof typeof zh.nav;
 
 export const navItems = [
   { href: "/", key: "dashboard" as const, icon: "LayoutDashboard" },
-  { href: "/items", key: "items" as const, icon: "PackageSearch" },
   { href: "/ai-lab", key: "aiLab" as const, icon: "FlaskConical" },
   { href: "/item-generator", key: "itemGenerator" as const, icon: "WandSparkles" },
   { href: "/asset-studio", key: "assetStudio" as const, icon: "FolderKanban" },

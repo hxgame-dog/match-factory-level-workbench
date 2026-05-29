@@ -13,13 +13,11 @@ const workflowSteps = [
     step: 2,
     title: "生成内容",
     bullets: [
-      "可选：在道具库上传导入 CSV / Excel",
-      "用 AI 道具表生成器按描述生成道具集",
+      "在 AI 道具表生成器中生成或上传道具表",
       "在资源工作室批量生成 Prompt 与图片",
     ],
     links: [
-      { href: "/items", label: "道具库上传" },
-      { href: "/item-generator", label: "道具表生成器" },
+      { href: "/item-generator", label: "AI 道具表生成器" },
       { href: "/asset-studio", label: "资源工作室" },
     ],
   },

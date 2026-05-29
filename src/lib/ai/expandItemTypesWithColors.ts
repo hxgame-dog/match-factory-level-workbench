@@ -1,0 +1,35 @@
+import { getActiveColors } from "@/lib/items/colorPalette";
+import type { GenerateItemsResult } from "@/types/ai";
+
+type BaseItem = GenerateItemsResult["items"][number];
+
+/** 将 AI 返回的「物品种类」展开为 种类 × 颜色 条目的道具表 */
+export function expandItemTypesWithColors(
+  baseItems: BaseItem[],
+  colorCount: number,
+): GenerateItemsResult["items"] {
+  const colors = getActiveColors(colorCount);
+  const expanded: GenerateItemsResult["items"] = [];
+
+  for (const base of baseItems) {
+    const baseSlug = base.name.replace(/_(red|orange|yellow|green|blue|purple|pink|gray)$/i, "");
+    for (const color of colors) {
+      expanded.push({
+        ...base,
+        name: `${baseSlug}_${color.key}`,
+        displayName: base.displayName
+          ? `${base.displayName}（${color.label}）`
+          : `${baseSlug}（${color.label}）`,
+        color1: color.en,
+        color2: base.color2,
+        imagePrompt: `${base.imagePrompt.replace(/\s*,\s*(red|orange|yellow|green|blue|purple|pink|gray)(\s+color)?/gi, "")}, ${color.en} color, dominant ${color.en} tones`,
+        reason: `${base.reason}；${color.label}配色变体`,
+        isNew: true,
+        catalogItemId: undefined,
+        sourceItemId: undefined,
+      });
+    }
+  }
+
+  return expanded;
+}

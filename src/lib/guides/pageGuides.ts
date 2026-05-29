@@ -26,16 +26,8 @@ export const pageGuides: Record<string, PageGuide> = {
     title: "道具库上传",
     sections: [
       {
-        heading: "导入数据",
-        bullets: [
-          "支持 CSV 与 Excel（.xlsx）上传",
-          "必填列：名称（Name）、一级分类（Category1）",
-          "可选择覆盖或追加导入模式",
-        ],
-      },
-      {
-        heading: "管理道具",
-        bullets: ["使用筛选器按分类、颜色、尺寸过滤", "支持导出 Excel 备份", "表格行末可删除单条道具"],
+        heading: "提示",
+        bullets: ["本页已合并至 AI 道具表生成器 →「上传道具表」标签"],
       },
     ],
   },
@@ -60,16 +52,20 @@ export const pageGuides: Record<string, PageGuide> = {
     title: "AI 道具表生成器",
     sections: [
       {
-        heading: "生成流程",
+        heading: "生成道具表",
         bullets: [
-          "填写自定义描述与物品种类数",
-          "配置 API Key 后将使用 Gemini 生成",
-          "类别由 AI 自动分配，生成后可编辑并保存",
+          "填写描述、物品种类数、颜色数量（种类×颜色=总条数）",
+          "标准 8 色：红橙黄绿蓝紫粉灰",
+          "右侧为主预览区，可保存为道具集",
         ],
       },
       {
-        heading: "提示",
-        bullets: ["与道具库上传独立，生成结果不会回写道具库", "种类数建议 4～40"],
+        heading: "上传道具表",
+        bullets: [
+          "切换到「上传道具表」标签导入 CSV/Excel",
+          "支持一键清空整个道具库",
+          "上传数据与 AI 生成相互独立",
+        ],
       },
     ],
   },

@@ -31,12 +31,14 @@ type ItemCatalogClientProps = {
     color1: string[];
     size: string[];
   };
+  showRowDelete?: boolean;
 };
 
 export function ItemCatalogClient({
   initialRows,
   initialTotal,
   initialFilters,
+  showRowDelete = false,
 }: ItemCatalogClientProps) {
   const [rows, setRows] = useState<ItemCatalogRow[]>(initialRows);
   const [total, setTotal] = useState(initialTotal);
@@ -122,7 +124,7 @@ export function ItemCatalogClient({
               setPage(nextPage);
               void loadRows({ page: nextPage });
             }}
-            onDelete={deleteRow}
+            onDelete={showRowDelete ? deleteRow : undefined}
           />
         </CardContent>
       </Card>

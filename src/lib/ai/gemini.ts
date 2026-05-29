@@ -198,14 +198,15 @@ export async function generateItemTable(
   input: GenerateItemsInput,
 ): Promise<GenerateItemsResult> {
   const validInput = generateItemsInputSchema.parse(input);
-  const resultSchema = createGenerateItemsResultSchema(validInput.itemCount);
+  const expectedTotal = validInput.itemTypeCount * validInput.colorCount;
+  const resultSchema = createGenerateItemsResultSchema(expectedTotal, validInput.itemTypeCount);
 
   try {
     const runtime = await resolveRuntime();
     const useMock = env.AI_MOCK_MODE && !runtime.hasApiKey;
 
     if (useMock) {
-      const mock = resultSchema.parse(finalizeFreeGeneratedItems(buildMockFreeItems(validInput)));
+      const mock = resultSchema.parse(buildMockFreeItems(validInput));
       await prisma.aiGenerationLog.create({
         data: {
           type: "item_table",
@@ -222,7 +223,7 @@ export async function generateItemTable(
     const prompt = generateItemsPrompt(validInput);
     const text = await generateText(prompt, { runtime });
     const parsed = parseJsonSafe<GenerateItemsResult>(text);
-    const finalized = finalizeFreeGeneratedItems(parsed);
+    const finalized = finalizeFreeGeneratedItems(parsed, validInput);
     const validated = resultSchema.parse(finalized);
 
     await prisma.aiGenerationLog.create({

@@ -6,32 +6,47 @@ export type GeneratedItemSetPayload = z.infer<typeof generatedItemSetPayloadSche
 
 export function toDbGeneratedItemSetFields(payload: GeneratedItemSetPayload) {
   const categories = [...new Set(payload.items.map((item) => item.category1))];
+  const totalItemCount = payload.itemTypeCount * payload.colorCount;
   return {
     name: payload.name,
     theme: payload.description,
     prompt: payload.description,
-    totalItemCount: payload.itemCount,
-    targetTypeCount: payload.items.length,
-    targetCountEach: 1,
+    totalItemCount,
+    targetTypeCount: payload.itemTypeCount,
+    targetCountEach: payload.colorCount,
     distractorTypeCount: 0,
     difficultyIntent: "normal",
-    constraints: JSON.stringify({ categories, mode: "ai_free" }),
+    constraints: JSON.stringify({
+      itemTypeCount: payload.itemTypeCount,
+      colorCount: payload.colorCount,
+      categories,
+      mode: "ai_free",
+    }),
     summary: payload.summary,
   };
 }
 
-export function parseStoredCategories(constraints: string | null | undefined): string[] {
-  if (!constraints) return [];
-  try {
-    const parsed = JSON.parse(constraints) as { categories?: string[] };
-    if (Array.isArray(parsed.categories) && parsed.categories.length > 0) {
-      return parsed.categories;
-    }
-  } catch {
-    // legacy: comma-separated
+export function parseStoredGenerationConfig(constraints: string | null | undefined) {
+  if (!constraints) {
+    return { itemTypeCount: 12, colorCount: 8, categories: [] as string[] };
   }
-  return constraints
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  try {
+    const parsed = JSON.parse(constraints) as {
+      itemTypeCount?: number;
+      colorCount?: number;
+      categories?: string[];
+    };
+    return {
+      itemTypeCount: parsed.itemTypeCount ?? 12,
+      colorCount: parsed.colorCount ?? 8,
+      categories: parsed.categories ?? [],
+    };
+  } catch {
+    return { itemTypeCount: 12, colorCount: 8, categories: [] as string[] };
+  }
+}
+
+/** @deprecated 使用 parseStoredGenerationConfig */
+export function parseStoredCategories(constraints: string | null | undefined): string[] {
+  return parseStoredGenerationConfig(constraints).categories;
 }

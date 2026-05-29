@@ -6,6 +6,7 @@ export function buildGeneratedItemSetWorkbook(
   payload: GeneratedItemSetPayload & { categories?: string[] },
 ): Buffer {
   const categories = payload.categories ?? [...new Set(payload.items.map((i) => i.category1))];
+  const totalRows = payload.itemTypeCount * payload.colorCount;
   const wb = XLSX.utils.book_new();
 
   const generatedItems = payload.items.map((item) => ({
@@ -31,8 +32,10 @@ export function buildGeneratedItemSetWorkbook(
     {
       SetName: payload.name,
       Description: payload.description,
+      ItemTypeCount: payload.itemTypeCount,
+      ColorCount: payload.colorCount,
+      TotalRows: totalRows,
       Categories: categories.join(", "),
-      ItemCount: payload.itemCount,
       CreatedAt: new Date().toISOString(),
     },
   ];

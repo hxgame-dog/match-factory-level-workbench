@@ -1,7 +1,10 @@
 export type GenerateItemsInput = {
   setName: string;
   description: string;
-  itemCount: number;
+  /** 物品种类数（基础造型种类） */
+  itemTypeCount: number;
+  /** 每种造型对应的颜色变体数（使用标准色板前 N 色） */
+  colorCount: number;
 };
 
 export type GenerateItemsResult = {

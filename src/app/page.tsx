@@ -97,15 +97,6 @@ export default async function HomePage() {
 
   const modules: ModuleDef[] = [
     {
-      title: "道具库上传",
-      description: "上传 CSV / Excel，管理基础道具目录",
-      href: "/items",
-      stats: [
-        { label: "道具总数", value: String(itemCount) },
-        { label: "最近更新", value: itemCount > 0 ? "已就绪" : "待导入" },
-      ],
-    },
-    {
       title: "AI 配置中心",
       description: "检测 Gemini 连接与 Mock 模式",
       href: "/ai-lab",
@@ -118,12 +109,12 @@ export default async function HomePage() {
     },
     {
       title: "AI 道具表生成器",
-      description: "按描述自动生成可编辑道具集",
+      description: "AI 生成或上传道具表，支持种类×颜色展开",
       href: "/item-generator",
       stats: [
         { label: "道具集数量", value: String(itemSetCount) },
+        { label: "上传库条数", value: String(itemCount) },
         { label: "最近道具集", value: latestItemSet?.name ?? "-" },
-        { label: "最近生成时间", value: formatDate(latestItemSet?.createdAt) },
       ],
     },
     {
@@ -213,7 +204,7 @@ export default async function HomePage() {
   ];
 
   const summaryMetrics = [
-    { label: "道具库上传", value: itemCount },
+    { label: "上传库", value: itemCount },
     { label: "道具集", value: itemSetCount },
     { label: "关卡", value: levelCount },
     { label: "资源批次", value: assetBatchCount },

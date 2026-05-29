@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
+
 const difficultyIntentSchema = z.enum(["easy", "normal", "hard", "expert"]);
 const generatedItemRoleSchema = z.enum(["target", "distractor", "filler", "special"]);
 
@@ -23,12 +25,22 @@ const generatedItemSchema = z.object({
   riskTags: z.array(z.string()).optional(),
 });
 
-/** 方案 A：AI 自由生成，不依赖道具库 */
-export const generateItemsInputSchema = z.object({
-  setName: z.string().min(1, "道具集名称不能为空"),
-  description: z.string().min(1, "请填写生成描述"),
-  itemCount: z.number().int().min(1).max(80),
-});
+const MAX_TOTAL_ITEMS = 1000;
+
+export const generateItemsInputSchema = z
+  .object({
+    setName: z.string().min(1, "道具集名称不能为空"),
+    description: z.string().min(1, "请填写生成描述"),
+    itemTypeCount: z.number().int().min(1).max(150),
+    colorCount: z
+      .number()
+      .int()
+      .min(1)
+      .max(STANDARD_COLOR_PALETTE.length),
+  })
+  .refine((data) => data.itemTypeCount * data.colorCount <= MAX_TOTAL_ITEMS, {
+    message: `物品种类数 × 颜色数量不能超过 ${MAX_TOTAL_ITEMS} 条`,
+  });
 
 export const generateItemsResultSchema = z.object({
   summary: z.string().min(1),
@@ -36,43 +48,60 @@ export const generateItemsResultSchema = z.object({
   items: z.array(generatedItemSchema).min(1, "items 不能为空"),
 });
 
-export function createGenerateItemsResultSchema(itemCount: number) {
+export function createGenerateItemsResultSchema(expectedTotal: number, itemTypeCount: number) {
   return generateItemsResultSchema.superRefine((result, ctx) => {
-    const minItems = Math.max(1, Math.floor(itemCount * 0.75));
-    const maxItems = Math.ceil(itemCount * 1.25);
+    const ratio = expectedTotal > 200 ? 0.3 : 0.65;
+    const minTotal = Math.max(1, Math.floor(expectedTotal * ratio));
+    const maxTotal = Math.ceil(expectedTotal * 1.08) + itemTypeCount;
 
-    if (result.items.length < minItems) {
+    if (result.items.length < minTotal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `生成种类过少：期望约 ${itemCount} 种，实际 ${result.items.length} 种`,
+        message: `生成条数过少：期望约 ${expectedTotal} 条（${itemTypeCount} 种 × 颜色），实际 ${result.items.length} 条`,
       });
     }
-    if (result.items.length > maxItems + 5) {
+    if (result.items.length > maxTotal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `生成种类过多：期望约 ${itemCount} 种，实际 ${result.items.length} 种`,
-      });
-    }
-
-    const uniqueNames = new Set(result.items.map((item) => item.name.toLowerCase())).size;
-    if (uniqueNames < Math.min(itemCount, result.items.length) - 1) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "存在重复道具名称，请重试生成",
+        message: `生成条数过多：期望约 ${expectedTotal} 条，实际 ${result.items.length} 条`,
       });
     }
 
+    const colorKeys = STANDARD_COLOR_PALETTE.map((c) => c.key);
+    const baseKeys = new Set(
+      result.items.map((item) => {
+        for (const key of colorKeys) {
+          if (item.name.endsWith(`_${key}`)) {
+            return item.name.slice(0, -(key.length + 1));
+          }
+        }
+        return item.name;
+      }),
+    );
+    const baseRatio = itemTypeCount > 50 ? 0.35 : 0.65;
+    const minBases = Math.max(1, Math.floor(itemTypeCount * baseRatio));
+    if (baseKeys.size < minBases) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `物品种类不足：期望约 ${itemTypeCount} 种基础造型，实际约 ${baseKeys.size} 种`,
+      });
+    }
   });
 }
 
-export const generatedItemSetPayloadSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().min(1),
-  itemCount: z.number().int().positive(),
-  summary: z.string().optional(),
-  warnings: z.array(z.string()).default([]),
-  items: z.array(generatedItemSchema).min(1),
-});
+export const generatedItemSetPayloadSchema = z
+  .object({
+    name: z.string().min(1),
+    description: z.string().min(1),
+    itemTypeCount: z.number().int().positive(),
+    colorCount: z.number().int().positive(),
+    summary: z.string().optional(),
+    warnings: z.array(z.string()).default([]),
+    items: z.array(generatedItemSchema).min(1),
+  })
+  .refine((data) => data.itemTypeCount * data.colorCount <= MAX_TOTAL_ITEMS, {
+    message: `物品种类数 × 颜色数量不能超过 ${MAX_TOTAL_ITEMS} 条`,
+  });
 
 export const diagnoseLevelInputSchema = z.object({
   levelConfig: z.unknown(),
@@ -119,5 +148,4 @@ export const aiTestInputSchema = z.object({
   prompt: z.string().min(1).default("请返回一句简短问候"),
 });
 
-/** @deprecated 仅 Excel 导出元数据兼容 */
 export { difficultyIntentSchema };

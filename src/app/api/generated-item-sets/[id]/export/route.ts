@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { buildGeneratedItemSetWorkbook } from "@/lib/generatedItemSetExport";
-import { parseStoredCategories } from "@/lib/generatedItemSetPayload";
+import { parseStoredGenerationConfig } from "@/lib/generatedItemSetPayload";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
@@ -21,12 +21,13 @@ export async function POST(_: Request, { params }: Params) {
       return NextResponse.json({ success: false, error: "未找到记录" }, { status: 404 });
     }
 
-    const categories = parseStoredCategories(set.constraints);
+    const cfg = parseStoredGenerationConfig(set.constraints);
     const workbook = buildGeneratedItemSetWorkbook({
       name: set.name,
       description: set.theme,
-      itemCount: set.items.length,
-      categories,
+      itemTypeCount: cfg.itemTypeCount,
+      colorCount: cfg.colorCount,
+      categories: cfg.categories,
       summary: set.summary ?? undefined,
       warnings: set.warningsJson ? JSON.parse(set.warningsJson) : [],
       items: set.items.map((item) => ({
