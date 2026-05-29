@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { getPaletteColorEnglish } from "@/lib/items/colorPalette";
 import { zh } from "@/lib/i18n/zh";
 
@@ -65,11 +66,15 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
   function patchItem(index: number, patch: Partial<GenerateItemsResult["items"][number]>) {
     const next = [...items];
     next[index] = { ...next[index], ...patch };
-    onChange(next);
+    commitItems(next);
   }
 
   function removeItem(index: number) {
-    onChange(items.filter((_, i) => i !== index));
+    onChange(assignSequentialItemIds(items.filter((_, i) => i !== index)));
+  }
+
+  function commitItems(next: GenerateItemsResult["items"]) {
+    onChange(assignSequentialItemIds(next));
   }
 
   return (
@@ -95,6 +100,7 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
         <Table className="w-full">
           <TableHeader>
             <TableRow>
+              <TableHead className="w-16">道具 ID</TableHead>
               <TableHead className="min-w-[120px]">名称</TableHead>
               <TableHead className="min-w-[120px]">显示名</TableHead>
               <TableHead>一级分类</TableHead>
@@ -115,6 +121,9 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
           <TableBody>
             {pageSlice.map(({ item, index }) => (
               <TableRow key={`${item.name}-${index}`}>
+                <TableCell className="tabular-nums text-muted-foreground">
+                  {item.itemId ?? index + 1}
+                </TableCell>
                 <TableCell>
                   <Input
                     className="min-w-[100px]"

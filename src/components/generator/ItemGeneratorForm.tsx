@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { parseStoredGenerationConfig } from "@/lib/generatedItemSetPayload";
+import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import { zh } from "@/lib/i18n/zh";
 import type { GenerateItemsResult } from "@/types/ai";
@@ -33,6 +34,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
   const [colorCount, setColorCount] = useState(8);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateItemsResult | null>(null);
   const [history, setHistory] = useState<GeneratedItemSetListItem[]>(initialHistory);
@@ -127,12 +129,14 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     setResult({
       summary: set.summary ?? "",
       warnings: set.warnings ?? [],
-      items: set.items.map(
-        (item: GenerateItemsResult["items"][number] & { moveSpeed?: number | null }) => ({
-          ...item,
-          role: item.role ?? "target",
-          moveSpeed: item.moveSpeed ?? 3,
-        }),
+      items: assignSequentialItemIds(
+        set.items.map(
+          (item: GenerateItemsResult["items"][number] & { moveSpeed?: number | null }) => ({
+            ...item,
+            role: item.role ?? "target",
+            moveSpeed: item.moveSpeed ?? 3,
+          }),
+        ),
       ),
     });
     setDirty(false);
@@ -147,22 +151,48 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
   }
 
   async function onExport() {
-    if (!savedSetId) {
-      setError("请先保存道具集，再导出 Excel");
-      return;
+    if (!result) return;
+    setExporting(true);
+    setError(null);
+    try {
+      const exportBody = {
+        name: setName,
+        description,
+        itemTypeCount,
+        colorCount,
+        summary: result.summary,
+        warnings: result.warnings,
+        items: result.items,
+      };
+      const response = await fetch("/api/generated-item-sets/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(exportBody),
+      });
+      const contentType = response.headers.get("content-type") ?? "";
+      if (!response.ok) {
+        let message = "导出失败";
+        if (contentType.includes("application/json")) {
+          const payload = (await response.json()) as { error?: string };
+          message = payload.error ?? message;
+        }
+        throw new Error(message);
+      }
+      if (!contentType.includes("spreadsheet") && !contentType.includes("octet-stream")) {
+        throw new Error("导出响应格式异常，请稍后重试");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `generated_item_set_${setName.replace(/[^\w\u4e00-\u9fa5-]/g, "_")}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "导出失败");
+    } finally {
+      setExporting(false);
     }
-    const response = await fetch(`/api/generated-item-sets/${savedSetId}/export`, { method: "POST" });
-    if (!response.ok) {
-      setError("导出失败");
-      return;
-    }
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "generated_item_set.xlsx";
-    link.click();
-    URL.revokeObjectURL(url);
   }
 
   async function onCopyJson() {
@@ -182,8 +212,8 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       <Button size="sm" onClick={onSave} disabled={!result || saving}>
         {saving ? t.actions.saving : t.actions.save}
       </Button>
-      <Button size="sm" variant="outline" onClick={onExport} disabled={!savedSetId}>
-        {t.actions.export}
+      <Button size="sm" variant="outline" onClick={() => void onExport()} disabled={!result || exporting}>
+        {exporting ? "导出中…" : t.actions.export}
       </Button>
       <Button size="sm" variant="outline" onClick={() => void onGenerate()} disabled={loading}>
         {t.actions.regenerate}

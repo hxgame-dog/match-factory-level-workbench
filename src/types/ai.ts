@@ -11,6 +11,8 @@ export type GenerateItemsResult = {
   summary: string;
   warnings: string[];
   items: Array<{
+    /** 道具表内序号，从 1 开始 */
+    itemId?: number;
     sourceItemId?: number;
     catalogItemId?: string;
     name: string;

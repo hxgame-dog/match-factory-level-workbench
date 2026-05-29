@@ -1,36 +1,34 @@
 import { NextResponse } from "next/server";
 
-import { buildGeneratedItemSetWorkbook } from "@/lib/generatedItemSetExport";
-import { parseStoredGenerationConfig } from "@/lib/generatedItemSetPayload";
+import {
+  createGeneratedItemSetExcelResponse,
+  parseRiskTagsJson,
+} from "@/lib/generatedItemSetExport";
+import {
+  normalizeGeneratedItemsForExport,
+  parseStoredGenerationConfig,
+} from "@/lib/generatedItemSetPayload";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
-function cleanName(name: string) {
-  return name.replace(/[^\w\u4e00-\u9fa5-]/g, "_");
-}
+export const runtime = "nodejs";
 
 export async function POST(_: Request, { params }: Params) {
   try {
     const { id } = await params;
     const set = await prisma.generatedItemSet.findUnique({
       where: { id },
-      include: { items: true },
+      include: { items: { orderBy: { createdAt: "asc" } } },
     });
     if (!set) {
       return NextResponse.json({ success: false, error: "未找到记录" }, { status: 404 });
     }
 
     const cfg = parseStoredGenerationConfig(set.constraints);
-    const workbook = buildGeneratedItemSetWorkbook({
-      name: set.name,
-      description: set.theme,
-      itemTypeCount: cfg.itemTypeCount,
-      colorCount: cfg.colorCount,
-      categories: cfg.categories,
-      summary: set.summary ?? undefined,
-      warnings: set.warningsJson ? JSON.parse(set.warningsJson) : [],
-      items: set.items.map((item) => ({
+    const items = normalizeGeneratedItemsForExport(
+      set.items.map((item, index) => ({
+        itemId: index + 1,
         sourceItemId: item.sourceItemId ?? undefined,
         catalogItemId: item.catalogItemId ?? undefined,
         name: item.name,
@@ -42,25 +40,39 @@ export async function POST(_: Request, { params }: Params) {
         shape: item.shape ?? undefined,
         size: item.size ?? undefined,
         targetScale: item.targetScale ?? undefined,
-        moveSpeed: item.moveSpeed ?? undefined,
+        moveSpeed: item.moveSpeed ?? 3,
         role: item.role as "target" | "distractor" | "filler" | "special",
         count: item.count,
         isNew: item.isNew,
         imagePrompt: item.imagePrompt ?? "",
         reason: item.reason ?? "",
-        riskTags: item.riskTagsJson ? JSON.parse(item.riskTagsJson) : [],
+        riskTags: parseRiskTagsJson(item.riskTagsJson),
       })),
-    });
+    );
 
-    const date = new Date().toISOString().slice(0, 10);
-    const fileName = `generated_item_set_${cleanName(set.name)}_${date}.xlsx`;
-    return new NextResponse(new Uint8Array(workbook), {
-      headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${fileName}"`,
+    let warnings: string[] = [];
+    if (set.warningsJson) {
+      try {
+        const parsed = JSON.parse(set.warningsJson) as unknown;
+        warnings = Array.isArray(parsed) ? parsed.map(String) : [];
+      } catch {
+        warnings = [];
+      }
+    }
+
+    return createGeneratedItemSetExcelResponse(
+      {
+        name: set.name,
+        description: set.theme,
+        itemTypeCount: cfg.itemTypeCount,
+        colorCount: cfg.colorCount,
+        categories: cfg.categories,
+        summary: set.summary ?? undefined,
+        warnings,
+        items,
       },
-    });
+      set.name,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "导出失败";
     return NextResponse.json({ success: false, error: message }, { status: 400 });

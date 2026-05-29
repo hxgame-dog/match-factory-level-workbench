@@ -1,4 +1,5 @@
 import { expandItemTypesWithColors } from "@/lib/ai/expandItemTypesWithColors";
+import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { getActiveColors } from "@/lib/items/colorPalette";
 import type { GenerateItemsInput, GenerateItemsResult } from "@/types/ai";
 
@@ -29,7 +30,7 @@ export function finalizeFreeGeneratedItems(
   return {
     summary: result.summary,
     warnings,
-    items: expanded,
+    items: assignSequentialItemIds(expanded),
   };
 }
 
@@ -58,6 +59,6 @@ export function buildMockFreeItems(input: GenerateItemsInput): GenerateItemsResu
   return {
     summary: `Mock：${typeCount} 种造型 × ${input.colorCount} 色（${colors.map((c) => c.label).join("、")}），共 ${expanded.length} 条（目标 ${total} 条）。`,
     warnings: ["当前为 Mock 输出，未调用 Gemini。"],
-    items: expanded,
+    items: assignSequentialItemIds(expanded),
   };
 }

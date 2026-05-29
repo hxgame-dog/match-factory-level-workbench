@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import type { generatedItemSetPayloadSchema } from "@/lib/validators/ai";
+import { generatedItemSetPayloadSchema } from "@/lib/validators/ai";
 
 export type GeneratedItemSetPayload = z.infer<typeof generatedItemSetPayloadSchema>;
 
@@ -24,6 +24,36 @@ export function toDbGeneratedItemSetFields(payload: GeneratedItemSetPayload) {
     }),
     summary: payload.summary,
   };
+}
+
+/** 规范化导出/保存前的道具行，补齐必填字段与道具 ID */
+export function normalizeGeneratedItemsForExport(
+  items: GeneratedItemSetPayload["items"],
+): GeneratedItemSetPayload["items"] {
+  return items.map((item, index) => ({
+    ...item,
+    itemId: item.itemId ?? index + 1,
+    imagePrompt: (item.imagePrompt ?? "").trim() || "-",
+    reason: (item.reason ?? "").trim() || "-",
+    role: item.role ?? "target",
+    moveSpeed: item.moveSpeed ?? 3,
+    count: item.count > 0 ? item.count : 1,
+  }));
+}
+
+/** 将请求体规范为可导出的 payload（校验前补齐缺省字段） */
+export function prepareGeneratedItemSetExportPayload(body: unknown): GeneratedItemSetPayload {
+  const record = body as Record<string, unknown>;
+  const items = Array.isArray(record.items) ? (record.items as GeneratedItemSetPayload["items"]) : [];
+  return generatedItemSetPayloadSchema.parse({
+    name: record.name,
+    description: record.description,
+    itemTypeCount: record.itemTypeCount,
+    colorCount: record.colorCount,
+    summary: record.summary,
+    warnings: record.warnings ?? [],
+    items: normalizeGeneratedItemsForExport(items),
+  });
 }
 
 export function parseStoredGenerationConfig(constraints: string | null | undefined) {
