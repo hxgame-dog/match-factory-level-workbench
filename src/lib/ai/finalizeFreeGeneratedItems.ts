@@ -2,11 +2,19 @@ import { expandItemTypesWithColors } from "@/lib/ai/expandItemTypesWithColors";
 import { getActiveColors } from "@/lib/items/colorPalette";
 import type { GenerateItemsInput, GenerateItemsResult } from "@/types/ai";
 
+function normalizeBaseItems(items: GenerateItemsResult["items"]): GenerateItemsResult["items"] {
+  return items.map((item) => ({
+    ...item,
+    role: item.role ?? "target",
+    moveSpeed: item.moveSpeed ?? 3,
+  }));
+}
+
 export function finalizeFreeGeneratedItems(
   result: GenerateItemsResult,
   input: Pick<GenerateItemsInput, "colorCount" | "itemTypeCount">,
 ): GenerateItemsResult {
-  const expanded = expandItemTypesWithColors(result.items, input.colorCount);
+  const expanded = expandItemTypesWithColors(normalizeBaseItems(result.items), input.colorCount);
   const warnings = [...result.warnings];
   const expectedTotal = input.itemTypeCount * input.colorCount;
   if (result.items.length < input.itemTypeCount * 0.8) {
@@ -33,7 +41,8 @@ export function buildMockFreeItems(input: GenerateItemsInput): GenerateItemsResu
       name: slug,
       displayName: `示例道具${index + 1}`,
       category1: "mock_category",
-      role: "target" as const,
+      color2: "cream",
+      moveSpeed: (index % 5) + 1,
       count: 9,
       isNew: true,
       imagePrompt: `single stylized 3D cartoon ${input.description} game item ${index + 1}, centered, clean background`,

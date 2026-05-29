@@ -42,6 +42,7 @@ export async function POST(_: Request, { params }: Params) {
         shape: item.shape ?? undefined,
         size: item.size ?? undefined,
         targetScale: item.targetScale ?? undefined,
+        moveSpeed: item.moveSpeed ?? undefined,
         role: item.role as "target" | "distractor" | "filler" | "special",
         count: item.count,
         isNew: item.isNew,

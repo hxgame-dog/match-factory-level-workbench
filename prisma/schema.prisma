@@ -74,6 +74,7 @@ model GeneratedItem {
   shape         String?
   size          String?
   targetScale   Float?
+  moveSpeed     Int?
 
   role          String
   count         Int

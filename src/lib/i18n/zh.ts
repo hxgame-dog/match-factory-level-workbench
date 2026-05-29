@@ -84,6 +84,13 @@ export const zh = {
       },
       warnings: "生成警告",
       dirty: "已修改未保存",
+      moveSpeedLabels: {
+        1: "很慢",
+        2: "慢",
+        3: "中",
+        4: "快",
+        5: "很快",
+      } as Record<1 | 2 | 3 | 4 | 5, string>,
       roles: {
         target: "目标物",
         distractor: "干扰物",

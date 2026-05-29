@@ -10,7 +10,6 @@ export function buildGeneratedItemSetWorkbook(
   const wb = XLSX.utils.book_new();
 
   const generatedItems = payload.items.map((item) => ({
-    Role: item.role,
     Name: item.name,
     DisplayName: item.displayName ?? "",
     Category1: item.category1,
@@ -19,6 +18,7 @@ export function buildGeneratedItemSetWorkbook(
     Color2: item.color2 ?? "",
     Shape: item.shape ?? "",
     Size: item.size ?? "",
+    MoveSpeed: item.moveSpeed ?? "",
     TargetScale: item.targetScale ?? "",
     Count: item.count,
     IsNew: item.isNew ? "true" : "false",

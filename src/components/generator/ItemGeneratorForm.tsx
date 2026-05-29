@@ -127,7 +127,13 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     setResult({
       summary: set.summary ?? "",
       warnings: set.warnings ?? [],
-      items: set.items,
+      items: set.items.map(
+        (item: GenerateItemsResult["items"][number] & { moveSpeed?: number | null }) => ({
+          ...item,
+          role: item.role ?? "target",
+          moveSpeed: item.moveSpeed ?? 3,
+        }),
+      ),
     });
     setDirty(false);
   }
@@ -193,7 +199,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-[minmax(300px,360px)_1fr] lg:items-start">
+      <div className="grid w-full min-w-0 gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] lg:items-start">
         <Card className="lg:sticky lg:top-4">
           <CardHeader className="border-b border-border bg-muted/30">
             <CardTitle className="text-lg">{t.configTitle}</CardTitle>
@@ -251,7 +257,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="min-h-[520px]">
+        <Card className="min-h-[520px] min-w-0">
           <CardHeader className="flex flex-col gap-3 border-b border-border bg-muted/30 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <CardTitle className="text-lg">{t.previewTitle}</CardTitle>

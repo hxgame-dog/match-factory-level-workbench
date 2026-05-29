@@ -22,7 +22,9 @@ export type GenerateItemsResult = {
     shape?: string;
     size?: string;
     targetScale?: number;
-    role: "target" | "distractor" | "filler" | "special";
+    /** 移动速度档位 1–5（很慢 → 很快） */
+    moveSpeed?: number;
+    role?: "target" | "distractor" | "filler" | "special";
     count: number;
     isNew: boolean;
     imagePrompt: string;

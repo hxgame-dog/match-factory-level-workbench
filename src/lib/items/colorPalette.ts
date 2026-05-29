@@ -14,3 +14,12 @@ export function getActiveColors(colorCount: number) {
   const n = Math.min(Math.max(1, colorCount), STANDARD_COLOR_PALETTE.length);
   return STANDARD_COLOR_PALETTE.slice(0, n);
 }
+
+/** 将 color1 存值（key 或 en）转为中文色名 */
+export function getPaletteColorLabel(colorKeyOrEn: string | undefined | null): string {
+  if (!colorKeyOrEn) return "—";
+  const found = STANDARD_COLOR_PALETTE.find(
+    (c) => c.key === colorKeyOrEn || c.en === colorKeyOrEn,
+  );
+  return found?.label ?? colorKeyOrEn;
+}
