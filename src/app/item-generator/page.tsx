@@ -40,7 +40,7 @@ export default async function ItemGeneratorPage() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.itemGenerator.title} description={zh.pages.itemGenerator.description} />
-      <PageContent className="space-y-4">
+      <PageContent fluid className="space-y-4">
         <GeminiStatusCompact
           mode="text"
           textModel={aiStatus.textModel}

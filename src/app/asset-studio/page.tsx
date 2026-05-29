@@ -23,7 +23,7 @@ export default async function AssetStudio() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.assetStudio.title} description={zh.pages.assetStudio.description} />
-      <PageContent>
+      <PageContent fluid>
         <AssetStudioPage
           itemSets={itemSets.map((set) => ({
             id: set.id,

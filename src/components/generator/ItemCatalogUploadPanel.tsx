@@ -44,7 +44,7 @@ export function ItemCatalogUploadPanel({ initialTotal, initialFilters, initialRo
   }
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       <ItemUpload
         onImported={async () => {
           const response = await fetch("/api/items?page=1&pageSize=1");

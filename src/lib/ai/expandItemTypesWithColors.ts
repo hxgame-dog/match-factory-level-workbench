@@ -18,14 +18,14 @@ export function expandItemTypesWithColors(
         ...base,
         name: `${baseSlug}_${color.key}`,
         displayName: base.displayName
-          ? `${base.displayName}（${color.label}）`
-          : `${baseSlug}（${color.label}）`,
+          ? `${base.displayName} (${color.en})`
+          : `${baseSlug} (${color.en})`,
         color1: color.key,
         color2: base.color2,
         moveSpeed: base.moveSpeed ?? 3,
         role: base.role ?? "target",
         imagePrompt: `${base.imagePrompt.replace(/\s*,\s*(red|orange|yellow|green|blue|purple|pink|gray)(\s+color)?/gi, "")}, ${color.en} color, dominant ${color.en} tones`,
-        reason: `${base.reason}；${color.label}配色变体`,
+        reason: `${base.reason}; ${color.en} color variant`,
         isNew: true,
         catalogItemId: undefined,
         sourceItemId: undefined,

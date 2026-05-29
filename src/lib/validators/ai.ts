@@ -6,8 +6,15 @@ const difficultyIntentSchema = z.enum(["easy", "normal", "hard", "expert"]);
 const generatedItemRoleSchema = z.enum(["target", "distractor", "filler", "special"]);
 
 const generatedItemSchema = z.object({
-  sourceItemId: z.number().int().optional(),
-  catalogItemId: z.string().optional(),
+  sourceItemId: z
+    .number()
+    .int()
+    .nullish()
+    .transform((v) => v ?? undefined),
+  catalogItemId: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? undefined),
   name: z.string().min(1),
   displayName: z.string().optional(),
   category1: z.string().min(1),

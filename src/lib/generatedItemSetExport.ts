@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 
+import { getPaletteColorEnglish } from "@/lib/items/colorPalette";
 import type { GeneratedItemSetPayload } from "@/types/generatedItemSet";
 
 export function buildGeneratedItemSetWorkbook(
@@ -14,7 +15,7 @@ export function buildGeneratedItemSetWorkbook(
     DisplayName: item.displayName ?? "",
     Category1: item.category1,
     Category2: item.category2 ?? "",
-    Color1: item.color1 ?? "",
+    Color1: item.color1 ? getPaletteColorEnglish(item.color1) : "",
     Color2: item.color2 ?? "",
     Shape: item.shape ?? "",
     Size: item.size ?? "",

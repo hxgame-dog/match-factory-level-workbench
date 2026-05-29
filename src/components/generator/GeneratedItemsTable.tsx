@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getPaletteColorLabel } from "@/lib/items/colorPalette";
+import { getPaletteColorEnglish } from "@/lib/items/colorPalette";
 import { zh } from "@/lib/i18n/zh";
 
 const PAGE_SIZE = 24;
@@ -92,7 +92,7 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
       </div>
 
       <div className="w-full overflow-x-auto rounded-md border border-border">
-        <Table className="min-w-[960px]">
+        <Table className="w-full">
           <TableHeader>
             <TableRow>
               <TableHead className="min-w-[120px]">名称</TableHead>
@@ -132,7 +132,7 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
                 <TableCell>{item.category1}</TableCell>
                 <TableCell>{item.category2 ?? "—"}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{getPaletteColorLabel(item.color1)}</Badge>
+                  <Badge variant="outline">{getPaletteColorEnglish(item.color1)}</Badge>
                 </TableCell>
                 <TableCell>
                   <Input

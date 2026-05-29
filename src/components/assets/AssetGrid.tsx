@@ -38,7 +38,7 @@ export function AssetGrid(props: Props) {
     );
   }
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5">
       {props.assets.map((asset, index) => (
         <AssetCard
           key={`${asset.name}-${index}`}

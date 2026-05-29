@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const optStr = z.string().nullish().transform((v) => v ?? undefined);
+const optInt = z.number().int().nullish().transform((v) => v ?? undefined);
+
 export const assetStatusSchema = z.enum([
   "pending",
   "prompt_ready",
@@ -10,19 +13,21 @@ export const assetStatusSchema = z.enum([
 ]);
 
 const assetItemSchema = z.object({
-  generatedItemId: z.string().optional(),
-  sourceItemId: z.number().int().optional(),
-  catalogItemId: z.string().optional(),
+  generatedItemId: optStr,
+  sourceItemId: optInt,
+  catalogItemId: optStr,
   name: z.string().min(1),
-  displayName: z.string().optional(),
+  displayName: optStr,
   category1: z.string().min(1),
-  category2: z.string().optional(),
-  color1: z.string().optional(),
-  color2: z.string().optional(),
-  shape: z.string().optional(),
-  size: z.string().optional(),
-  role: z.string().optional(),
-  count: z.number().int().optional(),
+  category2: optStr,
+  color1: optStr,
+  color2: optStr,
+  shape: optStr,
+  size: optStr,
+  role: optStr,
+  count: optInt,
+  imagePrompt: optStr,
+  reason: optStr,
 });
 
 export const generateAssetImageInputSchema = z.object({

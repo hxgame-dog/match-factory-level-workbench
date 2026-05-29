@@ -199,8 +199,8 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid w-full min-w-0 gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] lg:items-start">
-        <Card className="lg:sticky lg:top-4">
+      <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:items-start">
+        <Card className="xl:sticky xl:top-4">
           <CardHeader className="border-b border-border bg-muted/30">
             <CardTitle className="text-lg">{t.configTitle}</CardTitle>
             <CardDescription>{t.configDesc}</CardDescription>

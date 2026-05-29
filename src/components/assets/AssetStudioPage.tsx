@@ -14,6 +14,8 @@ import { AssetGrid } from "./AssetGrid";
 import { AssetPromptDialog } from "./AssetPromptDialog";
 import { AssetPromptPanel } from "./AssetPromptPanel";
 import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
+import { pickAssetItemPayload } from "@/lib/assets/pickAssetItemPayload";
+
 import { ItemSetSelector } from "./ItemSetSelector";
 
 type LoadedItem = {
@@ -137,7 +139,7 @@ export function AssetStudioPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          item: next[i],
+          item: pickAssetItemPayload(next[i] as unknown as Record<string, unknown>),
           globalArtStyle,
           negativePrompt,
         }),
@@ -165,7 +167,7 @@ export function AssetStudioPage({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         assetId: asset.assetId,
-        item: asset,
+        item: pickAssetItemPayload(asset as unknown as Record<string, unknown>),
         prompt: asset.prompt,
         negativePrompt: asset.negativePrompt,
         imageSize,
@@ -298,7 +300,7 @@ export function AssetStudioPage({
   }, [currentItems, detail]);
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       <GeminiStatusCompact mode="image" imageModel={imageModel} available={imageGenerationReady} />
 
       {error ? (
@@ -327,8 +329,8 @@ export function AssetStudioPage({
         </Card>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(300px,360px)_1fr]">
-        <div className="space-y-4">
+      <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] xl:items-start">
+        <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
         <ItemSetSelector
           itemSets={itemSets}
           selectedId={selectedSetId}
