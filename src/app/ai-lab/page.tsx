@@ -1,6 +1,4 @@
-import { AiStatusCard } from "@/components/ai/AiStatusCard";
-import { AiTestPanel } from "@/components/ai/AiTestPanel";
-import { GeminiSettingsPanel } from "@/components/ai/GeminiSettingsPanel";
+import { AiLabConsole } from "@/components/ai/AiLabConsole";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageContent } from "@/components/layout/PageContent";
@@ -13,12 +11,8 @@ export default async function AiLabPage() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.aiLab.title} description={zh.pages.aiLab.description} />
-      <PageContent className="space-y-4">
-        <div className="grid gap-4 xl:grid-cols-2">
-          <AiStatusCard {...status} className="max-w-none" />
-          <GeminiSettingsPanel />
-        </div>
-        <AiTestPanel />
+      <PageContent className="pb-10">
+        <AiLabConsole status={status} />
       </PageContent>
     </AppShell>
   );

@@ -187,15 +187,8 @@ export function GeminiSettingsPanel({ compact }: { compact?: boolean }) {
     }
   }
 
-  return (
-    <Card className={compact ? "h-full" : undefined}>
-      <CardHeader>
-        <CardTitle className={compact ? "text-base" : "text-lg"}>Gemini 连接与图像模型</CardTitle>
-        <p className="text-xs text-gray-500">
-          API Key 仅通过服务端 HttpOnly Cookie 保存，不会写入前端 localStorage，接口响应中也不会返回完整 Key。
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+  const inner = (
+      <div className="space-y-4 p-4 md:p-6">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           {settings?.hasGeminiKey ? (
             <Badge variant="outline">已配置 Key（{settings.keyHint}）</Badge>
@@ -301,7 +294,22 @@ export function GeminiSettingsPanel({ compact }: { compact?: boolean }) {
             <img src={testImageUrl} alt="Gemini 测试图" className="h-40 w-40 rounded border border-gray-200 object-contain" />
           </div>
         ) : null}
-      </CardContent>
+      </div>
+  );
+
+  if (compact) {
+    return inner;
+  }
+
+  return (
+    <Card>
+      <CardHeader className="border-b border-border bg-muted/30">
+        <CardTitle className="text-lg">Gemini 连接与图像模型</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          API Key 仅通过服务端 HttpOnly Cookie 保存，不会写入前端 localStorage，接口响应中也不会返回完整 Key。
+        </p>
+      </CardHeader>
+      <CardContent className="p-0">{inner}</CardContent>
     </Card>
   );
 }

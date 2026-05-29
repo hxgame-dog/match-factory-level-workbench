@@ -42,11 +42,11 @@ export function AiTestPanel() {
   }
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardHeader>
+    <Card>
+      <CardHeader className="border-b border-border bg-muted/30">
         <CardTitle className="text-lg">Gemini 文本连接测试</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         <Textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} className="min-h-28" />
         <Button onClick={onTest} disabled={loading}>
           {loading ? "测试中..." : "测试文本连接"}
