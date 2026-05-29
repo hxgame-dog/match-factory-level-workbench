@@ -7,7 +7,7 @@ export function generateItemsPrompt(input: GenerateItemsInput): string {
   "items": [
     {
       "sourceItemId": 1001,
-      "catalogItemId": "string",
+      "catalogItemId": "clxxxxxxxxxxxxxxxx",
       "name": "Basketball",
       "displayName": "篮球",
       "category1": "sports",
@@ -30,7 +30,9 @@ export function generateItemsPrompt(input: GenerateItemsInput): string {
   return [
     "你是 Match 3D 类手游的关卡策划助手，需要基于已有道具库生成一套关卡道具表。",
     "你必须优先从候选道具中选择，不要凭空乱造。",
-    "仅当候选不足时才生成新道具，并明确设置 isNew=true。",
+    "catalogItemId 必须填写候选道具 JSON 里的 id 字段（cuid 字符串），禁止填写 name、英文名或自造 ID。",
+    "sourceItemId 填写候选道具的 itemId（数字）；若无则省略。",
+    "仅当候选不足时才生成新道具：isNew=true，且不要填写 catalogItemId。",
     "需要考虑：目标物和干扰物比例、颜色/形状/分类相似度、物体大小、主题一致性、难度倾向。",
     "所有 imagePrompt 必须可用于后续图片资源生成。",
     "不要生成侵权内容，不要直接复制 Match Factory 原版资产描述。",

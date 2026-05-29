@@ -37,6 +37,7 @@ import { playtestAdvicePrompt } from "./prompts/playtestAdvicePrompt";
 import { analyticsFeedbackAdvicePrompt } from "./prompts/analyticsFeedbackAdvicePrompt";
 import { generateAssetPromptText } from "./prompts/generateAssetPrompt";
 import { generateLevelPrompt } from "./prompts/generateLevelPrompt";
+import { normalizeGeneratedItemTable } from "./normalizeGeneratedItems";
 import { generateItemsPrompt } from "./prompts/generateItemsPrompt";
 import { geminiPlaytestAdviceResultSchema } from "@/lib/validators/playtest";
 import { geminiAnalyticsAdviceResultSchema } from "@/lib/validators/analytics";
@@ -266,8 +267,22 @@ export async function generateItemTable(
 
     const prompt = generateItemsPrompt(validInput);
     const text = await generateText(prompt, { runtime });
-    const parsed = parseJsonSafe<unknown>(text);
-    const validated = resultSchema.parse(parsed);
+    const parsed = parseJsonSafe<GenerateItemsResult>(text);
+    const normalized = normalizeGeneratedItemTable(parsed, validInput.candidateItems, {
+      useExistingCatalogOnly: validInput.useExistingCatalogOnly,
+    });
+
+    const unresolved = normalized.items.filter(
+      (item) => item.catalogItemId != null && !validCatalogIds.has(item.catalogItemId),
+    );
+    if (unresolved.length > 0) {
+      const labels = unresolved.map((item) => item.name || item.catalogItemId).join("、");
+      throw new Error(
+        `以下道具无法匹配道具库：${labels}。请调整主题/约束，或在「道具库」导入相关道具后再试。`,
+      );
+    }
+
+    const validated = resultSchema.parse(normalized);
 
     await prisma.aiGenerationLog.create({
       data: {
