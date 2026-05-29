@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 type Asset = {
@@ -26,28 +27,10 @@ type Props = {
   onMarkDone: () => void;
 };
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "outline",
-  prompt_ready: "secondary",
-  generating: "secondary",
-  done: "default",
-  failed: "destructive",
-  skipped: "outline",
-};
-
-const statusLabel: Record<string, string> = {
-  pending: "待处理",
-  prompt_ready: "Prompt 就绪",
-  generating: "生成中",
-  done: "完成",
-  failed: "失败",
-  skipped: "已跳过",
-};
-
 export function AssetCard(props: Props) {
   const { asset } = props;
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card>
       <CardContent className="space-y-2 p-3">
         <div className="aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
           {asset.imageUrl ? (
@@ -63,9 +46,7 @@ export function AssetCard(props: Props) {
           {asset.role ? <Badge variant="secondary">{asset.role}</Badge> : null}
           <Badge variant="outline">{asset.category1}</Badge>
           {asset.size ? <Badge variant="outline">{asset.size}</Badge> : null}
-          <Badge variant={statusVariant[asset.status] ?? "outline"}>
-            {statusLabel[asset.status] ?? asset.status}
-          </Badge>
+          <StatusBadge status={asset.status} />
         </div>
         <p className="line-clamp-2 text-xs text-gray-600">{asset.prompt}</p>
         {asset.status === "failed" && asset.error ? (

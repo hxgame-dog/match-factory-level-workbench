@@ -1,6 +1,7 @@
 import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageContent } from "@/components/layout/PageContent";
 import { AutoLevelGeneratorPage } from "@/components/auto-level/AutoLevelGeneratorPage";
 import { prisma } from "@/lib/prisma";
 
@@ -13,7 +14,7 @@ export default async function AutoLevelGeneratorRoute() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.autoLevelGenerator.title} description={zh.pages.autoLevelGenerator.description} />
-      <div className="p-6">
+      <PageContent>
         <AutoLevelGeneratorPage
           levels={levels.map((row) => ({ id: row.id, name: row.name, levelIndex: row.levelIndex ?? 0, status: row.status }))}
           presets={presets.map((row) => ({ id: row.id, name: row.name, isDefault: row.isDefault }))}
@@ -25,7 +26,7 @@ export default async function AutoLevelGeneratorRoute() {
             createdAt: row.createdAt.toISOString(),
           }))}
         />
-      </div>
+      </PageContent>
     </AppShell>
   );
 }

@@ -6,7 +6,8 @@ import { WorkflowGuideSection } from "@/components/dashboard/WorkflowGuideSectio
 import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageContent } from "@/components/layout/PageContent";
+import { StatCard } from "@/components/ui/stat-card";
 
 type ModuleDef = {
   title: string;
@@ -221,15 +222,10 @@ export default async function HomePage() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.home.title} description={zh.pages.home.description} />
-      <div className="space-y-6 p-6">
+      <PageContent wide className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {summaryMetrics.map((m) => (
-            <Card key={m.label} className="border border-gray-200 shadow-sm">
-              <CardContent className="pt-6">
-                <p className="text-sm text-gray-500">{m.label}</p>
-                <p className="mt-1 text-3xl font-semibold text-gray-900">{m.value}</p>
-              </CardContent>
-            </Card>
+            <StatCard key={m.label} label={m.label} value={m.value} />
           ))}
         </div>
 
@@ -245,7 +241,7 @@ export default async function HomePage() {
         </section>
 
         <AiStatusCard {...aiStatus} />
-      </div>
+      </PageContent>
     </AppShell>
   );
 }

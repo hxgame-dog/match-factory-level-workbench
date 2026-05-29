@@ -2,6 +2,7 @@ import { FormulaLabPage } from "@/components/formula-lab/FormulaLabPage";
 import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageContent } from "@/components/layout/PageContent";
 import { getAiStatus } from "@/lib/ai/gemini";
 import { diagnoseLevelDifficulty } from "@/lib/difficulty/diagnoseLevelDifficulty";
 import { getDefaultFormulaPreset } from "@/lib/difficulty/formulaPresetService";
@@ -54,7 +55,7 @@ export default async function FormulaLabRoute() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.formulaLab.title} description={zh.pages.formulaLab.description} />
-      <div className="p-6">
+      <PageContent>
         <FormulaLabPage
           levels={levels.map((l) => ({ id: l.id, name: l.name, levelIndex: l.levelIndex }))}
           initialPresets={presets.map((p) => ({
@@ -77,7 +78,7 @@ export default async function FormulaLabRoute() {
           initialPresetDescription={defaultPreset.description ?? ""}
           initialFormulaConfig={defaultConfig}
         />
-      </div>
+      </PageContent>
     </AppShell>
   );
 }

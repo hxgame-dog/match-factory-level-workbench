@@ -15,21 +15,21 @@ export function DashboardModuleCard({
   stats: DashboardStatLine[];
 }) {
   return (
-    <Card className="flex h-full flex-col border border-gray-200 shadow-sm">
+    <Card className="flex h-full flex-col">
       <CardHeader className="pb-2">
-        <CardTitle className="font-serif text-base text-gray-900">{title}</CardTitle>
-        <p className="text-xs text-gray-500">{description}</p>
+        <CardTitle className="font-serif text-base">{title}</CardTitle>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </CardHeader>
       <CardContent className="mt-auto space-y-3">
-        <ul className="space-y-1 text-sm text-gray-600">
+        <dl className="space-y-2 text-sm">
           {stats.map((line) => (
-            <li key={line.label} className="flex justify-between gap-2">
-              <span>{line.label}</span>
-              <span className="font-medium text-gray-900">{line.value}</span>
-            </li>
+            <div key={line.label} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5">
+              <dt className="text-muted-foreground">{line.label}</dt>
+              <dd className="text-right font-medium text-foreground">{line.value}</dd>
+            </div>
           ))}
-        </ul>
-        <Link href={href} className="inline-flex text-sm text-blue-600 hover:underline">
+        </dl>
+        <Link href={href} className="inline-flex text-sm text-primary hover:underline">
           进入模块 →
         </Link>
       </CardContent>

@@ -2,6 +2,7 @@ import { AssetStudioPage } from "@/components/assets/AssetStudioPage";
 import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageContent } from "@/components/layout/PageContent";
 import { getAiStatus } from "@/lib/ai/gemini";
 import { prisma } from "@/lib/prisma";
 
@@ -22,7 +23,7 @@ export default async function AssetStudio() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.assetStudio.title} description={zh.pages.assetStudio.description} />
-      <div className="p-6">
+      <PageContent>
         <AssetStudioPage
           itemSets={itemSets.map((set) => ({
             id: set.id,
@@ -45,7 +46,7 @@ export default async function AssetStudio() {
           hasGeminiKey={aiStatus.hasGeminiKey}
           imageGenerationReady={Boolean(aiStatus.imageGenerationReady)}
         />
-      </div>
+      </PageContent>
     </AppShell>
   );
 }

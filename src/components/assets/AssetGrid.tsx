@@ -1,6 +1,9 @@
 "use client";
 
+import { ImageOff } from "lucide-react";
+
 import { AssetCard } from "./AssetCard";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Asset = {
   id?: string;
@@ -26,10 +29,16 @@ type Props = {
 
 export function AssetGrid(props: Props) {
   if (props.assets.length === 0) {
-    return <div className="rounded-md border border-dashed border-gray-300 p-8 text-sm text-gray-500">暂无资源，请先加载 Item Set 并生成 Prompt。</div>;
+    return (
+      <EmptyState
+        icon={ImageOff}
+        title="暂无资源"
+        description="请先加载道具集并生成 Prompt，再批量或单张出图。"
+      />
+    );
   }
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {props.assets.map((asset, index) => (
         <AssetCard
           key={`${asset.name}-${index}`}

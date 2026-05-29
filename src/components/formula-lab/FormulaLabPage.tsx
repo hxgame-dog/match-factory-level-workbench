@@ -370,6 +370,8 @@ export function FormulaLabPage({
         </Alert>
       ) : null}
 
+      <div className="grid gap-4 xl:grid-cols-[minmax(280px,320px)_1fr]">
+        <div className="space-y-4">
       <FormulaPresetManager
         presets={presets}
         selectedId={selectedPresetId}
@@ -386,7 +388,7 @@ export function FormulaLabPage({
         onResetDefault={handleResetDefault}
       />
 
-      <Card className="border border-gray-200 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">公式权重配置</CardTitle>
         </CardHeader>
@@ -394,8 +396,10 @@ export function FormulaLabPage({
           <FormulaWeightTabs config={formulaConfig} onChange={setFormulaConfig} />
         </CardContent>
       </Card>
+        </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="space-y-4 min-w-0">
+      <div className="grid gap-4 lg:grid-cols-2">
         <SingleLevelDiagnosisPanel
           levels={levels}
           selectedLevelId={selectedLevelId}
@@ -432,7 +436,7 @@ export function FormulaLabPage({
 
       <GeminiAdvicePanel advice={advice} mockMode={mockMode} onAsk={() => void handleAskGemini()} />
 
-      <Card className="border border-gray-200 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">批量回放结果</CardTitle>
         </CardHeader>
@@ -454,15 +458,15 @@ export function FormulaLabPage({
 
       <DiagnosisRunHistory runs={runs} />
 
-      <Card className="border border-gray-200 shadow-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Formula vs Playtest 对比</CardTitle>
+          <CardTitle className="text-lg">公式 vs 试玩对比</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto text-xs">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200">
+            <table className="w-full min-w-[640px] border-collapse">
+              <thead className="sticky top-0 bg-card">
+                <tr className="border-b border-border">
                   <th className="py-2 text-left font-medium text-gray-700">关卡</th>
                   <th className="py-2 text-left font-medium text-gray-700">Formula P</th>
                   <th className="py-2 text-left font-medium text-gray-700">难度标签</th>
@@ -496,6 +500,8 @@ export function FormulaLabPage({
           </div>
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }

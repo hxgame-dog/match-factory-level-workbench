@@ -2,6 +2,7 @@ import { AiStatusCard } from "@/components/ai/AiStatusCard";
 import { ItemGeneratorForm } from "@/components/generator/ItemGeneratorForm";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageContent } from "@/components/layout/PageContent";
 import { getAiStatus } from "@/lib/ai/gemini";
 import { zh } from "@/lib/i18n/zh";
 import { prisma } from "@/lib/prisma";
@@ -29,7 +30,7 @@ export default async function ItemGeneratorPage() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.itemGenerator.title} description={zh.pages.itemGenerator.description} />
-      <div className="space-y-4 p-6">
+      <PageContent className="space-y-4">
         <AiStatusCard {...aiStatus} />
         <ItemGeneratorForm
           aiStatus={aiStatus}
@@ -48,7 +49,7 @@ export default async function ItemGeneratorPage() {
             createdAt: set.createdAt.toISOString(),
           }))}
         />
-      </div>
+      </PageContent>
     </AppShell>
   );
 }

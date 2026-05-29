@@ -95,3 +95,5 @@ export const navItems = [
   { href: "/playtest-simulator", key: "playtestSimulator" as const, icon: "TestTube2" },
   { href: "/analytics-feedback", key: "analyticsFeedback" as const, icon: "LineChart" },
 ] as const;
+
+export type NavItemDef = (typeof navItems)[number];

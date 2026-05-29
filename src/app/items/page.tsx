@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageContent } from "@/components/layout/PageContent";
 import { ItemCatalogClient } from "@/components/items/ItemCatalogClient";
 import { zh } from "@/lib/i18n/zh";
 import { prisma } from "@/lib/prisma";
@@ -35,7 +36,7 @@ export default async function ItemsPage() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.items.title} description={zh.pages.items.description} />
-      <div className="p-6">
+      <PageContent>
         <ItemCatalogClient
           initialRows={initialRows.map((row) => ({
             ...row,
@@ -51,7 +52,7 @@ export default async function ItemsPage() {
             size: sizeList.map((x) => x.size).filter((v): v is string => Boolean(v)),
           }}
         />
-      </div>
+      </PageContent>
     </AppShell>
   );
 }

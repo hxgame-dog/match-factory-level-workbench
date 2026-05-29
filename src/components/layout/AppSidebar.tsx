@@ -19,7 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { navItems, zh } from "@/lib/i18n/zh";
+import { navItems, zh, type NavKey } from "@/lib/i18n/zh";
 import { useLayoutStore } from "@/stores/layoutStore";
 import { cn } from "@/lib/utils";
 
@@ -37,58 +37,85 @@ const iconMap: Record<string, LucideIcon> = {
   LineChart,
 };
 
+const navGroups: { label: string; keys: NavKey[] }[] = [
+  { label: "概览", keys: ["dashboard"] },
+  { label: "数据准备", keys: ["items", "aiLab"] },
+  { label: "内容生成", keys: ["itemGenerator", "assetStudio"] },
+  { label: "关卡设计", keys: ["levelGenerator", "levelEditor", "formulaLab", "autoLevelGenerator"] },
+  { label: "验证交付", keys: ["playtestSimulator", "analyticsFeedback", "pipeline"] },
+];
+
 export function AppSidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useLayoutStore();
+  const itemByKey = Object.fromEntries(navItems.map((item) => [item.key, item])) as Record<
+    NavKey,
+    (typeof navItems)[number]
+  >;
 
   return (
     <aside
       className={cn(
-        "flex shrink-0 flex-col border-r border-gray-200 bg-white transition-all duration-200",
-        sidebarCollapsed ? "w-14" : "w-64",
+        "flex shrink-0 flex-col border-r border-border bg-sidebar transition-all duration-200",
+        sidebarCollapsed ? "w-14" : "w-60",
       )}
     >
-      <div className={cn("border-b border-gray-200 p-3", sidebarCollapsed && "px-2")}>
+      <div className={cn("border-b border-border p-3", sidebarCollapsed && "px-2")}>
         {!sidebarCollapsed ? (
           <>
-            <p className="font-serif text-base text-gray-900">{zh.brand.title}</p>
-            <p className="text-xs text-gray-500">{zh.brand.subtitle}</p>
+            <p className="font-serif text-base font-medium text-sidebar-foreground">{zh.brand.title}</p>
+            <p className="text-xs text-muted-foreground">{zh.brand.subtitle}</p>
           </>
         ) : (
-          <p className="text-center font-serif text-sm text-gray-900" title={zh.brand.title}>
+          <p className="text-center font-serif text-sm font-medium" title={zh.brand.title}>
             MF
           </p>
         )}
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-        {navItems.map((item) => {
-          const Icon = iconMap[item.icon] ?? LayoutDashboard;
-          const label = zh.nav[item.key];
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={sidebarCollapsed ? label : undefined}
-              className={cn(
-                "flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors",
-                sidebarCollapsed && "justify-center px-2",
-                active
-                  ? "border-gray-300 bg-gray-100 text-gray-900"
-                  : "border-transparent text-gray-600 hover:border-gray-200 hover:bg-gray-50",
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!sidebarCollapsed && <span>{label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto p-2">
+        {navGroups.map((group, groupIndex) => (
+          <div key={group.label} className={cn(groupIndex > 0 && "mt-4")}>
+            {!sidebarCollapsed ? (
+              <p className="mb-1 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                {group.label}
+              </p>
+            ) : groupIndex > 0 ? (
+              <div className="mx-1 mb-1 border-t border-border" />
+            ) : null}
+            <div className="space-y-0.5">
+              {group.keys.map((key) => {
+                const item = itemByKey[key];
+                if (!item) return null;
+                const Icon = iconMap[item.icon] ?? LayoutDashboard;
+                const label = zh.nav[key];
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={sidebarCollapsed ? label : undefined}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors",
+                      sidebarCollapsed && "justify-center px-2",
+                      active
+                        ? "border-l-2 border-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                        : "border-l-2 border-transparent text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {!sidebarCollapsed && <span className="truncate">{label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
-      <div className="border-t border-gray-200 p-2">
+      <div className="border-t border-border p-2">
         <button
           type="button"
           onClick={toggleSidebar}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-200 px-2 py-2 text-xs text-gray-600 hover:bg-gray-50"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-border px-2 py-2 text-xs text-muted-foreground hover:bg-sidebar-accent"
           aria-label={sidebarCollapsed ? zh.common.expand : zh.common.collapse}
         >
           {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}

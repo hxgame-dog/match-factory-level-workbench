@@ -188,7 +188,7 @@ export function GeminiSettingsPanel({ compact }: { compact?: boolean }) {
   }
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card className={compact ? "h-full" : undefined}>
       <CardHeader>
         <CardTitle className={compact ? "text-base" : "text-lg"}>Gemini 连接与图像模型</CardTitle>
         <p className="text-xs text-gray-500">

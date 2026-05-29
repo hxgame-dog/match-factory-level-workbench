@@ -322,7 +322,27 @@ export function AssetStudioPage({
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      {progress.total > 0 ? (
+        <Card>
+          <CardContent className="flex flex-wrap items-center gap-4 pt-6 text-sm">
+            <span className="text-muted-foreground">批量进度</span>
+            <span className="font-medium">
+              完成 {progress.done} / 失败 {progress.failed} / 共 {progress.total}
+            </span>
+            <div className="h-2 min-w-[120px] flex-1 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{
+                  width: `${progress.total ? Math.round(((progress.done + progress.failed) / progress.total) * 100) : 0}%`,
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(300px,360px)_1fr]">
+        <div className="space-y-4">
         <ItemSetSelector
           itemSets={itemSets}
           selectedId={selectedSetId}
@@ -345,23 +365,23 @@ export function AssetStudioPage({
             if (next.outputFormat !== undefined) setOutputFormat(next.outputFormat);
           }}
         />
-      </div>
+        <AssetPromptPanel
+          onGeneratePrompts={() => void generatePrompts(false)}
+          onRegeneratePrompts={() => void generatePrompts(true)}
+          onClearPrompts={() =>
+            setAssets((prev) => prev.map((asset) => ({ ...asset, prompt: "", status: "pending" })))
+          }
+        />
+        </div>
 
-      <AssetPromptPanel
-        onGeneratePrompts={() => void generatePrompts(false)}
-        onRegeneratePrompts={() => void generatePrompts(true)}
-        onClearPrompts={() =>
-          setAssets((prev) => prev.map((asset) => ({ ...asset, prompt: "", status: "pending" })))
-        }
-      />
-
-      <Card className="border border-gray-200 shadow-sm">
+        <div className="space-y-4 min-w-0">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg">图片生成与预览区</CardTitle>
+          <CardTitle className="text-lg">图片生成与预览</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => void generateAll()}>Generate All</Button>
+            <Button onClick={() => void generateAll()}>批量生成</Button>
             <Button
               variant="outline"
               onClick={() => {
@@ -370,22 +390,18 @@ export function AssetStudioPage({
                 });
               }}
             >
-              Retry Failed
+              重试失败项
             </Button>
-            <Button variant="outline">Stop / Cancel</Button>
             <Button variant="outline" onClick={() => void refreshBatches()}>
-              Save Batch
+              刷新批次
             </Button>
             <Button variant="outline" onClick={() => void exportZip()}>
-              Export ZIP
+              导出 ZIP
             </Button>
             <Button variant="outline" onClick={() => void exportMapping()}>
-              Export Mapping JSON
+              导出 Mapping
             </Button>
           </div>
-          <p className="text-sm text-gray-600">
-            进度：已完成 {progress.done} / 失败 {progress.failed} / 总计 {progress.total}
-          </p>
           <AssetGrid
             assets={assets}
             onEditPrompt={(index) => setEditingIndex(index)}
@@ -411,6 +427,8 @@ export function AssetStudioPage({
           />
         </CardContent>
       </Card>
+        </div>
+      </div>
 
       <AssetBatchHistory batches={batches} onOpen={(id) => void openBatch(id)} onDelete={(id) => void deleteBatch(id)} />
 

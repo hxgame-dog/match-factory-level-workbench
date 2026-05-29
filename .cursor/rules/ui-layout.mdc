@@ -1,0 +1,12 @@
+---
+description: UI 布局与 Studio Console 视觉规范
+alwaysApply: true
+---
+
+# UI 布局规范
+
+- 功能页主内容使用 `PageContent`（`max-w-7xl`），首页可用 `wide`。
+- **禁止**在键值对、状态列表中使用 `flex justify-between` 拉满整行；使用 `DescriptionList` / `DescriptionItem` 或 `grid-cols-[9rem_1fr]`。
+- 卡片优先使用 shadcn `Card`，勿重复写 `border border-gray-200 shadow-sm`。
+- 状态展示使用 `StatusBadge`；空数据使用 `EmptyState`。
+- 宽表格包在 `overflow-x-auto` 内，表头可用 `sticky top-0 bg-card`。

@@ -2,6 +2,7 @@ import { LevelGeneratorPage } from "@/components/levels/LevelGeneratorPage";
 import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageContent } from "@/components/layout/PageContent";
 import { generatorRulePresets, refreshRulePresets } from "@/lib/level/rulePresets";
 import { prisma } from "@/lib/prisma";
 
@@ -25,7 +26,7 @@ export default async function LevelGenerator() {
   return (
     <AppShell>
       <AppHeader title={zh.pages.levelGenerator.title} description={zh.pages.levelGenerator.description} />
-      <div className="p-6">
+      <PageContent>
         <LevelGeneratorPage
           itemSets={itemSets.map((set) => ({
             id: set.id,
@@ -51,7 +52,7 @@ export default async function LevelGenerator() {
           generatorRules={generatorRulePresets}
           refreshRules={refreshRulePresets}
         />
-      </div>
+      </PageContent>
     </AppShell>
   );
 }

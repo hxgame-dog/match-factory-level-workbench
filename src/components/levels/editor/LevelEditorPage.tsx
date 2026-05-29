@@ -222,8 +222,8 @@ export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }
         }}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1.3fr_1fr_1fr]">
-        <Card className="border border-gray-200 shadow-sm">
+      <div className="grid gap-4 lg:grid-cols-[minmax(240px,1fr)_minmax(280px,1.2fr)_minmax(260px,300px)]">
+        <Card>
           <CardHeader><CardTitle className="text-lg">基础配置与道具编辑</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {level ? (
@@ -269,8 +269,8 @@ export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }
         </div>
       </div>
 
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader><CardTitle className="text-lg">JSON 预览与操作区</CardTitle></CardHeader>
+      <Card>
+        <CardHeader><CardTitle className="text-lg">JSON 预览与操作</CardTitle></CardHeader>
         <CardContent>
           <LevelJsonActions
             onPreview={() => setJsonOpen(true)}
