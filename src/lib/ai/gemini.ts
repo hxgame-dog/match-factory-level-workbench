@@ -37,7 +37,7 @@ import { playtestAdvicePrompt } from "./prompts/playtestAdvicePrompt";
 import { analyticsFeedbackAdvicePrompt } from "./prompts/analyticsFeedbackAdvicePrompt";
 import { generateAssetPromptText } from "./prompts/generateAssetPrompt";
 import { generateLevelPrompt } from "./prompts/generateLevelPrompt";
-import { normalizeGeneratedItemTable } from "./normalizeGeneratedItems";
+import { buildMockFreeItems, finalizeFreeGeneratedItems } from "./finalizeFreeGeneratedItems";
 import { generateItemsPrompt } from "./prompts/generateItemsPrompt";
 import { geminiPlaytestAdviceResultSchema } from "@/lib/validators/playtest";
 import { geminiAnalyticsAdviceResultSchema } from "@/lib/validators/analytics";
@@ -55,51 +55,6 @@ function extractJsonText(text: string): string {
 function parseJsonSafe<T>(text: string): T {
   const jsonText = extractJsonText(text);
   return JSON.parse(jsonText) as T;
-}
-
-function buildMockItems(input: GenerateItemsInput): GenerateItemsResult {
-  const poolByTheme: Record<string, string[]> = {
-    早餐: ["Toast", "Egg", "Milk", "Coffee", "Butter", "Jam", "Spoon", "Plate", "Apple", "Cup"],
-    运动: ["Basketball", "Football", "TennisBall", "Whistle", "Sneaker", "Cap", "WaterBottle"],
-    文具: ["Pencil", "Notebook", "Eraser", "Ruler", "Pen", "Marker", "Clip"],
-  };
-  const themeKey = Object.keys(poolByTheme).find((k) => input.theme.includes(k)) ?? "早餐";
-  const preferredNames = poolByTheme[themeKey];
-  const candidate = input.candidateItems;
-
-  const mapped = preferredNames.slice(0, Math.max(6, input.targetTypeCount + input.distractorTypeCount)).map((name, index) => {
-    const matched = candidate.find((item) => item.name.toLowerCase().includes(name.toLowerCase()));
-    const role = index < input.targetTypeCount ? "target" : "distractor";
-    return {
-      sourceItemId: matched?.itemId,
-      catalogItemId: matched?.id,
-      name: matched?.name ?? name,
-      displayName: name,
-      category1: matched?.category1 ?? themeKey,
-      category2: matched?.category2,
-      color1: matched?.color1,
-      color2: matched?.color2,
-      shape: matched?.shape,
-      size: matched?.size,
-      targetScale: matched?.targetScale,
-      role: role as "target" | "distractor" | "filler" | "special",
-      count: role === "target" ? input.targetCountEach : Math.max(1, Math.floor(input.targetCountEach * 0.7)),
-      isNew: !matched,
-      imagePrompt: `single stylized 3D cartoon ${name} game item, centered, clean background, mobile puzzle game asset`,
-      reason: role === "target" ? `${themeKey}主题核心目标物` : `${themeKey}主题干扰物，提高辨识难度`,
-      riskTags: role === "distractor" ? ["visual_similarity"] : [],
-    };
-  });
-
-  const fixed = mapped.map((item) =>
-    input.useExistingCatalogOnly ? { ...item, isNew: false } : item,
-  );
-
-  return {
-    items: fixed,
-    summary: `Mock 模式：已基于“${input.theme}”生成 ${fixed.length} 个道具条目。`,
-    warnings: ["当前为 Mock 输出，未调用 Gemini。"],
-  };
 }
 
 function buildMockDiagnosis(): DiagnoseLevelResult {
@@ -243,21 +198,20 @@ export async function generateItemTable(
   input: GenerateItemsInput,
 ): Promise<GenerateItemsResult> {
   const validInput = generateItemsInputSchema.parse(input);
-  const validCatalogIds = new Set(validInput.candidateItems.map((it) => it.id));
-  const resultSchema = createGenerateItemsResultSchema(validInput, validCatalogIds);
+  const resultSchema = createGenerateItemsResultSchema(validInput.itemCount, validInput.categories);
 
   try {
     const runtime = await resolveRuntime();
     const useMock = env.AI_MOCK_MODE && !runtime.hasApiKey;
 
     if (useMock) {
-      const mock = resultSchema.parse(buildMockItems(validInput));
+      const mock = resultSchema.parse(finalizeFreeGeneratedItems(buildMockFreeItems(validInput)));
       await prisma.aiGenerationLog.create({
         data: {
           type: "item_table",
           provider: "mock",
           model: env.GEMINI_TEXT_MODEL,
-          prompt: `[MOCK] ${validInput.theme}`,
+          prompt: `[MOCK] ${validInput.description}`,
           resultJson: JSON.stringify(mock),
           status: "success",
         },
@@ -268,21 +222,8 @@ export async function generateItemTable(
     const prompt = generateItemsPrompt(validInput);
     const text = await generateText(prompt, { runtime });
     const parsed = parseJsonSafe<GenerateItemsResult>(text);
-    const normalized = normalizeGeneratedItemTable(parsed, validInput.candidateItems, {
-      useExistingCatalogOnly: validInput.useExistingCatalogOnly,
-    });
-
-    const unresolved = normalized.items.filter(
-      (item) => item.catalogItemId != null && !validCatalogIds.has(item.catalogItemId),
-    );
-    if (unresolved.length > 0) {
-      const labels = unresolved.map((item) => item.name || item.catalogItemId).join("、");
-      throw new Error(
-        `以下道具无法匹配道具库：${labels}。请调整主题/约束，或在「道具库」导入相关道具后再试。`,
-      );
-    }
-
-    const validated = resultSchema.parse(normalized);
+    const finalized = finalizeFreeGeneratedItems(parsed);
+    const validated = resultSchema.parse(finalized);
 
     await prisma.aiGenerationLog.create({
       data: {
@@ -303,7 +244,7 @@ export async function generateItemTable(
         type: "item_table",
         provider: env.AI_PROVIDER,
         model: env.GEMINI_TEXT_MODEL,
-        prompt: input.theme,
+        prompt: input.description,
         status: "failed",
         error: message,
       },

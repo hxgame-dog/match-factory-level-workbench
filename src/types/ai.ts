@@ -1,31 +1,8 @@
 export type GenerateItemsInput = {
   setName: string;
-  theme: string;
-  totalItemCount: number;
-  targetTypeCount: number;
-  targetCountEach: number;
-  distractorTypeCount: number;
-  difficultyIntent: "easy" | "normal" | "hard" | "expert";
-  constraints?: string;
-  useExistingCatalogOnly: boolean;
-  catalogSummary: {
-    total: number;
-    categories: Array<{ name: string; count: number }>;
-    colors: Array<{ name: string; count: number }>;
-    sizes: Array<{ name: string; count: number }>;
-  };
-  candidateItems: Array<{
-    id: string;
-    itemId?: number;
-    name: string;
-    category1: string;
-    category2?: string;
-    color1?: string;
-    color2?: string;
-    shape?: string;
-    size?: string;
-    targetScale?: number;
-  }>;
+  description: string;
+  categories: string[];
+  itemCount: number;
 };
 
 export type GenerateItemsResult = {

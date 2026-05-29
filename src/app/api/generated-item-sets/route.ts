@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { toDbGeneratedItemSetFields } from "@/lib/generatedItemSetPayload";
 import { prisma } from "@/lib/prisma";
 import { generatedItemSetPayloadSchema } from "@/lib/validators/ai";
 
@@ -30,18 +31,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const payload = generatedItemSetPayloadSchema.parse(body);
+    const dbFields = toDbGeneratedItemSetFields(payload);
     const created = await prisma.generatedItemSet.create({
       data: {
-        name: payload.name,
-        theme: payload.theme,
-        prompt: payload.prompt,
-        totalItemCount: payload.totalItemCount,
-        targetTypeCount: payload.targetTypeCount,
-        targetCountEach: payload.targetCountEach,
-        distractorTypeCount: payload.distractorTypeCount,
-        difficultyIntent: payload.difficultyIntent,
-        constraints: payload.constraints,
-        summary: payload.summary,
+        ...dbFields,
         warningsJson: JSON.stringify(payload.warnings ?? []),
         items: {
           create: payload.items.map((item) => ({

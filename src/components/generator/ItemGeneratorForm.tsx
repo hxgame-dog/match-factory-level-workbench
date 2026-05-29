@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { parseStoredCategories } from "@/lib/generatedItemSetPayload";
 import { zh } from "@/lib/i18n/zh";
 import type { GenerateItemsResult } from "@/types/ai";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
+import { cn } from "@/lib/utils";
 
 import { FormField } from "./FormField";
 import { GeneratedItemSetHistory } from "./GeneratedItemSetHistory";
@@ -22,38 +22,20 @@ import { GeneratedItemsTable } from "./GeneratedItemsTable";
 
 const t = zh.pages.itemGenerator;
 
-type CatalogContext = {
-  total: number;
-  categories: Array<{ name: string; count: number }>;
-  colors: Array<{ name: string; count: number }>;
-  sizes: Array<{ name: string; count: number }>;
-  lastImportedAt?: string;
-};
-
 type Props = {
-  catalogContext: CatalogContext;
+  /** 来自道具库的去重 category1，仅作多选建议 */
+  categoryOptions: string[];
   initialHistory: GeneratedItemSetListItem[];
 };
 
-const DIFFICULTY_OPTIONS = [
-  { value: "easy", label: t.difficulty.easy },
-  { value: "normal", label: t.difficulty.normal },
-  { value: "hard", label: t.difficulty.hard },
-  { value: "expert", label: t.difficulty.expert },
-] as const;
-
-export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
-  const [setName, setSetName] = useState("早餐关卡组合A");
-  const [theme, setTheme] = useState("早餐主题");
-  const [totalItemCount, setTotalItemCount] = useState(40);
-  const [targetTypeCount, setTargetTypeCount] = useState(4);
-  const [targetCountEach, setTargetCountEach] = useState(9);
-  const [distractorTypeCount, setDistractorTypeCount] = useState(3);
-  const [difficultyIntent, setDifficultyIntent] =
-    useState<"easy" | "normal" | "hard" | "expert">("normal");
-  const [constraints, setConstraints] = useState("");
-  const [useExistingCatalogOnly, setUseExistingCatalogOnly] = useState(true);
-  const [catalogOpen, setCatalogOpen] = useState(false);
+export function ItemGeneratorForm({ categoryOptions, initialHistory }: Props) {
+  const [setName, setSetName] = useState("海洋生物道具集");
+  const [description, setDescription] = useState("海里、河里的鱼、虾、贝类等，卡通 3D 风格，适合三消关卡");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() =>
+    categoryOptions.length > 0 ? [categoryOptions[0]] : ["sea"],
+  );
+  const [customCategory, setCustomCategory] = useState("");
+  const [itemCount, setItemCount] = useState(12);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +44,25 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
   const [dirty, setDirty] = useState(false);
   const [savedSetId, setSavedSetId] = useState<string | null>(null);
 
+  const allCategoryChoices = useMemo(() => {
+    const set = new Set([...categoryOptions, ...selectedCategories]);
+    return [...set].sort((a, b) => a.localeCompare(b, "zh-CN"));
+  }, [categoryOptions, selectedCategories]);
+
   const summary = useMemo(() => result?.summary ?? "", [result]);
+
+  function toggleCategory(category: string) {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category],
+    );
+  }
+
+  function addCustomCategory() {
+    const value = customCategory.trim();
+    if (!value) return;
+    setSelectedCategories((prev) => (prev.includes(value) ? prev : [...prev, value]));
+    setCustomCategory("");
+  }
 
   async function loadHistory() {
     const response = await fetch("/api/generated-item-sets");
@@ -73,6 +73,10 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
   }
 
   async function onGenerate() {
+    if (selectedCategories.length === 0) {
+      setError("请至少选择一个物品类别");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -80,15 +84,10 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          theme,
-          totalItemCount,
-          targetTypeCount,
-          targetCountEach,
-          distractorTypeCount,
-          difficultyIntent,
-          constraints,
           setName,
-          useExistingCatalogOnly,
+          description,
+          categories: selectedCategories,
+          itemCount,
         }),
       });
       const payload = await response.json();
@@ -110,24 +109,19 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
     setSaving(true);
     setError(null);
     try {
+      const body = {
+        name: setName,
+        description,
+        categories: selectedCategories,
+        itemCount,
+        summary: result.summary,
+        warnings: result.warnings,
+        items: result.items,
+      };
       const response = await fetch(savedSetId ? `/api/generated-item-sets/${savedSetId}` : "/api/generated-item-sets", {
         method: savedSetId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: setName,
-          theme,
-          prompt: theme,
-          totalItemCount,
-          targetTypeCount,
-          targetCountEach,
-          distractorTypeCount,
-          difficultyIntent,
-          constraints,
-          useExistingCatalogOnly,
-          summary: result.summary,
-          warnings: result.warnings,
-          items: result.items,
-        }),
+        body: JSON.stringify(body),
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.error ?? "保存失败");
@@ -148,13 +142,9 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
     const set = payload.data;
     setSavedSetId(set.id);
     setSetName(set.name);
-    setTheme(set.theme);
-    setTotalItemCount(set.totalItemCount);
-    setTargetTypeCount(set.targetTypeCount);
-    setTargetCountEach(set.targetCountEach);
-    setDistractorTypeCount(set.distractorTypeCount);
-    setDifficultyIntent((set.difficultyIntent || "normal") as "easy" | "normal" | "hard" | "expert");
-    setConstraints(set.constraints ?? "");
+    setDescription(set.theme ?? set.prompt ?? "");
+    setSelectedCategories(parseStoredCategories(set.constraints));
+    setItemCount(set.totalItemCount || set.items?.length || 12);
     setResult({
       summary: set.summary ?? "",
       warnings: set.warnings ?? [],
@@ -230,80 +220,78 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
           <CardDescription>{t.configDesc}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormField label={t.fields.setName.label} hint={t.fields.setName.hint}>
-              <Input value={setName} onChange={(e) => setSetName(e.target.value)} placeholder="例如：早餐关卡组合 A" />
-            </FormField>
-            <FormField label={t.fields.theme.label} hint={t.fields.theme.hint}>
-              <Input value={theme} onChange={(e) => setTheme(e.target.value)} placeholder="例如：早餐、运动器材" />
-            </FormField>
-            <FormField label={t.fields.totalItemCount.label} hint={t.fields.totalItemCount.hint}>
-              <Input
-                type="number"
-                min={1}
-                value={totalItemCount}
-                onChange={(e) => setTotalItemCount(Number(e.target.value))}
-              />
-            </FormField>
-            <FormField label={t.fields.targetTypeCount.label} hint={t.fields.targetTypeCount.hint}>
-              <Input
-                type="number"
-                min={1}
-                value={targetTypeCount}
-                onChange={(e) => setTargetTypeCount(Number(e.target.value))}
-              />
-            </FormField>
-            <FormField label={t.fields.targetCountEach.label} hint={t.fields.targetCountEach.hint}>
-              <Input
-                type="number"
-                min={1}
-                value={targetCountEach}
-                onChange={(e) => setTargetCountEach(Number(e.target.value))}
-              />
-            </FormField>
-            <FormField label={t.fields.distractorTypeCount.label} hint={t.fields.distractorTypeCount.hint}>
-              <Input
-                type="number"
-                min={0}
-                value={distractorTypeCount}
-                onChange={(e) => setDistractorTypeCount(Number(e.target.value))}
-              />
-            </FormField>
-            <FormField label={t.fields.difficultyIntent.label} hint={t.fields.difficultyIntent.hint}>
-              <Select
-                value={difficultyIntent}
-                onValueChange={(v) => setDifficultyIntent((v ?? "normal") as typeof difficultyIntent)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DIFFICULTY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormField>
-          </div>
+          <FormField label={t.fields.setName.label} hint={t.fields.setName.hint}>
+            <Input value={setName} onChange={(e) => setSetName(e.target.value)} placeholder="例如：海洋生物道具集" />
+          </FormField>
 
-          <FormField label={t.fields.constraints.label} hint={t.fields.constraints.hint}>
+          <FormField label={t.fields.description.label} hint={t.fields.description.hint}>
             <Textarea
-              value={constraints}
-              onChange={(e) => setConstraints(e.target.value)}
-              placeholder="例如：避免使用红色道具；目标物以食物为主"
-              className="min-h-20"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="min-h-24"
+              placeholder="描述你想要的道具主题、风格、物种范围…"
             />
           </FormField>
 
-          <div className="flex items-start justify-between gap-4 rounded-md border border-border bg-muted/20 px-3 py-3">
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium">{t.fields.useExistingCatalogOnly.label}</p>
-              <p className="text-xs text-muted-foreground">{t.fields.useExistingCatalogOnly.hint}</p>
+          <FormField label={t.fields.categories.label} hint={`${t.fields.categories.hint}。${t.categoryHint}`}>
+            <div className="flex flex-wrap gap-2">
+              {allCategoryChoices.map((category) => {
+                const active = selectedCategories.includes(category);
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => toggleCategory(category)}
+                    className={cn(
+                      "rounded-md border px-2.5 py-1 text-sm transition-colors",
+                      active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-foreground hover:bg-muted",
+                    )}
+                  >
+                    {category}
+                  </button>
+                );
+              })}
             </div>
-            <Switch checked={useExistingCatalogOnly} onCheckedChange={(v) => setUseExistingCatalogOnly(Boolean(v))} />
-          </div>
+            <div className="mt-2 flex gap-2">
+              <Input
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                placeholder={t.fields.customCategory.label}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomCategory();
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={addCustomCategory}>
+                添加
+              </Button>
+            </div>
+            {selectedCategories.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                已选：{selectedCategories.map((c) => (
+                  <Badge key={c} variant="secondary" className="mr-1">
+                    {c}
+                  </Badge>
+                ))}
+              </p>
+            ) : (
+              <p className="text-xs text-amber-700">请至少选择一个类别</p>
+            )}
+          </FormField>
+
+          <FormField label={t.fields.itemCount.label} hint={t.fields.itemCount.hint}>
+            <Input
+              type="number"
+              min={1}
+              max={80}
+              value={itemCount}
+              onChange={(e) => setItemCount(Number(e.target.value))}
+            />
+          </FormField>
 
           <Button className="w-full sm:w-auto" onClick={() => void onGenerate()} disabled={loading}>
             {loading ? t.actions.generating : t.actions.generate}
@@ -324,7 +312,7 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
             <CardTitle className="text-lg">{t.previewTitle}</CardTitle>
             {result ? (
               <CardDescription className="mt-1">
-                共 {result.items.length} 条
+                共 {result.items.length} 种
                 {summary ? ` · ${summary}` : ""}
                 {dirty ? (
                   <Badge variant="secondary" className="ml-2">
@@ -366,37 +354,6 @@ export function ItemGeneratorForm({ catalogContext, initialHistory }: Props) {
             />
           )}
         </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="border-b border-border bg-muted/30">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <CardTitle className="text-base">{t.catalogTitle}</CardTitle>
-              <CardDescription>{t.catalogDesc}</CardDescription>
-            </div>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setCatalogOpen((v) => !v)}>
-              {catalogOpen ? zh.common.collapse : zh.common.expand}
-            </Button>
-          </div>
-        </CardHeader>
-        {catalogOpen ? (
-          <CardContent className="grid gap-2 pt-4 text-sm text-muted-foreground md:grid-cols-2">
-            <p>总道具数量：{catalogContext.total}</p>
-            <p>
-              最近导入：
-              {catalogContext.lastImportedAt ? new Date(catalogContext.lastImportedAt).toLocaleString() : "未知"}
-            </p>
-            <p>一级分类分布：{catalogContext.categories.slice(0, 6).map((x) => `${x.name}(${x.count})`).join("、") || "—"}</p>
-            <p>主色分布：{catalogContext.colors.slice(0, 6).map((x) => `${x.name}(${x.count})`).join("、") || "—"}</p>
-            <p className="md:col-span-2">尺寸分布：{catalogContext.sizes.slice(0, 6).map((x) => `${x.name}(${x.count})`).join("、") || "—"}</p>
-            {catalogContext.total === 0 ? (
-              <p className="md:col-span-2 text-amber-800">
-                道具库为空，请先在「道具库」页导入 CSV/Excel，否则生成将仅能依赖 Mock 或新建道具。
-              </p>
-            ) : null}
-          </CardContent>
-        ) : null}
       </Card>
 
       <GeneratedItemSetHistory data={history} onOpen={onOpenHistory} onDelete={onDeleteHistory} />

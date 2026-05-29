@@ -7,8 +7,6 @@ export function buildGeneratedItemSetWorkbook(payload: GeneratedItemSetPayload):
 
   const generatedItems = payload.items.map((item) => ({
     Role: item.role,
-    SourceItemId: item.sourceItemId ?? "",
-    CatalogItemId: item.catalogItemId ?? "",
     Name: item.name,
     DisplayName: item.displayName ?? "",
     Category1: item.category1,
@@ -29,14 +27,9 @@ export function buildGeneratedItemSetWorkbook(payload: GeneratedItemSetPayload):
   const config = [
     {
       SetName: payload.name,
-      Theme: payload.theme,
-      TotalItemCount: payload.totalItemCount,
-      TargetTypeCount: payload.targetTypeCount,
-      TargetCountEach: payload.targetCountEach,
-      DistractorTypeCount: payload.distractorTypeCount,
-      DifficultyIntent: payload.difficultyIntent ?? "",
-      Constraints: payload.constraints ?? "",
-      UseExistingCatalogOnly: payload.useExistingCatalogOnly ? "true" : "false",
+      Description: payload.description,
+      Categories: payload.categories.join(", "),
+      ItemCount: payload.itemCount,
       CreatedAt: new Date().toISOString(),
     },
   ];

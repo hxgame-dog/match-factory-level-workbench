@@ -23,38 +23,12 @@ const generatedItemSchema = z.object({
   riskTags: z.array(z.string()).optional(),
 });
 
+/** 方案 A：AI 自由生成，不依赖道具库 */
 export const generateItemsInputSchema = z.object({
-  setName: z.string().min(1, "setName 不能为空"),
-  theme: z.string().min(1, "theme 不能为空"),
-  totalItemCount: z.number().int().positive(),
-  targetTypeCount: z.number().int().positive(),
-  targetCountEach: z.number().int().positive(),
-  distractorTypeCount: z.number().int().min(0),
-  difficultyIntent: difficultyIntentSchema,
-  constraints: z.string().optional(),
-  useExistingCatalogOnly: z.boolean().default(true),
-  catalogSummary: z.object({
-    total: z.number().int().nonnegative(),
-    categories: z.array(z.object({ name: z.string(), count: z.number().int().nonnegative() })),
-    colors: z.array(z.object({ name: z.string(), count: z.number().int().nonnegative() })),
-    sizes: z.array(z.object({ name: z.string(), count: z.number().int().nonnegative() })),
-  }),
-  candidateItems: z
-    .array(
-      z.object({
-        id: z.string(),
-        itemId: z.number().int().optional(),
-        name: z.string(),
-        category1: z.string(),
-        category2: z.string().optional(),
-        color1: z.string().optional(),
-        color2: z.string().optional(),
-        shape: z.string().optional(),
-        size: z.string().optional(),
-        targetScale: z.number().optional(),
-      }),
-    )
-    .max(150),
+  setName: z.string().min(1, "道具集名称不能为空"),
+  description: z.string().min(1, "请填写生成描述"),
+  categories: z.array(z.string().min(1)).min(1, "请至少选择一个物品类别"),
+  itemCount: z.number().int().min(1).max(80),
 });
 
 export const generateItemsResultSchema = z.object({
@@ -63,57 +37,50 @@ export const generateItemsResultSchema = z.object({
   items: z.array(generatedItemSchema).min(1, "items 不能为空"),
 });
 
-export function createGenerateItemsResultSchema(
-  input: z.infer<typeof generateItemsInputSchema>,
-  validCatalogIds: Set<string>,
-) {
+export function createGenerateItemsResultSchema(itemCount: number, categories: string[]) {
+  const categorySet = new Set(categories.map((c) => c.toLowerCase()));
+
   return generateItemsResultSchema.superRefine((result, ctx) => {
-    const targets = result.items.filter((item) => item.role === "target");
-    const uniqueTargetTypes = new Set(targets.map((item) => item.name.toLowerCase())).size;
-    if (uniqueTargetTypes < Math.max(1, input.targetTypeCount - 1)) {
+    const minItems = Math.max(1, Math.floor(itemCount * 0.75));
+    const maxItems = Math.ceil(itemCount * 1.25);
+
+    if (result.items.length < minItems) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "target 种类数与输入目标不匹配",
+        message: `生成种类过少：期望约 ${itemCount} 种，实际 ${result.items.length} 种`,
       });
     }
-    targets.forEach((target, index) => {
-      if (target.count !== input.targetCountEach) {
+    if (result.items.length > maxItems + 5) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `生成种类过多：期望约 ${itemCount} 种，实际 ${result.items.length} 种`,
+      });
+    }
+
+    const uniqueNames = new Set(result.items.map((item) => item.name.toLowerCase())).size;
+    if (uniqueNames < Math.min(itemCount, result.items.length) - 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "存在重复道具名称，请重试生成",
+      });
+    }
+
+    result.items.forEach((item, index) => {
+      if (!categorySet.has(item.category1.toLowerCase())) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `target 第 ${index + 1} 项 count 应为 ${input.targetCountEach}`,
+          message: `第 ${index + 1} 项 category1「${item.category1}」不在所选类别内`,
         });
       }
     });
-
-    if (input.useExistingCatalogOnly && result.items.some((item) => item.isNew)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "useExistingCatalogOnly=true 时不允许 isNew=true",
-      });
-    }
-
-    for (const item of result.items) {
-      if (item.catalogItemId && !validCatalogIds.has(item.catalogItemId)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `catalogItemId 无效: ${item.catalogItemId}`,
-        });
-      }
-    }
   });
 }
 
 export const generatedItemSetPayloadSchema = z.object({
   name: z.string().min(1),
-  theme: z.string().min(1),
-  prompt: z.string().min(1),
-  totalItemCount: z.number().int().positive(),
-  targetTypeCount: z.number().int().positive(),
-  targetCountEach: z.number().int().positive(),
-  distractorTypeCount: z.number().int().min(0),
-  difficultyIntent: z.string().optional(),
-  constraints: z.string().optional(),
-  useExistingCatalogOnly: z.boolean().default(true),
+  description: z.string().min(1),
+  categories: z.array(z.string().min(1)).min(1),
+  itemCount: z.number().int().positive(),
   summary: z.string().optional(),
   warnings: z.array(z.string()).default([]),
   items: z.array(generatedItemSchema).min(1),
@@ -163,3 +130,6 @@ export const generateAssetPromptResultSchema = z.object({
 export const aiTestInputSchema = z.object({
   prompt: z.string().min(1).default("请返回一句简短问候"),
 });
+
+/** @deprecated 仅 Excel 导出元数据兼容 */
+export { difficultyIntentSchema };

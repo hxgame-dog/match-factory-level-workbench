@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { buildGeneratedItemSetWorkbook } from "@/lib/generatedItemSetExport";
+import { parseStoredCategories } from "@/lib/generatedItemSetPayload";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
@@ -22,15 +23,9 @@ export async function POST(_: Request, { params }: Params) {
 
     const workbook = buildGeneratedItemSetWorkbook({
       name: set.name,
-      theme: set.theme,
-      prompt: set.prompt,
-      totalItemCount: set.totalItemCount,
-      targetTypeCount: set.targetTypeCount,
-      targetCountEach: set.targetCountEach,
-      distractorTypeCount: set.distractorTypeCount,
-      difficultyIntent: set.difficultyIntent ?? undefined,
-      constraints: set.constraints ?? undefined,
-      useExistingCatalogOnly: true,
+      description: set.theme,
+      categories: parseStoredCategories(set.constraints),
+      itemCount: set.items.length,
       summary: set.summary ?? undefined,
       warnings: set.warningsJson ? JSON.parse(set.warningsJson) : [],
       items: set.items.map((item) => ({

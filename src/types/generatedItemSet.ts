@@ -2,15 +2,9 @@ import type { GenerateItemsResult } from "@/types/ai";
 
 export type GeneratedItemSetPayload = {
   name: string;
-  theme: string;
-  prompt: string;
-  totalItemCount: number;
-  targetTypeCount: number;
-  targetCountEach: number;
-  distractorTypeCount: number;
-  difficultyIntent?: string;
-  constraints?: string;
-  useExistingCatalogOnly: boolean;
+  description: string;
+  categories: string[];
+  itemCount: number;
   summary?: string;
   warnings?: string[];
   items: GenerateItemsResult["items"];
