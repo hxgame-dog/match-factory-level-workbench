@@ -1,0 +1,12 @@
+#!/bin/sh
+# 每次本地 commit 后自动推送到 origin（需已配置 remote 与认证）
+branch=$(git symbolic-ref --short HEAD 2>/dev/null) || exit 0
+if ! git remote get-url origin >/dev/null 2>&1; then
+  exit 0
+fi
+
+if git push -u origin "$branch" 2>/dev/null || git push origin "$branch" 2>/dev/null; then
+  echo "[auto-push] 已推送到 origin/$branch"
+else
+  echo "[auto-push] 推送失败，请检查网络或执行 gh auth login / git pull" >&2
+fi

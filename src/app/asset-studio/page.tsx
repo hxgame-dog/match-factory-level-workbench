@@ -1,4 +1,5 @@
 import { AssetStudioPage } from "@/components/assets/AssetStudioPage";
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { getAiStatus } from "@/lib/ai/gemini";
@@ -20,7 +21,7 @@ export default async function AssetStudio() {
 
   return (
     <AppShell>
-      <AppHeader title="Asset Studio" description="从 Generated Item Set 生成资源 Prompt 与图片资源，并导出资源包。" />
+      <AppHeader title={zh.pages.assetStudio.title} description={zh.pages.assetStudio.description} />
       <div className="p-6">
         <AssetStudioPage
           itemSets={itemSets.map((set) => ({

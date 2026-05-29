@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Match Factory Level Workbench",
+  title: "Match Factory 关卡工作台",
   description: "用于生成、管理、诊断 Match 3D 类手游关卡配置",
 };
 

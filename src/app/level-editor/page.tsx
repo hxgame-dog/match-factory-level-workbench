@@ -1,4 +1,5 @@
 import { LevelEditorPage } from "@/components/levels/editor/LevelEditorPage";
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +11,7 @@ export default async function LevelEditor() {
   });
   return (
     <AppShell>
-      <AppHeader title="Level Editor" description="打开、预览、编辑、校验并保存标准 LevelConfig JSON。" />
+      <AppHeader title={zh.pages.levelEditor.title} description={zh.pages.levelEditor.description} />
       <div className="p-6">
         <LevelEditorPage
           initialLevels={levels.map((row) => ({

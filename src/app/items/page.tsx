@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { ItemCatalogClient } from "@/components/items/ItemCatalogClient";
+import { zh } from "@/lib/i18n/zh";
 import { prisma } from "@/lib/prisma";
 
 export default async function ItemsPage() {
@@ -33,10 +34,7 @@ export default async function ItemsPage() {
 
   return (
     <AppShell>
-      <AppHeader
-        title="Item Catalog"
-        description="上传、校验并管理道具 CSV 数据，支持筛选和导出。"
-      />
+      <AppHeader title={zh.pages.items.title} description={zh.pages.items.description} />
       <div className="p-6">
         <ItemCatalogClient
           initialRows={initialRows.map((row) => ({

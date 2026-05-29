@@ -1,12 +1,12 @@
-import Link from "next/link";
-
 import { getAiStatus } from "@/lib/ai/gemini";
 import { prisma } from "@/lib/prisma";
 import { AiStatusCard } from "@/components/ai/AiStatusCard";
 import { DashboardModuleCard, type DashboardStatLine } from "@/components/dashboard/DashboardModuleCard";
+import { WorkflowGuideSection } from "@/components/dashboard/WorkflowGuideSection";
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 type ModuleDef = {
   title: string;
@@ -109,9 +109,9 @@ export default async function HomePage() {
       description: "检测 Gemini 连接与 Mock 模式",
       href: "/ai-lab",
       stats: [
-        { label: "Provider", value: aiStatus.provider },
-        { label: "Mock 模式", value: aiStatus.mockMode ? "开启" : "关闭" },
-        { label: "API Key", value: aiStatus.hasGeminiKey ? "已配置" : "未配置" },
+        { label: zh.common.provider, value: aiStatus.provider },
+        { label: zh.common.mockMode, value: aiStatus.mockMode ? "开启" : "关闭" },
+        { label: zh.common.apiKey, value: aiStatus.hasGeminiKey ? "已配置" : "未配置" },
         { label: "AI 调用记录", value: String(aiLogCount) },
       ],
     },
@@ -156,7 +156,7 @@ export default async function HomePage() {
       ],
     },
     {
-      title: "Formula Lab",
+      title: "公式实验室",
       description: "难度公式、单关诊断与批量回放",
       href: "/formula-lab",
       stats: [
@@ -176,7 +176,7 @@ export default async function HomePage() {
       ],
     },
     {
-      title: "Pipeline 交付",
+      title: "管线交付",
       description: "生产包、导入导出与关卡快照",
       href: "/pipeline",
       stats: [
@@ -220,10 +220,7 @@ export default async function HomePage() {
 
   return (
     <AppShell>
-      <AppHeader
-        title="Match Factory Level Workbench"
-        description="用于生成、管理、诊断 Match 3D 类手游关卡配置"
-      />
+      <AppHeader title={zh.pages.home.title} description={zh.pages.home.description} />
       <div className="space-y-6 p-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {summaryMetrics.map((m) => (
@@ -236,6 +233,8 @@ export default async function HomePage() {
           ))}
         </div>
 
+        <WorkflowGuideSection />
+
         <section>
           <h2 className="mb-3 font-serif text-lg text-gray-900">功能模块</h2>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -245,23 +244,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <AiStatusCard {...aiStatus} />
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="font-serif text-lg">推荐工作流</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-gray-600">
-              <p>1. 道具库导入 Excel → AI 生成道具集 → 资源工作室出图</p>
-              <p>2. 关卡生成器出候选 → 关卡编辑器精调 → Formula Lab 诊断</p>
-              <p>3. 试玩模拟器 QA → 玩家数据回灌校准 → Pipeline 打包交付</p>
-              <p>4. 需要批量续关时使用自动续关生成器</p>
-              <Link href="/ai-lab" className="inline-flex text-blue-600 hover:underline">
-                先在 AI 实验室检查连接 →
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+        <AiStatusCard {...aiStatus} />
       </div>
     </AppShell>
   );

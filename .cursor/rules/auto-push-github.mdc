@@ -1,0 +1,17 @@
+---
+description: 功能开发完成后自动提交并推送到 GitHub
+alwaysApply: true
+---
+
+# GitHub 自动推送
+
+完成用户请求的功能开发、修复或优化后：
+
+1. 若有未提交更改，执行 `git add`（勿提交 `.env`、`dev.db`、密钥文件）
+2. 使用简洁的中文或 Conventional Commits 信息提交
+3. **必须**执行 `git push origin HEAD`（或当前分支的 upstream）
+4. 若 push 失败，说明原因并提示用户 `gh auth login` 或解决冲突
+
+用户明确要求「保存进度」「推送」「上线代码」时，同样执行提交 + 推送。
+
+远程仓库：`https://github.com/hxgame-dog/match-factory-level-workbench`

@@ -12,6 +12,7 @@ type Asset = {
   status: string;
   prompt: string;
   imageUrl?: string;
+  error?: string;
 };
 
 type Props = {

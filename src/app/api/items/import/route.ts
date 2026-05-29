@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { parseItemCsv } from "@/lib/csv";
+import { isExcelFileName, parseItemExcel } from "@/lib/excel";
 import { prisma } from "@/lib/prisma";
 import { importModeSchema } from "@/lib/validators/item";
 
@@ -13,13 +14,15 @@ export async function POST(request: Request) {
 
     if (!(file instanceof File)) {
       return NextResponse.json(
-        { success: false, error: "请上传 CSV 文件" },
+        { success: false, error: "请上传 CSV 或 Excel 文件" },
         { status: 400 },
       );
     }
 
-    const text = await file.text();
-    const parsed = parseItemCsv(text);
+    const parsed = isExcelFileName(file.name)
+      ? parseItemExcel(Buffer.from(await file.arrayBuffer()))
+      : parseItemCsv(await file.text());
+
     if (parsed.missingHeaders.length > 0) {
       return NextResponse.json(
         {

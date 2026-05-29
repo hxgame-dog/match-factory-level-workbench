@@ -1,4 +1,5 @@
 import { FormulaLabPage } from "@/components/formula-lab/FormulaLabPage";
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { getAiStatus } from "@/lib/ai/gemini";
@@ -52,10 +53,7 @@ export default async function FormulaLabRoute() {
 
   return (
     <AppShell>
-      <AppHeader
-        title="Formula Lab"
-        description="配置难度公式、单关诊断、批量回放、异常检测，并与 Playtest 结果对比。"
-      />
+      <AppHeader title={zh.pages.formulaLab.title} description={zh.pages.formulaLab.description} />
       <div className="p-6">
         <FormulaLabPage
           levels={levels.map((l) => ({ id: l.id, name: l.name, levelIndex: l.levelIndex }))}

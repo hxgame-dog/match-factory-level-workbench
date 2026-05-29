@@ -27,7 +27,7 @@ export function ItemUpload({ onImported }: ItemUploadProps) {
 
   async function onImport() {
     if (!file) {
-      setError("请先选择 CSV 文件");
+      setError("请先选择 CSV 或 Excel 文件");
       return;
     }
     setLoading(true);
@@ -58,12 +58,13 @@ export function ItemUpload({ onImported }: ItemUploadProps) {
   return (
     <Card className="border border-gray-200 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-lg">CSV 导入</CardTitle>
+        <CardTitle className="text-lg">文件导入</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <p className="text-xs text-gray-500">支持 CSV、Excel（.xlsx / .xls）</p>
         <Input
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
         />
         <div className="flex items-center gap-2 text-sm text-gray-600">

@@ -1,3 +1,4 @@
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { AutoLevelGeneratorPage } from "@/components/auto-level/AutoLevelGeneratorPage";
@@ -11,7 +12,7 @@ export default async function AutoLevelGeneratorRoute() {
   ]);
   return (
     <AppShell>
-      <AppHeader title="Auto Level Generator" description="基于参考关卡和难度公式，自动续关并筛选候选方案。" />
+      <AppHeader title={zh.pages.autoLevelGenerator.title} description={zh.pages.autoLevelGenerator.description} />
       <div className="p-6">
         <AutoLevelGeneratorPage
           levels={levels.map((row) => ({ id: row.id, name: row.name, levelIndex: row.levelIndex ?? 0, status: row.status }))}

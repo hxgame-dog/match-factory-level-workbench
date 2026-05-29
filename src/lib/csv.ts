@@ -53,24 +53,26 @@ function standardizeRow(raw: Record<string, unknown>): Record<string, unknown> {
   return row;
 }
 
-export function parseItemCsv(csvText: string): ParseResult {
-  const parsed = Papa.parse<Record<string, unknown>>(csvText, {
-    header: true,
-    skipEmptyLines: true,
-  });
+export type ItemParseResult = ParseResult;
 
-  const missingHeaders = ["name", "category1"].filter((required) => {
-    const fields = parsed.meta.fields ?? [];
-    return !fields.some((field) => {
-      const standardized = standardizeRow({ [field]: "" });
-      return Object.keys(standardized).includes(required);
-    });
-  });
+function detectMissingHeaders(records: Record<string, unknown>[]): string[] {
+  if (records.length === 0) {
+    return ["name", "category1"];
+  }
+  const keys = new Set<string>();
+  for (const raw of records) {
+    const standardized = standardizeRow(raw);
+    Object.keys(standardized).forEach((k) => keys.add(k));
+  }
+  return ["name", "category1"].filter((required) => !keys.has(required));
+}
 
+export function parseItemRecords(records: Record<string, unknown>[]): ParseResult {
+  const missingHeaders = detectMissingHeaders(records);
   const successRows: ParsedItemRow[] = [];
   const errors: Array<{ row: number; message: string }> = [];
 
-  parsed.data.forEach((raw, index) => {
+  records.forEach((raw, index) => {
     const standardized = standardizeRow(raw);
     const validated = itemCsvRawSchema.safeParse(standardized);
     if (!validated.success) {
@@ -83,9 +85,13 @@ export function parseItemCsv(csvText: string): ParseResult {
     successRows.push(validated.data);
   });
 
-  return {
-    successRows,
-    errors,
-    missingHeaders,
-  };
+  return { successRows, errors, missingHeaders };
+}
+
+export function parseItemCsv(csvText: string): ParseResult {
+  const parsed = Papa.parse<Record<string, unknown>>(csvText, {
+    header: true,
+    skipEmptyLines: true,
+  });
+  return parseItemRecords(parsed.data);
 }

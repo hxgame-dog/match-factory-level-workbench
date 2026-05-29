@@ -1,3 +1,4 @@
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { AnalyticsFeedbackPage } from "@/components/analytics/AnalyticsFeedbackPage";
@@ -11,7 +12,7 @@ export default async function AnalyticsFeedbackRoute() {
   });
   return (
     <AppShell>
-      <AppHeader title="Analytics Feedback" description="导入玩家数据、诊断真实表现、对比公式和模拟、生成优化建议。" />
+      <AppHeader title={zh.pages.analyticsFeedback.title} description={zh.pages.analyticsFeedback.description} />
       <div className="p-6">
         <AnalyticsFeedbackPage
           batches={batches.map((b) => ({

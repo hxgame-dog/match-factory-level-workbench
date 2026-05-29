@@ -246,12 +246,15 @@ export async function generateItemTable(
   const resultSchema = createGenerateItemsResultSchema(validInput, validCatalogIds);
 
   try {
-    if (env.AI_MOCK_MODE) {
+    const runtime = await resolveRuntime();
+    const useMock = env.AI_MOCK_MODE && !runtime.hasApiKey;
+
+    if (useMock) {
       const mock = resultSchema.parse(buildMockItems(validInput));
       await prisma.aiGenerationLog.create({
         data: {
           type: "item_table",
-          provider: env.AI_PROVIDER,
+          provider: "mock",
           model: env.GEMINI_TEXT_MODEL,
           prompt: `[MOCK] ${validInput.theme}`,
           resultJson: JSON.stringify(mock),
@@ -262,7 +265,7 @@ export async function generateItemTable(
     }
 
     const prompt = generateItemsPrompt(validInput);
-    const text = await generateText(prompt);
+    const text = await generateText(prompt, { runtime });
     const parsed = parseJsonSafe<unknown>(text);
     const validated = resultSchema.parse(parsed);
 

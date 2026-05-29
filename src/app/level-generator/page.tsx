@@ -1,4 +1,5 @@
 import { LevelGeneratorPage } from "@/components/levels/LevelGeneratorPage";
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { generatorRulePresets, refreshRulePresets } from "@/lib/level/rulePresets";
@@ -23,7 +24,7 @@ export default async function LevelGenerator() {
 
   return (
     <AppShell>
-      <AppHeader title="Level Generator" description="基于 ItemSet 与资源批次生成标准 LevelConfig JSON 候选关卡。" />
+      <AppHeader title={zh.pages.levelGenerator.title} description={zh.pages.levelGenerator.description} />
       <div className="p-6">
         <LevelGeneratorPage
           itemSets={itemSets.map((set) => ({

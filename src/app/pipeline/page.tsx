@@ -1,3 +1,4 @@
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { PipelinePage } from "@/components/pipeline/PipelinePage";
@@ -11,7 +12,7 @@ export default async function PipelineRoute() {
   ]);
   return (
     <AppShell>
-      <AppHeader title="Pipeline Integration" description="生产包构建、导入导出、快照与外部适配预览。" />
+      <AppHeader title={zh.pages.pipeline.title} description={zh.pages.pipeline.description} />
       <div className="p-6">
         <PipelinePage
           levels={levels.map((l) => ({ id: l.id, name: l.name }))}

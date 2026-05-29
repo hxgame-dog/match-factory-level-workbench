@@ -1,4 +1,5 @@
 import { getAiStatus } from "@/lib/ai/gemini";
+import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { PlaytestSimulatorPage } from "@/components/playtest/PlaytestSimulatorPage";
@@ -12,7 +13,7 @@ export default async function PlaytestSimulatorRoute() {
   ]);
   return (
     <AppShell>
-      <AppHeader title="Playtest Simulator" description="本地试玩模拟、QA 评审与平衡建议。" />
+      <AppHeader title={zh.pages.playtestSimulator.title} description={zh.pages.playtestSimulator.description} />
       <div className="p-6">
         <PlaytestSimulatorPage
           levels={levels.map((l) => ({ id: l.id, name: l.name, levelIndex: l.levelIndex }))}

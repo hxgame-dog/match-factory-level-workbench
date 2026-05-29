@@ -26,7 +26,7 @@ export function AiStatusCard(props: AiStatusCardProps) {
       </CardHeader>
       <CardContent className="space-y-2 text-sm text-gray-700">
         <div className="flex items-center justify-between">
-          <span>AI Provider</span>
+          <span>模型提供商</span>
           <Badge variant="outline">{props.provider}</Badge>
         </div>
         <div className="flex items-center justify-between">

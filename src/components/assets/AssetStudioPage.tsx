@@ -39,6 +39,7 @@ type AssetDraft = LoadedItem & {
   negativePrompt: string;
   status: string;
   imageUrl?: string;
+  error?: string;
 };
 
 type Batch = {
@@ -186,12 +187,18 @@ export function AssetStudioPage({
     if (!payload.success) {
       const next = [...assets];
       next[index].status = "failed";
+      next[index].error = payload.error ?? "生成失败";
       setAssets(next);
+      setError(payload.error ?? "生成失败");
       return;
     }
     const next = [...assets];
     next[index].status = payload.data.status;
     next[index].imageUrl = payload.data.imageUrl;
+    next[index].error = payload.data.error;
+    if (payload.data.status === "failed") {
+      setError(payload.data.error ?? "图片生成失败");
+    }
     setAssets(next);
   }
 
@@ -225,7 +232,13 @@ export function AssetStudioPage({
       done: payload.data.successCount,
       failed: payload.data.failedCount,
     });
+    if (payload.data.failedCount > 0) {
+      setError(`批量生成完成：成功 ${payload.data.successCount}，失败 ${payload.data.failedCount}`);
+    }
     await refreshBatches();
+    if (payload.data.batchId) {
+      await openBatch(payload.data.batchId);
+    }
   }
 
   async function openBatch(id: string) {
@@ -234,9 +247,10 @@ export function AssetStudioPage({
     if (!payload.success) return;
     const batch = payload.data;
     setAssets(
-      batch.assets.map((asset: AssetDraft) => ({
+      batch.assets.map((asset: AssetDraft & { id?: string; error?: string }) => ({
         ...asset,
         assetId: asset.id,
+        error: asset.error ?? undefined,
       })),
     );
     setProgress({

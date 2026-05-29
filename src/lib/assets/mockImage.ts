@@ -49,13 +49,7 @@ function shapeSvg(shapeType: string, color: string) {
 export async function generateMockAssetImage(
   input: GenerateAssetImageInput,
 ): Promise<{ imageUrl: string; localPath: string }> {
-  const baseDir = path.join(process.cwd(), "public", "generated-assets", "mock");
-  await fs.mkdir(baseDir, { recursive: true });
-
   const shortName = input.item.name.slice(0, 12);
-  const safe = safeName(input.item.name);
-  const fileName = `${safe}_${Date.now()}.svg`;
-  const absolutePath = path.join(baseDir, fileName);
   const color = pickColor(input.item.color1);
   const shape = pickShape(input.item.name, input.item.shape);
 
@@ -66,9 +60,22 @@ export async function generateMockAssetImage(
   <text x="256" y="462" text-anchor="middle" fill="#334155" font-size="26" font-family="Arial">${shortName}</text>
 </svg>`;
 
-  await fs.writeFile(absolutePath, svg, "utf-8");
-  return {
-    imageUrl: `/generated-assets/mock/${fileName}`,
-    localPath: absolutePath,
-  };
+  try {
+    const baseDir = path.join(process.cwd(), "public", "generated-assets", "mock");
+    await fs.mkdir(baseDir, { recursive: true });
+    const safe = safeName(input.item.name);
+    const fileName = `${safe}_${Date.now()}.svg`;
+    const absolutePath = path.join(baseDir, fileName);
+    await fs.writeFile(absolutePath, svg, "utf-8");
+    return {
+      imageUrl: `/generated-assets/mock/${fileName}`,
+      localPath: absolutePath,
+    };
+  } catch {
+    const encoded = Buffer.from(svg, "utf-8").toString("base64");
+    return {
+      imageUrl: `data:image/svg+xml;base64,${encoded}`,
+      localPath: "",
+    };
+  }
 }

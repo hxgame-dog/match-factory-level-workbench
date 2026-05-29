@@ -35,6 +35,19 @@ async function saveImageBytes(bytes: Buffer, mimeType: string | undefined, baseN
   };
 }
 
+async function persistImageBytes(bytes: Buffer, mimeType: string | undefined, baseName: string) {
+  const resolvedMime = mimeType ?? "image/png";
+  try {
+    return await saveImageBytes(bytes, resolvedMime, baseName);
+  } catch {
+    const b64 = bytes.toString("base64");
+    return {
+      imageUrl: `data:${resolvedMime};base64,${b64}`,
+      localPath: "",
+    };
+  }
+}
+
 function extractImageBytesFromGenerateContent(response: {
   candidates?: Array<{
     content?: { parts?: Array<{ inlineData?: { data?: string; mimeType?: string } }> };
@@ -81,7 +94,7 @@ export async function generateGeminiImage(input: {
       throw new Error("Imagen 未返回图片数据");
     }
     const buffer = Buffer.isBuffer(imageBytes) ? imageBytes : Buffer.from(imageBytes as string, "base64");
-    const saved = await saveImageBytes(buffer, "image/png", input.itemName ?? "asset");
+    const saved = await persistImageBytes(buffer, "image/png", input.itemName ?? "asset");
     return { ...saved, model: modelId };
   }
 
@@ -97,7 +110,7 @@ export async function generateGeminiImage(input: {
   if (!extracted) {
     throw new Error("模型未返回图片，请确认所选模型支持图像输出（如 gemini-2.5-flash-image 或 Imagen）");
   }
-  const saved = await saveImageBytes(extracted.bytes, extracted.mimeType, input.itemName ?? "asset");
+  const saved = await persistImageBytes(extracted.bytes, extracted.mimeType, input.itemName ?? "asset");
   return { ...saved, model: modelId };
 }
 

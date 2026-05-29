@@ -1,17 +1,20 @@
+import { AiStatusCard } from "@/components/ai/AiStatusCard";
 import { ItemGeneratorForm } from "@/components/generator/ItemGeneratorForm";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAiStatus } from "@/lib/ai/gemini";
+import { zh } from "@/lib/i18n/zh";
 import { prisma } from "@/lib/prisma";
 
 export default async function ItemGeneratorPage() {
-  const [rows, historyRows] = await Promise.all([
+  const [rows, historyRows, aiStatus] = await Promise.all([
     prisma.itemCatalog.findMany({ orderBy: { updatedAt: "desc" } }),
     prisma.generatedItemSet.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
       include: { items: { select: { id: true } } },
     }),
+    getAiStatus(),
   ]);
   const countBy = (key: "category1" | "color1" | "size") => {
     const map = new Map<string, number>();
@@ -25,34 +28,26 @@ export default async function ItemGeneratorPage() {
 
   return (
     <AppShell>
-      <AppHeader
-        title="Item Generator"
-        description="第一版使用 Mock 数据生成，后续接入真实 Gemini 生成链路。"
-      />
-      <div className="p-6">
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">AI 道具表生成</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ItemGeneratorForm
-              catalogContext={{
-                total: rows.length,
-                categories: countBy("category1"),
-                colors: countBy("color1"),
-                sizes: countBy("size"),
-                lastImportedAt: rows[0]?.updatedAt.toISOString(),
-              }}
-              initialHistory={historyRows.map((set) => ({
-                id: set.id,
-                name: set.name,
-                theme: set.theme,
-                itemCount: set.items.length,
-                createdAt: set.createdAt.toISOString(),
-              }))}
-            />
-          </CardContent>
-        </Card>
+      <AppHeader title={zh.pages.itemGenerator.title} description={zh.pages.itemGenerator.description} />
+      <div className="space-y-4 p-6">
+        <AiStatusCard {...aiStatus} />
+        <ItemGeneratorForm
+          aiStatus={aiStatus}
+          catalogContext={{
+            total: rows.length,
+            categories: countBy("category1"),
+            colors: countBy("color1"),
+            sizes: countBy("size"),
+            lastImportedAt: rows[0]?.updatedAt.toISOString(),
+          }}
+          initialHistory={historyRows.map((set) => ({
+            id: set.id,
+            name: set.name,
+            theme: set.theme,
+            itemCount: set.items.length,
+            createdAt: set.createdAt.toISOString(),
+          }))}
+        />
       </div>
     </AppShell>
   );
