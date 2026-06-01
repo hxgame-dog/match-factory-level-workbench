@@ -17,6 +17,7 @@ import { AssetPromptDialog } from "./AssetPromptDialog";
 import { AssetPromptPanel } from "./AssetPromptPanel";
 import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
 import { pickAssetItemPayload } from "@/lib/assets/pickAssetItemPayload";
+import { TaskProgressCard } from "@/components/ui/task-progress";
 import { notify } from "@/lib/ui/notify";
 
 import { ItemSetSelector } from "./ItemSetSelector";
@@ -90,6 +91,11 @@ export function AssetStudioPage({
   const [error, setError] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState({ total: 0, done: 0, failed: 0 });
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [promptGenerating, setPromptGenerating] = useState(false);
+  const [promptProgress, setPromptProgress] = useState<{ current: number; total: number; label: string } | null>(
+    null,
+  );
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
 
   useEffect(() => {
@@ -142,8 +148,16 @@ export function AssetStudioPage({
   }
 
   async function generatePrompts(regenerate = false) {
+    if (assets.length === 0) {
+      notify.warning("请先加载道具集");
+      return;
+    }
+    setPromptGenerating(true);
+    const loadingToast = notify.loading(`正在生成 Prompt（${assets.length} 个道具）…`);
     const next = [...assets];
+    try {
     for (let i = 0; i < next.length; i += 1) {
+      setPromptProgress({ current: i + 1, total: next.length, label: next[i].name });
       if (!regenerate && next[i].prompt) {
         next[i].status = "prompt_ready";
         continue;
@@ -173,6 +187,15 @@ export function AssetStudioPage({
       notify.warning("Prompt 已更新（部分失败）", `就绪 ${ready} 条，失败 ${failed} 条`);
     } else {
       notify.success("Prompt 已生成", `共 ${ready} 条道具可进入批量出图`);
+    }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Prompt 生成失败";
+      setError(message);
+      notify.error("Prompt 生成失败", message);
+    } finally {
+      notify.dismiss(loadingToast);
+      setPromptGenerating(false);
+      setPromptProgress(null);
     }
   }
 
@@ -223,7 +246,9 @@ export function AssetStudioPage({
     }
     setError(null);
     setProgress({ total: assets.length, done: 0, failed: 0 });
-
+    setBatchGenerating(true);
+    const loadingToast = notify.loading(`正在批量出图（${assets.length} 个道具），请勿关闭页面…`);
+    try {
     const response = await fetch("/api/assets/generate-batch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -240,7 +265,9 @@ export function AssetStudioPage({
     if (!payload.success) {
       const message = payload.error ?? "批量生成失败";
       setError(message);
+      notify.dismiss(loadingToast);
       notify.error("批量出图失败", message);
+      setBatchGenerating(false);
       return;
     }
     setProgress({
@@ -259,6 +286,14 @@ export function AssetStudioPage({
     await refreshBatches();
     if (payload.data.batchId) {
       await openBatch(payload.data.batchId);
+    }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "批量出图失败";
+      setError(message);
+      notify.error("批量出图失败", message);
+    } finally {
+      notify.dismiss(loadingToast);
+      setBatchGenerating(false);
     }
   }
 
@@ -339,23 +374,30 @@ export function AssetStudioPage({
         </Alert>
       ) : null}
 
-      {progress.total > 0 ? (
-        <Card>
-          <CardContent className="flex flex-wrap items-center gap-4 pt-6 text-sm">
-            <span className="text-muted-foreground">批量进度</span>
-            <span className="font-medium">
-              完成 {progress.done} / 失败 {progress.failed} / 共 {progress.total}
-            </span>
-            <div className="h-2 min-w-[120px] flex-1 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{
-                  width: `${progress.total ? Math.round(((progress.done + progress.failed) / progress.total) * 100) : 0}%`,
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+      {promptGenerating && promptProgress ? (
+        <TaskProgressCard
+          title="正在生成 Prompt"
+          description={`当前：${promptProgress.label}`}
+          current={promptProgress.current}
+          total={promptProgress.total}
+        />
+      ) : null}
+      {batchGenerating ? (
+        <TaskProgressCard
+          title="正在批量出图"
+          description="服务端逐张生成，耗时取决于道具数量与模型速度"
+          current={0}
+          total={assets.length || 1}
+          indeterminate
+        />
+      ) : null}
+      {!batchGenerating && progress.total > 0 ? (
+        <TaskProgressCard
+          title="批量出图结果"
+          description={`成功 ${progress.done} · 失败 ${progress.failed}`}
+          current={progress.done + progress.failed}
+          total={progress.total}
+        />
       ) : null}
 
       <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] xl:items-start">
@@ -398,7 +440,9 @@ export function AssetStudioPage({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => void generateAll()}>批量生成</Button>
+            <Button onClick={() => void generateAll()} disabled={batchGenerating || promptGenerating || !selectedSetId}>
+              {batchGenerating ? "出图中…" : "批量出图"}
+            </Button>
             <Button
               variant="outline"
               onClick={() => {

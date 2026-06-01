@@ -62,6 +62,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
   async function onGenerate() {
     setLoading(true);
     setError(null);
+    const loadingToast = notify.loading("正在生成道具表，请稍候…");
     try {
       const response = await fetch("/api/ai/items/generate", {
         method: "POST",
@@ -86,6 +87,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       setError(message);
       notify.error("道具表生成失败", message);
     } finally {
+      notify.dismiss(loadingToast);
       setLoading(false);
     }
   }

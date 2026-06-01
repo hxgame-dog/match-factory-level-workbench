@@ -1,5 +1,6 @@
 import { getAiStatus } from "@/lib/ai/gemini";
 import { getWorkspaceSummaries } from "@/lib/workspace/getWorkspaceSummaries";
+import { ContinueLastWorkspaceBanner } from "@/components/dashboard/ContinueLastWorkspaceBanner";
 import { WorkspaceHubSection } from "@/components/dashboard/WorkspaceHubSection";
 import { DashboardModuleCard, type DashboardStatLine } from "@/components/dashboard/DashboardModuleCard";
 import { WorkflowGuideSection } from "@/components/dashboard/WorkflowGuideSection";
@@ -119,6 +120,7 @@ export default async function HomePage() {
           ))}
         </div>
 
+        <ContinueLastWorkspaceBanner workspaces={workspaces} />
         <WorkspaceHubSection workspaces={workspaces} />
 
         <WorkflowGuideSection />

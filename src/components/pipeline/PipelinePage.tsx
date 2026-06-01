@@ -10,6 +10,7 @@ import { AdapterPreviewPanel } from "./AdapterPreviewPanel";
 import { ExportJobList } from "./ExportJobList";
 import { PackageHistory } from "./PackageHistory";
 import { ManifestPreviewDialog } from "./ManifestPreviewDialog";
+import { notify } from "@/lib/ui/notify";
 
 export function PipelinePage({
   levels,
@@ -55,18 +56,40 @@ export function PipelinePage({
         form={form}
         onChange={(key, value) => setForm((prev) => ({ ...prev, [key]: value }))}
         onDryRun={async () => {
-          const res = await fetch("/api/pipeline/packages/dry-run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(packagePayload) }).then((r) => r.json());
-          if (res.success) {
-            setValidation(res.data.validation);
-            setManifest(res.data.manifest);
+          const toastId = notify.loading("正在校验生产包…");
+          try {
+            const res = await fetch("/api/pipeline/packages/dry-run", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(packagePayload),
+            }).then((r) => r.json());
+            if (res.success) {
+              setValidation(res.data.validation);
+              setManifest(res.data.manifest);
+              const ok = res.data.validation?.passed;
+              if (ok) notify.success("校验通过", "可继续正式打包");
+              else notify.warning("校验完成", "存在待修复项，请查看下方面板");
+            } else notify.error("校验失败", res.error);
+          } finally {
+            notify.dismiss(toastId);
           }
         }}
         onBuild={async () => {
-          const res = await fetch("/api/pipeline/packages/build", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(packagePayload) }).then((r) => r.json());
-          if (res.success) {
-            setValidation(res.data.validation);
-            setManifest(res.data.manifest);
-            await refresh();
+          const toastId = notify.loading("正在构建生产包…");
+          try {
+            const res = await fetch("/api/pipeline/packages/build", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(packagePayload),
+            }).then((r) => r.json());
+            if (res.success) {
+              setValidation(res.data.validation);
+              setManifest(res.data.manifest);
+              await refresh();
+              notify.success("生产包已构建", res.data.package?.name ?? form.name);
+            } else notify.error("构建失败", res.error);
+          } finally {
+            notify.dismiss(toastId);
           }
         }}
       />
@@ -75,15 +98,52 @@ export function PipelinePage({
         <ImportCenter
           content={importContent}
           onContentChange={setImportContent}
-          onDryRun={() => fetch("/api/pipeline/import/level-json/dry-run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fileContent: importContent }) })}
-          onConfirm={() => fetch("/api/pipeline/import/level-json/confirm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fileContent: importContent }) })}
+          onDryRun={async () => {
+            const toastId = notify.loading("正在预览关卡导入…");
+            try {
+              const res = await fetch("/api/pipeline/import/level-json/dry-run", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fileContent: importContent }),
+              }).then((r) => r.json());
+              if (res.success) notify.success("导入预览完成");
+              else notify.error("导入预览失败", res.error);
+              return res;
+            } finally {
+              notify.dismiss(toastId);
+            }
+          }}
+          onConfirm={async () => {
+            const toastId = notify.loading("正在导入关卡…");
+            try {
+              const res = await fetch("/api/pipeline/import/level-json/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fileContent: importContent }),
+              }).then((r) => r.json());
+              if (res.success) notify.success("关卡已导入");
+              else notify.error("导入失败", res.error);
+              return res;
+            } finally {
+              notify.dismiss(toastId);
+            }
+          }}
         />
         <SnapshotCenter
           levelId={snapshotLevelId}
           snapshotName={snapshotName}
           onLevelIdChange={setSnapshotLevelId}
           onNameChange={setSnapshotName}
-          onCreate={() => fetch("/api/pipeline/snapshots", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ levelId: snapshotLevelId, snapshotName }) })}
+          onCreate={async () => {
+            const res = await fetch("/api/pipeline/snapshots", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ levelId: snapshotLevelId, snapshotName }),
+            }).then((r) => r.json());
+            if (res.success) notify.success("快照已创建", snapshotName);
+            else notify.error("快照创建失败", res.error);
+            return res;
+          }}
         />
       </div>
       <AdapterPreviewPanel

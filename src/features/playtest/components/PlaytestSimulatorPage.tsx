@@ -23,6 +23,7 @@ import { PlaytestRunHistory } from "./PlaytestRunHistory";
 import { BatchResultsPanel } from "./BatchResultsPanel";
 import { PlaytestSampleHistograms } from "./PlaytestSampleHistograms";
 import { PlaytestAnalyticsComparePanel } from "./PlaytestAnalyticsComparePanel";
+import { notify } from "@/lib/ui/notify";
 
 function buildBatchSummary(results: PlaytestLevelSimulationResult[], simulationCountPerLevel: number) {
   const avg = (list: number[]) => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : 0);
@@ -141,10 +142,14 @@ export function PlaytestSimulatorPage({
         }),
       }).then((r) => r.json());
       if (!res.success) {
-        setError(res.error ?? "单关模拟失败");
+        const msg = res.error ?? "单关模拟失败";
+        setError(msg);
+        notify.error("单关试玩失败", msg);
         return;
       }
       setSingleResult(res.data.result);
+      const passPct = Math.round((res.data.result.metrics.passRate ?? 0) * 100);
+      notify.success("单关试玩完成", `通过率约 ${passPct}% · QA 问题 ${res.data.result.qaIssues.length} 条`);
       await refreshRuns();
     } finally {
       setSingleRunning(false);
@@ -169,6 +174,7 @@ export function PlaytestSimulatorPage({
       for (let i = 0; i < ordered.length; i++) {
         if (batchAbortRef.current) {
           setError("批量模拟已取消");
+          notify.info("已取消批量试玩");
           break;
         }
         const level = ordered[i];
@@ -184,7 +190,9 @@ export function PlaytestSimulatorPage({
           }),
         }).then((r) => r.json());
         if (!res.success) {
-          setError(res.error ?? `关卡 ${level.name} 模拟失败`);
+          const msg = res.error ?? `关卡 ${level.name} 模拟失败`;
+          setError(msg);
+          notify.error("批量试玩中断", msg);
           break;
         }
         results.push(res.data.result);
@@ -209,9 +217,12 @@ export function PlaytestSimulatorPage({
         }).then((r) => r.json());
         if (persistRes.success) {
           setBatchResult(persistRes.data);
+          notify.success("批量试玩完成", `共 ${results.length} 关 · 已回灌关卡数据`);
           await refreshRuns();
         } else {
-          setError(persistRes.error ?? "保存批量记录失败（模拟结果已展示）");
+          const msg = persistRes.error ?? "保存批量记录失败（模拟结果已展示）";
+          setError(msg);
+          notify.warning("试玩结果已展示", msg);
         }
       }
     } finally {
@@ -318,8 +329,14 @@ export function PlaytestSimulatorPage({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ levelId: singleResult.levelId, playtestResult: singleResult }),
             }).then((r) => r.json());
-            if (res.success) setAdvice(res.data);
-            else setError(res.error ?? "获取建议失败");
+            if (res.success) {
+              setAdvice(res.data);
+              notify.success("AI 试玩建议已生成");
+            } else {
+              const msg = res.error ?? "获取建议失败";
+              setError(msg);
+              notify.error("获取试玩建议失败", msg);
+            }
           }}
         />
       </div>
@@ -340,11 +357,17 @@ export function PlaytestSimulatorPage({
         }}
         onExport={async (id) => {
           const res = await fetch(`/api/playtest/runs/${id}/export-report`, { method: "POST" }).then((r) => r.json());
-          if (res.success) window.open(res.data.excelUrl, "_blank");
+          if (res.success) {
+            window.open(res.data.excelUrl, "_blank");
+            notify.success("试玩报告已导出");
+          } else notify.error("导出失败", res.error);
         }}
         onDelete={async (id) => {
           const res = await fetch(`/api/playtest/runs/${id}`, { method: "DELETE" }).then((r) => r.json());
-          if (res.success) setRuns((prev) => prev.filter((x) => x.id !== id));
+          if (res.success) {
+            setRuns((prev) => prev.filter((x) => x.id !== id));
+            notify.success("已删除试玩记录");
+          } else notify.error("删除失败", res.error);
         }}
       />
     </div>

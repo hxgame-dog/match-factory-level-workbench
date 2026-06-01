@@ -55,7 +55,7 @@ export function BatchSimulationPanel({
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full bg-blue-600 transition-all duration-300"
+                className="h-full bg-primary transition-all duration-300"
                 style={{ width: `${pct}%` }}
               />
             </div>
