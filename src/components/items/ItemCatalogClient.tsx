@@ -86,12 +86,18 @@ export function ItemCatalogClient({
     <div className="space-y-4">
       <ItemStats total={total} />
       <ItemUpload onImported={() => void loadRows({ page: 1 })} />
-      <Card >
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">道具表预览</CardTitle>
-          <a href="/api/items/export">
-            <Button variant="outline">导出 Excel</Button>
-          </a>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              window.location.href = "/api/items/export";
+            }}
+          >
+            导出 Excel
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <ItemFilters

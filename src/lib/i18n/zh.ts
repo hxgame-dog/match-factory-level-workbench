@@ -29,8 +29,10 @@ export const zh = {
   theme: {
     light: "浅色模式",
     dark: "深色模式",
+    system: "跟随系统",
     switchToLight: "切换为浅色模式",
     switchToDark: "切换为深色模式",
+    cycle: "切换主题（浅色 / 深色 / 跟随系统）",
   },
   pages: {
     home: {

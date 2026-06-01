@@ -33,7 +33,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem("level-work-theme");if(s){var p=JSON.parse(s);if(p&&p.state&&p.state.theme==="dark")document.documentElement.classList.add("dark")}}catch(e){}})();`,
+            __html: `(function(){try{var s=localStorage.getItem("level-work-theme");if(!s)return;var p=JSON.parse(s);var t=p&&p.state&&p.state.theme;var dark=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(dark)document.documentElement.classList.add("dark")}catch(e){}})();`,
           }}
         />
       </head>

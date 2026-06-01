@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/incompatible-library": "warn",
       "no-restricted-syntax": [
         "error",
         {

@@ -1,32 +1,43 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useThemeStore } from "@/stores/themeStore";
+import { useThemeStore, type ThemePreference } from "@/stores/themeStore";
 import { zh } from "@/lib/i18n/zh";
 
 type Props = {
   collapsed?: boolean;
 };
 
+function themeMeta(preference: ThemePreference) {
+  switch (preference) {
+    case "dark":
+      return { icon: Moon, label: zh.theme.dark };
+    case "system":
+      return { icon: Monitor, label: zh.theme.system };
+    default:
+      return { icon: Sun, label: zh.theme.light };
+  }
+}
+
 export function ThemeToggle({ collapsed }: Props) {
   const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
-  const isDark = theme === "dark";
+  const cycleTheme = useThemeStore((s) => s.cycleTheme);
+  const { icon: Icon, label } = themeMeta(theme);
 
   return (
     <Button
       type="button"
       variant="outline"
       size={collapsed ? "icon-sm" : "sm"}
-      onClick={toggleTheme}
-      className={collapsed ? "w-full" : "w-full justify-start"}
-      aria-label={isDark ? zh.theme.switchToLight : zh.theme.switchToDark}
-      title={isDark ? zh.theme.switchToLight : zh.theme.switchToDark}
+      onClick={cycleTheme}
+      className={collapsed ? "w-full" : "w-full justify-start gap-2"}
+      aria-label={zh.theme.cycle}
+      title={zh.theme.cycle}
     >
-      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      {!collapsed ? <span>{isDark ? zh.theme.light : zh.theme.dark}</span> : null}
+      <Icon className="h-4 w-4 shrink-0" />
+      {!collapsed ? <span className="truncate">{label}</span> : null}
     </Button>
   );
 }

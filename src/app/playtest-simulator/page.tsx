@@ -1,4 +1,4 @@
-import { PlaytestSimulatorPage } from "@/components/playtest/PlaytestSimulatorPage";
+import { PlaytestSimulatorPage } from "@/features/playtest";
 import { WorkspacePageLayout } from "@/features/workspace";
 import { getAiStatus } from "@/lib/ai/gemini";
 import { zh } from "@/lib/i18n/zh";

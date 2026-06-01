@@ -1,4 +1,4 @@
-import { AssetStudioPage } from "@/components/assets/AssetStudioPage";
+import { AssetStudioPage } from "@/features/asset-studio";
 import { WorkspacePageLayout } from "@/features/workspace";
 import { zh } from "@/lib/i18n/zh";
 import { getAiStatus } from "@/lib/ai/gemini";

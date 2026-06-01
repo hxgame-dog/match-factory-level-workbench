@@ -1,4 +1,3 @@
-import { defaultFormulaConfig } from "@/lib/difficulty/defaultFormulaConfig";
 import { diagnoseLevelDifficulty } from "@/lib/difficulty/diagnoseLevelDifficulty";
 import { feedbackDiagnosis } from "@/lib/analytics/feedbackDiagnosis";
 import { buildCalibrationPoints, type CalibrationPoint } from "@/lib/analytics/compareFormulaPlaytestAnalytics";

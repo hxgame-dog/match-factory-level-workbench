@@ -4,7 +4,7 @@ import { CartesianGrid, Legend, ResponsiveContainer, Scatter, ScatterChart, Tool
 import type { CalibrationPoint } from "@/lib/analytics/compareFormulaPlaytestAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { PlaytestChartEmpty } from "@/components/playtest/PlaytestChartEmpty";
+import { PlaytestChartEmpty } from "@/features/playtest";
 
 type ScatterRow = CalibrationPoint & {
   label: string;
