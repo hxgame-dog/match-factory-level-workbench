@@ -22,7 +22,7 @@ type Props = {
 
 export function LevelBasicConfigForm({ values, onChange }: Props) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader><CardTitle className="text-lg">关卡基础配置区</CardTitle></CardHeader>
       <CardContent className="grid gap-2 md:grid-cols-2">
         <Input value={values.levelName} onChange={(e) => onChange({ levelName: e.target.value })} placeholder="Level Name" />

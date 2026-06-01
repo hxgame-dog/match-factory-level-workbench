@@ -104,7 +104,7 @@ export function ItemTable({
           ))}
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center text-gray-500">
+              <TableCell colSpan={columns.length} className="text-center text-muted-foreground">
                 暂无数据
               </TableCell>
             </TableRow>
@@ -112,7 +112,7 @@ export function ItemTable({
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between text-sm text-gray-500">
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
           第 {page} / {totalPages} 页，共 {total} 条
         </span>

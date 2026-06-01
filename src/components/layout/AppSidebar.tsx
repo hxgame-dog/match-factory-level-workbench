@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { WorkspaceSidebarLink } from "@/components/shell/WorkspaceSidebarLink";
 import { navItems, zh, type NavKey } from "@/lib/i18n/zh";
 import { pipelineStepForPath } from "@/features/workspace";
@@ -121,7 +122,8 @@ export function AppSidebar() {
           </div>
         ))}
       </nav>
-      <div className="border-t border-border p-2">
+      <div className="space-y-2 border-t border-border p-2">
+        <ThemeToggle collapsed={sidebarCollapsed} />
         <button
           type="button"
           onClick={toggleSidebar}

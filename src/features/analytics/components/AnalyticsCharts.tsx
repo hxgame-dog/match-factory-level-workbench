@@ -16,7 +16,7 @@ export function AnalyticsCharts({ diagnoses }: { diagnoses: LevelFeedbackDiagnos
       formulaP: d.formula?.P ?? 0,
     }));
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Analytics Charts</CardTitle></CardHeader>
       <CardContent className="space-y-4 overflow-x-auto">
         <LineChart width={640} height={220} data={rows}>

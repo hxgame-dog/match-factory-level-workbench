@@ -56,18 +56,18 @@ export function ItemUpload({ onImported }: ItemUploadProps) {
   }
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader>
         <CardTitle className="text-lg">文件导入</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-xs text-gray-500">支持 CSV、Excel（.xlsx / .xls）</p>
+        <p className="text-xs text-muted-foreground">支持 CSV、Excel（.xlsx / .xls）</p>
         <Input
           type="file"
           accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
         />
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Switch checked={overwrite} onCheckedChange={setOverwrite} />
           <span>覆盖旧数据</span>
         </div>

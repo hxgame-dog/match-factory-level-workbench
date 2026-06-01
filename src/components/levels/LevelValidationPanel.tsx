@@ -16,7 +16,7 @@ type Validation = {
 
 export function LevelValidationPanel({ validation }: { validation: Validation }) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader><CardTitle className="text-base">Level Validation</CardTitle></CardHeader>
       <CardContent className="space-y-1 text-sm">
         <p>状态: {validation.isValid ? "通过" : "未通过"}</p>

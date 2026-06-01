@@ -32,7 +32,7 @@ type Props = {
 export function LevelCandidateCard(props: Props) {
   const c = props.candidate;
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader>
         <CardTitle className="text-base">{c.name}</CardTitle>
       </CardHeader>

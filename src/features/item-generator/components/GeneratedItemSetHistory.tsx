@@ -13,21 +13,21 @@ type Props = {
 
 export function GeneratedItemSetHistory({ data, onOpen, onDelete }: Props) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader>
         <CardTitle className="text-lg">历史生成记录</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {data.length === 0 ? (
-          <p className="text-sm text-gray-500">暂无历史记录</p>
+          <p className="text-sm text-muted-foreground">暂无历史记录</p>
         ) : (
           data.map((item) => (
-            <div key={item.id} className="rounded-md border border-gray-200 p-3">
-              <p className="font-medium text-gray-900">{item.name}</p>
-              <p className="text-xs text-gray-500">
+            <div key={item.id} className="rounded-md border border-border p-3">
+              <p className="font-medium text-foreground">{item.name}</p>
+              <p className="text-xs text-muted-foreground">
                 主题: {item.theme} / 道具数: {item.itemCount}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 时间: {new Date(item.createdAt).toLocaleString()}
               </p>
               <div className="mt-2 flex gap-2">

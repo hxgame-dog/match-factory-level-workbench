@@ -15,7 +15,7 @@ export function FeedbackDiagnosisTable({
 }) {
   if (!rows.length) return null;
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Feedback Diagnosis Table</CardTitle></CardHeader>
       <CardContent className="overflow-x-auto text-xs">
         <table className="w-full border-collapse">
@@ -61,6 +61,6 @@ function severityClass(severity: string) {
   if (severity === "critical") return "rounded bg-red-100 px-1 text-red-700";
   if (severity === "high") return "rounded bg-orange-100 px-1 text-orange-700";
   if (severity === "medium") return "rounded bg-amber-100 px-1 text-amber-700";
-  if (severity === "low") return "rounded bg-gray-100 px-1 text-gray-700";
+  if (severity === "low") return "rounded bg-muted px-1 text-foreground";
   return "rounded bg-green-100 px-1 text-green-700";
 }

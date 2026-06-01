@@ -20,7 +20,7 @@ export function LevelSourceSelector(props: Props) {
   const activeSet = props.itemSets.find((set) => set.id === props.selectedItemSetId);
   const activeBatch = props.batches.find((batch) => batch.id === props.selectedBatchId);
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader><CardTitle className="text-lg">Source 选择区</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <Select value={props.selectedItemSetId || "none"} onValueChange={(v) => props.onChange({ itemSetId: v === "none" ? "" : v ?? "" })}>
@@ -41,7 +41,7 @@ export function LevelSourceSelector(props: Props) {
         </Select>
         <Button onClick={props.onLoad}>Load Sources</Button>
         {activeSet ? (
-          <div className="rounded-md border border-gray-200 p-3 text-sm text-gray-700">
+          <div className="rounded-md border border-border p-3 text-sm text-foreground">
             <p>Item Set: {activeSet.name}</p>
             <p>主题: {activeSet.theme}</p>
             <p>道具数: {activeSet.itemCount}</p>

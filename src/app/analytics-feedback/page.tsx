@@ -1,6 +1,6 @@
 import { WorkspacePageLayout } from "@/features/workspace";
 import { zh } from "@/lib/i18n/zh";
-import { AnalyticsFeedbackPage } from "@/components/analytics/AnalyticsFeedbackPage";
+import { AnalyticsFeedbackPage } from "@/features/analytics";
 import { prisma } from "@/lib/prisma";
 
 export default async function AnalyticsFeedbackRoute() {

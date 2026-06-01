@@ -5,14 +5,30 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXAttribute[name.name='className'] Literal[value=/\\bgray-\\d/]",
+          message:
+            "禁止使用 Tailwind gray-* 色阶，请改用 text-muted-foreground、text-foreground、border-border、bg-muted、bg-card 等语义 token。",
+        },
+        {
+          selector:
+            "JSXAttribute[name.name='className'] TemplateLiteral TemplateElement[value.raw=/\\bgray-\\d/]",
+          message:
+            "禁止使用 Tailwind gray-* 色阶，请改用 text-muted-foreground、text-foreground、border-border、bg-muted、bg-card 等语义 token。",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -185,7 +185,7 @@ export function AnalyticsFeedbackPage({
       </div>
 
       <div className="flex items-center gap-2">
-        <select value={activeBatchId} onChange={(e) => setActiveBatchId(e.target.value)} className="h-9 rounded-md border border-gray-200 px-2 text-sm">
+        <select value={activeBatchId} onChange={(e) => setActiveBatchId(e.target.value)} className="h-9 rounded-md border border-border px-2 text-sm">
           <option value="">选择数据批次</option>
           {batches.map((b) => (
             <option key={b.id} value={b.id}>{b.name}（{b.rowCount} 行）</option>

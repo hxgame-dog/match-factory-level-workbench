@@ -14,7 +14,7 @@ export function FormulaPresetSelector({
   onChange: (v: string) => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm">Formula Preset 选择区</CardTitle>
       </CardHeader>
@@ -22,7 +22,7 @@ export function FormulaPresetSelector({
         <select
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-full rounded-md border border-gray-200 px-2 text-sm"
+          className="h-9 w-full rounded-md border border-border px-2 text-sm"
         >
           <option value="">使用默认公式</option>
           {presets.map((p) => (

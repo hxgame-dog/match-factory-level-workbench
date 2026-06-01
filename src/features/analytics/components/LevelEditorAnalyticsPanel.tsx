@@ -122,18 +122,18 @@ export function LevelEditorAnalyticsPanel({
   const diagnosis = summary?.diagnosis;
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader className="pb-2">
         <CardTitle className="text-base">玩家数据反馈</CardTitle>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           {levelName ? `当前关卡：${levelName}` : "真实表现与公式/试玩对比"}
         </p>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
-        {loading ? <p className="text-gray-500">加载中…</p> : null}
+        {loading ? <p className="text-muted-foreground">加载中…</p> : null}
 
         {!loading && !summary?.hasAnalytics ? (
-          <p className="text-gray-500">
+          <p className="text-muted-foreground">
             暂无该关卡的玩家数据。请先在
             <Link href="/analytics-feedback" className="mx-1 text-blue-600 hover:underline">
               玩家数据回灌
@@ -144,25 +144,25 @@ export function LevelEditorAnalyticsPanel({
 
         {diagnosis ? (
           <>
-            <div className="grid gap-2 rounded-md border border-gray-200 p-3 text-xs md:grid-cols-3">
+            <div className="grid gap-2 rounded-md border border-border p-3 text-xs md:grid-cols-3">
               <div>
-                <p className="text-gray-500">真实通关率</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-muted-foreground">真实通关率</p>
+                <p className="text-lg font-semibold text-foreground">
                   {diagnosis.analytics.passRate != null
                     ? `${Math.round(diagnosis.analytics.passRate * 100)}%`
                     : "-"}
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Formula P</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-muted-foreground">Formula P</p>
+                <p className="text-lg font-semibold text-foreground">
                   {diagnosis.formula?.P?.toFixed(2) ?? "-"}
                   {diagnosis.formula?.label ? ` (${diagnosis.formula.label})` : ""}
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Playtest 通关率</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-muted-foreground">Playtest 通关率</p>
+                <p className="text-lg font-semibold text-foreground">
                   {diagnosis.playtest?.passRate != null
                     ? `${Math.round(diagnosis.playtest.passRate * 100)}%`
                     : "-"}
@@ -189,14 +189,14 @@ export function LevelEditorAnalyticsPanel({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500">未发现明显问题标签</p>
+              <p className="text-xs text-muted-foreground">未发现明显问题标签</p>
             )}
 
             {diagnosis.comparison.formulaVsAnalytics?.message ? (
-              <p className="text-xs text-gray-600">公式对比：{diagnosis.comparison.formulaVsAnalytics.message}</p>
+              <p className="text-xs text-muted-foreground">公式对比：{diagnosis.comparison.formulaVsAnalytics.message}</p>
             ) : null}
             {diagnosis.comparison.playtestVsAnalytics?.message ? (
-              <p className="text-xs text-gray-600">试玩对比：{diagnosis.comparison.playtestVsAnalytics.message}</p>
+              <p className="text-xs text-muted-foreground">试玩对比：{diagnosis.comparison.playtestVsAnalytics.message}</p>
             ) : null}
           </>
         ) : null}
@@ -233,7 +233,7 @@ export function LevelEditorAnalyticsPanel({
           </Button>
           <Link
             href={`/analytics-feedback${levelId ? `?levelId=${encodeURIComponent(levelId)}` : ""}`}
-            className="inline-flex h-8 items-center rounded-md border border-gray-200 px-3 text-xs text-gray-700 hover:bg-gray-50"
+            className="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs text-foreground hover:bg-muted"
           >
             打开 Analytics 详情
           </Link>

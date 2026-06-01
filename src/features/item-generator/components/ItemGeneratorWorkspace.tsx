@@ -3,8 +3,8 @@
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { ItemCatalogUploadPanel } from "@/components/generator/ItemCatalogUploadPanel";
-import { ItemGeneratorForm } from "@/components/generator/ItemGeneratorForm";
+import { ItemCatalogUploadPanel } from "./ItemCatalogUploadPanel";
+import { ItemGeneratorForm } from "./ItemGeneratorForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zh } from "@/lib/i18n/zh";
 import type { ItemCatalogRow } from "@/types/item";

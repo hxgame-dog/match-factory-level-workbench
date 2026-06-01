@@ -6,13 +6,13 @@ import type { AnalyticsImportPreview } from "@/types/analytics";
 export function FieldMappingTable({ preview }: { preview: AnalyticsImportPreview | null }) {
   if (!preview) return null;
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">字段映射结果</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-xs">
         <p>识别字段：{preview.detectedFields.length} 个 · 有效行 {preview.summary.validRows}/{preview.summary.totalRows}</p>
         <div className="grid grid-cols-2 gap-1">
           {Object.entries(preview.fieldMapping).map(([from, to]) => (
-            <div key={from} className="rounded border border-gray-200 px-2 py-1">
+            <div key={from} className="rounded border border-border px-2 py-1">
               {from} → <span className="text-blue-600">{to}</span>
             </div>
           ))}

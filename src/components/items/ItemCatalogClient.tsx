@@ -86,7 +86,7 @@ export function ItemCatalogClient({
     <div className="space-y-4">
       <ItemStats total={total} />
       <ItemUpload onImported={() => void loadRows({ page: 1 })} />
-      <Card className="border border-gray-200 shadow-sm">
+      <Card >
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">道具表预览</CardTitle>
           <a href="/api/items/export">

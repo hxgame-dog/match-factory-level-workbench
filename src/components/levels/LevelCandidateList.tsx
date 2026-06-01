@@ -28,7 +28,7 @@ type Props = {
 
 export function LevelCandidateList(props: Props) {
   if (props.candidates.length === 0) {
-    return <div className="rounded-md border border-dashed border-gray-300 p-8 text-sm text-gray-500">暂无候选关卡</div>;
+    return <div className="rounded-md border border-dashed border-border p-8 text-sm text-muted-foreground">暂无候选关卡</div>;
   }
   return (
     <div className="grid gap-3 xl:grid-cols-2">

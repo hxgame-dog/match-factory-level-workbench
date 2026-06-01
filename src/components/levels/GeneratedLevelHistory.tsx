@@ -21,11 +21,11 @@ type Props = {
 
 export function GeneratedLevelHistory(props: Props) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader><CardTitle className="text-lg">历史关卡区</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {props.rows.map((row) => (
-          <div key={row.id} className="rounded-md border border-gray-200 p-3 text-sm">
+          <div key={row.id} className="rounded-md border border-border p-3 text-sm">
             <p className="font-medium">{row.name}</p>
             <p>Index: {row.levelIndex ?? "-"} / Theme: {row.theme ?? "-"} / Difficulty: {row.targetDifficulty ?? "-"}</p>
             <p>{new Date(row.createdAt).toLocaleString()}</p>
@@ -36,7 +36,7 @@ export function GeneratedLevelHistory(props: Props) {
             </div>
           </div>
         ))}
-        {props.rows.length === 0 ? <p className="text-sm text-gray-500">暂无历史关卡</p> : null}
+        {props.rows.length === 0 ? <p className="text-sm text-muted-foreground">暂无历史关卡</p> : null}
       </CardContent>
     </Card>
   );

@@ -1,5 +1,5 @@
 import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
-import { ItemGeneratorWorkspace } from "@/components/generator/ItemGeneratorWorkspace";
+import { ItemGeneratorWorkspace } from "@/features/item-generator";
 import { WorkspacePageLayout } from "@/features/workspace";
 import { getAiStatus } from "@/lib/ai/gemini";
 import { zh } from "@/lib/i18n/zh";

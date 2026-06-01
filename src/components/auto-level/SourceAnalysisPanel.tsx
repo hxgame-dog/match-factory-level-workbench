@@ -6,9 +6,9 @@ import type { SourceLevelPatternAnalysis } from "@/types/autoLevel";
 export function SourceAnalysisPanel({ analysis }: { analysis: SourceLevelPatternAnalysis | null }) {
   if (!analysis) return null;
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader className="pb-2"><CardTitle className="text-sm">Source Analysis 区</CardTitle></CardHeader>
-      <CardContent className="space-y-1 text-xs text-gray-700">
+      <CardContent className="space-y-1 text-xs text-foreground">
         <p>平均 P：{analysis.difficulty?.avgP?.toFixed?.(3) ?? "-"}</p>
         <p>P 范围：{analysis.difficulty?.minP?.toFixed?.(3)} ~ {analysis.difficulty?.maxP?.toFixed?.(3)}</p>
         <p>趋势：{analysis.difficulty?.trend ?? "-"}</p>

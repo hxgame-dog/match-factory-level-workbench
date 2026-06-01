@@ -203,7 +203,7 @@ export function GeminiSettingsPanel({ compact }: { compact?: boolean }) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs text-gray-500">Gemini API Key（保存后清空输入框）</label>
+          <label className="text-xs text-muted-foreground">Gemini API Key（保存后清空输入框）</label>
           <Input
             type="password"
             autoComplete="off"
@@ -226,7 +226,7 @@ export function GeminiSettingsPanel({ compact }: { compact?: boolean }) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">文本模型</label>
+            <label className="text-xs text-muted-foreground">文本模型</label>
             {textModels.length > 0 ? (
               <Select value={textModel} onValueChange={(v) => setTextModel(v ?? textModel)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -243,7 +243,7 @@ export function GeminiSettingsPanel({ compact }: { compact?: boolean }) {
             )}
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">图像模型</label>
+            <label className="text-xs text-muted-foreground">图像模型</label>
             {imageModels.length > 0 ? (
               <Select value={imageModel} onValueChange={(v) => setImageModel(v ?? imageModel)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -289,9 +289,9 @@ export function GeminiSettingsPanel({ compact }: { compact?: boolean }) {
 
         {testImageUrl ? (
           <div className="space-y-2">
-            <p className="text-xs text-gray-500">图像测试成功</p>
+            <p className="text-xs text-muted-foreground">图像测试成功</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={testImageUrl} alt="Gemini 测试图" className="h-40 w-40 rounded border border-gray-200 object-contain" />
+            <img src={testImageUrl} alt="Gemini 测试图" className="h-40 w-40 rounded border border-border object-contain" />
           </div>
         ) : null}
       </div>

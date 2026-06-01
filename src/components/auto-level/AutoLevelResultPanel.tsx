@@ -21,11 +21,11 @@ export function AutoLevelResultPanel({
 }) {
   if (!result) return null;
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">生成结果区</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         {result.generated?.map((row) => (
-          <details key={row.targetLevelIndex} open className="rounded-md border border-gray-200 p-2">
+          <details key={row.targetLevelIndex} open className="rounded-md border border-border p-2">
             <summary className="cursor-pointer text-sm">L{row.targetLevelIndex} · Target P {row.targetP?.toFixed?.(3)}</summary>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
               {row.candidates?.map((candidate) => (

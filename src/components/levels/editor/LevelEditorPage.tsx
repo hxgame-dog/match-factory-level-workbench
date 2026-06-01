@@ -19,7 +19,7 @@ import { LevelJsonActions } from "./LevelJsonActions";
 import { LevelJsonPreviewDialog } from "./LevelJsonPreviewDialog";
 import { LevelSelector } from "./LevelSelector";
 import { LevelValidationPanel } from "./LevelValidationPanel";
-import { LevelEditorAnalyticsPanel } from "@/components/analytics/LevelEditorAnalyticsPanel";
+import { LevelEditorAnalyticsPanel } from "@/features/analytics";
 import { buttonVariants } from "@/components/ui/button";
 import { WorkspaceFilterBanner } from "@/components/shell/WorkspaceFilterBanner";
 import { hrefWithWorkspace } from "@/features/workspace";

@@ -13,7 +13,7 @@ export function TargetCurveChart({
   const rows = [...source.map((s) => ({ levelIndex: s.levelIndex, sourceP: s.P })), ...target.map((t) => ({ levelIndex: t.levelIndex, targetP: t.targetP }))]
     .sort((a, b) => a.levelIndex - b.levelIndex);
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader className="pb-2"><CardTitle className="text-sm">Target Curve 区</CardTitle></CardHeader>
       <CardContent className="h-64">
         <LineChart width={720} height={240} data={rows}>

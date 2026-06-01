@@ -11,7 +11,7 @@ export function AutoLevelConfigForm({
   onChange: (key: string, value: string | number) => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader className="pb-2"><CardTitle className="text-sm">生成配置区</CardTitle></CardHeader>
       <CardContent className="grid grid-cols-2 gap-2">
         <Input value={String(form.name ?? "")} onChange={(e) => onChange("name", e.target.value)} placeholder="Run Name" />

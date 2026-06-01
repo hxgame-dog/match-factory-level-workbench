@@ -12,12 +12,12 @@ export function AnalyticsGeminiAdvicePanel({
   onAsk: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Gemini Analytics Advice</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-xs">
         <Button variant="outline" onClick={onAsk}>Ask Gemini for Analytics Advice</Button>
         {advice ? (
-          <div className="space-y-2 rounded border border-gray-200 p-2">
+          <div className="space-y-2 rounded border border-border p-2">
             <p className="font-medium">{advice.summary}</p>
             <div>
               <p className="font-medium">Key Findings</p>
@@ -35,11 +35,11 @@ export function AnalyticsGeminiAdvicePanel({
                 {advice.optimizationSuggestions.map((s, i) => <li key={i}>[{s.priority}] {s.action} — {s.detail}</li>)}
               </ul>
             </div>
-            <p className="text-gray-500">Formula 校准: {advice.formulaCalibrationNotes}</p>
-            <p className="text-gray-500">Playtest 校准: {advice.playtestCalibrationNotes}</p>
+            <p className="text-muted-foreground">Formula 校准: {advice.formulaCalibrationNotes}</p>
+            <p className="text-muted-foreground">Playtest 校准: {advice.playtestCalibrationNotes}</p>
           </div>
         ) : (
-          <p className="text-gray-500">暂无建议</p>
+          <p className="text-muted-foreground">暂无建议</p>
         )}
       </CardContent>
     </Card>

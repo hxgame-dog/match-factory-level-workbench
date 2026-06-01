@@ -26,6 +26,12 @@ export const zh = {
     expand: "展开",
     comingSoon: "即将推出",
   },
+  theme: {
+    light: "浅色模式",
+    dark: "深色模式",
+    switchToLight: "切换为浅色模式",
+    switchToDark: "切换为深色模式",
+  },
   pages: {
     home: {
       title: "Match Factory 关卡工作台",

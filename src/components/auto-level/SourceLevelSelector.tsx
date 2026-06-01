@@ -17,7 +17,7 @@ export function SourceLevelSelector({
   const sorted = [...levels].sort((a, b) => b.levelIndex - a.levelIndex);
   const picked = levels.filter((l) => selectedIds.includes(l.id));
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm">Source Levels 选择区</CardTitle>
       </CardHeader>
@@ -27,17 +27,17 @@ export function SourceLevelSelector({
           <Button variant="outline" onClick={() => onQuickPick(10)}>最近 10 关</Button>
           <Button variant="outline" onClick={() => onQuickPick(20)}>最近 20 关</Button>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           已选 {picked.length} 关，范围：
           {picked.length ? `${Math.min(...picked.map((x) => x.levelIndex))} ~ ${Math.max(...picked.map((x) => x.levelIndex))}` : "-"}
         </p>
-        <div className="max-h-56 space-y-1 overflow-auto rounded-md border border-gray-200 p-2">
+        <div className="max-h-56 space-y-1 overflow-auto rounded-md border border-border p-2">
           {sorted.map((level) => (
             <button
               key={level.id}
               onClick={() => onToggle(level.id)}
               className={`block w-full rounded-sm border px-2 py-1 text-left text-xs ${
-                selectedIds.includes(level.id) ? "border-blue-300 bg-blue-50" : "border-gray-200 bg-white"
+                selectedIds.includes(level.id) ? "border-blue-300 bg-blue-50" : "border-border bg-card"
               }`}
               type="button"
             >

@@ -23,11 +23,11 @@ export function OptimizationProposalPanel({
   onReject: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Optimization Proposal</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-xs">
         <div className="flex items-center gap-2">
-          <select value={mode} onChange={(e) => onModeChange(e.target.value as "conservative" | "balanced" | "aggressive")} className="h-8 rounded-md border border-gray-200 px-2">
+          <select value={mode} onChange={(e) => onModeChange(e.target.value as "conservative" | "balanced" | "aggressive")} className="h-8 rounded-md border border-border px-2">
             <option value="conservative">conservative</option>
             <option value="balanced">balanced</option>
             <option value="aggressive">aggressive</option>
@@ -46,7 +46,7 @@ export function OptimizationProposalPanel({
             </div>
           </div>
         ) : (
-          <p className="text-gray-500">先选择一个关卡并生成方案</p>
+          <p className="text-muted-foreground">先选择一个关卡并生成方案</p>
         )}
       </CardContent>
     </Card>

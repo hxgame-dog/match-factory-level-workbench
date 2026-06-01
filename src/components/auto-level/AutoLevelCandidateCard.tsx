@@ -20,7 +20,7 @@ export function AutoLevelCandidateCard({
   onSave: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader className="pb-2"><CardTitle className="text-sm">候选 #{candidate.candidateRank}</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-xs">
         <p>Actual P: {candidate.actualP?.toFixed?.(3) ?? "-"}</p>

@@ -17,13 +17,13 @@ export function AnalyticsOverview({
   const easy = diagnoses.filter((d) => d.issueTags.includes("too_easy_real")).length;
   const lowConf = diagnoses.filter((d) => d.dataQuality.confidence === "low").length;
   const cell = (label: string, value: string | number) => (
-    <div className="rounded border border-gray-200 p-2">
-      <p className="text-xs text-gray-500">{label}</p>
+    <div className="rounded border border-border p-2">
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">{value}</p>
     </div>
   );
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Analytics Overview</CardTitle></CardHeader>
       <CardContent className="grid grid-cols-3 gap-2 md:grid-cols-6">
         {cell("关卡数", diagnoses.length)}

@@ -13,14 +13,14 @@ export function AutoRunHistory({
   onDelete: (id: string) => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">历史 Auto Runs</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {runs.map((run) => (
-          <div key={run.id} className="flex items-center justify-between rounded-sm border border-gray-200 p-2 text-xs">
+          <div key={run.id} className="flex items-center justify-between rounded-sm border border-border p-2 text-xs">
             <div>
               <p className="font-medium">{run.name}</p>
-              <p className="text-gray-500">{run.status} · 生成 {run.generateCount} 关</p>
+              <p className="text-muted-foreground">{run.status} · 生成 {run.generateCount} 关</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => onOpen(run.id)}>打开</Button>
