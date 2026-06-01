@@ -6,6 +6,7 @@ import { ItemCatalogClient } from "@/components/items/ItemCatalogClient";
 import { ItemUpload } from "@/components/items/ItemUpload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { notify } from "@/lib/ui/notify";
 import { zh } from "@/lib/i18n/zh";
 
 const t = zh.pages.itemGenerator;
@@ -33,11 +34,12 @@ export function ItemCatalogUploadPanel({ initialTotal, initialFilters, initialRo
       const response = await fetch("/api/items/clear", { method: "POST" });
       const payload = await response.json();
       if (!payload.success) {
-        window.alert(payload.error ?? "清空失败");
+        notify.error("清空失败", payload.error ?? "请稍后重试");
         return;
       }
       setCatalogTotal(0);
       setRefreshKey((k) => k + 1);
+      notify.success("道具库已清空");
     } finally {
       setClearing(false);
     }
@@ -52,6 +54,7 @@ export function ItemCatalogUploadPanel({ initialTotal, initialFilters, initialRo
           if (payload.success) {
             setCatalogTotal(payload.total);
             setRefreshKey((k) => k + 1);
+            notify.success("道具库已更新", `当前共 ${payload.total} 条记录`);
           }
         }}
       />

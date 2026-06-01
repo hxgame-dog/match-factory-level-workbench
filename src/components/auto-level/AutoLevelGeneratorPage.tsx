@@ -153,9 +153,13 @@ export function AutoLevelGeneratorPage({
         <GenerationConstraintsPanel noveltyRate={noveltyRate} onNoveltyRateChange={setNoveltyRate} />
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" onClick={analyze}>Analyze</Button>
-        <Button variant="outline" onClick={calcCurve}>生成目标曲线</Button>
-        <Button onClick={generate}>Generate</Button>
+        <Button variant="outline" onClick={analyze}>
+          分析参考关卡
+        </Button>
+        <Button variant="outline" onClick={calcCurve}>
+          生成目标曲线
+        </Button>
+        <Button onClick={generate}>批量生成关卡</Button>
         {result?.runId ? (
           <>
             <Button variant="outline" onClick={() => postNoBody(`/api/auto-level-generator/runs/${result.runId}/save-selected`)}>Save Selected Candidates</Button>

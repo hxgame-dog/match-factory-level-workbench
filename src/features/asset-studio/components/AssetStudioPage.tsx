@@ -17,6 +17,7 @@ import { AssetPromptDialog } from "./AssetPromptDialog";
 import { AssetPromptPanel } from "./AssetPromptPanel";
 import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
 import { pickAssetItemPayload } from "@/lib/assets/pickAssetItemPayload";
+import { notify } from "@/lib/ui/notify";
 
 import { ItemSetSelector } from "./ItemSetSelector";
 
@@ -166,6 +167,13 @@ export function AssetStudioPage({
       next[i].status = "prompt_ready";
     }
     setAssets(next);
+    const ready = next.filter((a) => a.status === "prompt_ready").length;
+    const failed = next.filter((a) => a.status === "failed").length;
+    if (failed > 0) {
+      notify.warning("Prompt 已更新（部分失败）", `就绪 ${ready} 条，失败 ${failed} 条`);
+    } else {
+      notify.success("Prompt 已生成", `共 ${ready} 条道具可进入批量出图`);
+    }
   }
 
   async function generateOne(index: number) {
@@ -208,7 +216,9 @@ export function AssetStudioPage({
 
   async function generateAll() {
     if (!selectedSetId) {
-      setError("请先选择 Item Set");
+      const message = "请先选择道具集";
+      setError(message);
+      notify.warning(message);
       return;
     }
     setError(null);
@@ -228,7 +238,9 @@ export function AssetStudioPage({
     });
     const payload = await response.json();
     if (!payload.success) {
-      setError(payload.error ?? "批量生成失败");
+      const message = payload.error ?? "批量生成失败";
+      setError(message);
+      notify.error("批量出图失败", message);
       return;
     }
     setProgress({
@@ -236,8 +248,13 @@ export function AssetStudioPage({
       done: payload.data.successCount,
       failed: payload.data.failedCount,
     });
-    if (payload.data.failedCount > 0) {
-      setError(`批量生成完成：成功 ${payload.data.successCount}，失败 ${payload.data.failedCount}`);
+    const { successCount, failedCount, totalCount } = payload.data;
+    if (failedCount > 0) {
+      const message = `成功 ${successCount} / ${totalCount}，失败 ${failedCount}`;
+      setError(`批量生成完成：${message}`);
+      notify.warning("批量出图完成（部分失败）", message);
+    } else {
+      notify.success("批量出图完成", `共 ${successCount} 张图片已生成`);
     }
     await refreshBatches();
     if (payload.data.batchId) {

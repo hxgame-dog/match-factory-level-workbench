@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { PlannerStepHint } from "@/components/shell/PlannerStepHint";
 import { WorkspaceContextBar } from "@/components/shell/WorkspaceContextBar";
 import { WorkspaceLevelToolsBar } from "@/components/shell/WorkspaceLevelToolsBar";
 import { WorkspaceStepper } from "@/components/shell/WorkspaceStepper";
@@ -55,6 +56,7 @@ export function WorkspaceShell({ step, children, workspaceProgress = null }: Pro
         progress={progress}
         onClear={clearActive}
       />
+      <PlannerStepHint workspaceId={activeId} progress={progress} />
       <div className="min-w-0">{children}</div>
     </div>
   );

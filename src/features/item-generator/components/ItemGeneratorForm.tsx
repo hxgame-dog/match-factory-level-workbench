@@ -14,6 +14,7 @@ import { parseStoredGenerationConfig } from "@/lib/generatedItemSetPayload";
 import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import { zh } from "@/lib/i18n/zh";
+import { notify } from "@/lib/ui/notify";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { GenerateItemsResult } from "@/types/ai";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
@@ -79,8 +80,11 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       setResult(payload.data as GenerateItemsResult);
       setDirty(false);
       setSavedSetId(null);
+      notify.success("道具表已生成", "记得点击「保存」绑定为当前工作区，便于后续出图与关卡设计。");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "生成失败");
+      const message = e instanceof Error ? e.message : "生成失败";
+      setError(message);
+      notify.error("道具表生成失败", message);
     } finally {
       setLoading(false);
     }
@@ -114,8 +118,11 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       }
       setDirty(false);
       await loadHistory();
+      notify.success("道具集已保存", "已设为当前工作区，可前往资源工作室出图。");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "保存失败");
+      const message = e instanceof Error ? e.message : "保存失败";
+      setError(message);
+      notify.error("保存失败", message);
     } finally {
       setSaving(false);
     }
@@ -195,8 +202,11 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       link.download = `generated_item_set_${setName.replace(/[^\w\u4e00-\u9fa5-]/g, "_")}.xlsx`;
       link.click();
       URL.revokeObjectURL(url);
+      notify.success("Excel 已开始下载");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "导出失败");
+      const message = e instanceof Error ? e.message : "导出失败";
+      setError(message);
+      notify.error("导出失败", message);
     } finally {
       setExporting(false);
     }

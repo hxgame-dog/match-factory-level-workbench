@@ -220,7 +220,7 @@ export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }
             }
           }}
         >
-          Run Playtest
+          快速试玩
         </Button>
         <Link
           href={hrefWithWorkspace("/playtest-simulator", activeWorkspaceId)}

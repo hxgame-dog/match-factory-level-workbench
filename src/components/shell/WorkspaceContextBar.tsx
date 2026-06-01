@@ -19,10 +19,17 @@ export function WorkspaceContextBar({ workspaceId, workspaceName, progress, onCl
   if (!workspaceId) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-border bg-muted/40 px-3 py-2 text-sm">
-        <span className="text-muted-foreground">未选择工作区：请先在首页选择道具集，或在本页保存生成结果。</span>
-        <Link href="/" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-          选择工作区
-        </Link>
+        <span className="text-muted-foreground">
+          未绑定工作区（道具集）。请从首页选择已有道具集，或在本页生成后点击「保存」以创建并绑定。
+        </span>
+        <div className="flex shrink-0 gap-2">
+          <Link href="/" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            打开工作区列表
+          </Link>
+          <Link href="/item-generator" className={cn(buttonVariants({ size: "sm" }))}>
+            新建道具表
+          </Link>
+        </div>
       </div>
     );
   }

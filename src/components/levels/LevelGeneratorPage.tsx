@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { notify } from "@/lib/ui/notify";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -112,8 +113,12 @@ export function LevelGeneratorPage(props: {
       setWarnings(payload.data.warnings ?? []);
       setCandidates(payload.data.candidates ?? []);
       setValidations(payload.validations ?? []);
+      const count = (payload.data.candidates ?? []).length;
+      notify.success(`已生成 ${count} 个候选关卡`, "可在下方预览、保存或导出 JSON。");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "生成失败");
+      const message = e instanceof Error ? e.message : "生成失败";
+      setError(message);
+      notify.error("关卡生成失败", message);
     } finally {
       setLoading(false);
     }
@@ -148,6 +153,9 @@ export function LevelGeneratorPage(props: {
     if (payload.success) {
       const rows = await fetch("/api/generated-levels").then((r) => r.json());
       if (rows.success) setHistory(rows.data);
+      notify.success("关卡已保存", `「${c.name}」已写入历史，可在关卡编辑器继续精调。`);
+    } else {
+      notify.error("保存失败", payload.error ?? "请稍后重试");
     }
   }
 
@@ -211,9 +219,22 @@ export function LevelGeneratorPage(props: {
         <CardHeader><CardTitle className="text-lg">候选关卡生成区</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-2">
-            <Button onClick={() => void generateCandidates()} disabled={loading}>{loading ? "生成中..." : "Generate Level Candidates"}</Button>
-            <Button variant="outline" onClick={() => void generateCandidates()}>Regenerate</Button>
-            <Button variant="outline" onClick={() => { setCandidates([]); setWarnings([]); setSummary(""); }}>Clear</Button>
+            <Button onClick={() => void generateCandidates()} disabled={loading || !selectedItemSetId}>
+              {loading ? "生成中…" : "生成候选关卡"}
+            </Button>
+            <Button variant="outline" onClick={() => void generateCandidates()} disabled={loading || !selectedItemSetId}>
+              重新生成
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCandidates([]);
+                setWarnings([]);
+                setSummary("");
+              }}
+            >
+              清空结果
+            </Button>
           </div>
           {summary ? <p className="text-sm text-muted-foreground">{summary}</p> : null}
           {warnings.length > 0 ? <p className="text-sm text-amber-700">{warnings.join("；")}</p> : null}

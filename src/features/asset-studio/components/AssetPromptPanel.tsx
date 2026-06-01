@@ -11,17 +11,17 @@ type Props = {
 
 export function AssetPromptPanel(props: Props) {
   return (
-    <Card >
+    <Card>
       <CardHeader>
         <CardTitle className="text-lg">Prompt 生成区</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
-        <Button onClick={props.onGeneratePrompts}>Generate Prompts</Button>
+        <Button onClick={props.onGeneratePrompts}>生成 Prompt</Button>
         <Button variant="outline" onClick={props.onRegeneratePrompts}>
-          Regenerate All Prompts
+          全部重新生成
         </Button>
         <Button variant="outline" onClick={props.onClearPrompts}>
-          Clear Prompts
+          清空 Prompt
         </Button>
       </CardContent>
     </Card>
