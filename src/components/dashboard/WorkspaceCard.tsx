@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { hrefWithWorkspace } from "@/features/workspace";
+import { hrefWithWorkspace } from "@/lib/workspace/pipeline";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { WorkspaceSummary } from "@/types/workspace";
 

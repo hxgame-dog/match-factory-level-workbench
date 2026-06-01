@@ -4,7 +4,8 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { hrefWithWorkspace, isNavItemActive } from "@/features/workspace";
+import { hrefWithWorkspace } from "@/lib/workspace/pipeline";
+import { isNavItemActive } from "@/lib/workspace/routes";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 type Props = {

@@ -22,7 +22,7 @@ import { LevelValidationPanel } from "./LevelValidationPanel";
 import { LevelEditorAnalyticsPanel } from "@/features/analytics";
 import { buttonVariants } from "@/components/ui/button";
 import { WorkspaceFilterBanner } from "@/components/shell/WorkspaceFilterBanner";
-import { hrefWithWorkspace } from "@/features/workspace";
+import { hrefWithWorkspace } from "@/lib/workspace/pipeline";
 import { cn } from "@/lib/utils";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { VALIDATE_TOOLS } from "@/lib/workspace/routes";
-import { hrefWithWorkspace } from "@/features/workspace";
+import { hrefWithWorkspace } from "@/lib/workspace/pipeline";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function WorkspaceValidateToolsBar() {

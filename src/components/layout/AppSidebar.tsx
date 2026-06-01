@@ -21,7 +21,7 @@ import {
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { WorkspaceSidebarLink } from "@/components/shell/WorkspaceSidebarLink";
 import { navItems, zh, type NavKey } from "@/lib/i18n/zh";
-import { pipelineStepForPath } from "@/features/workspace";
+import { pipelineStepForPath } from "@/lib/workspace/routes";
 import { useLayoutStore } from "@/stores/layoutStore";
 import { cn } from "@/lib/utils";
 

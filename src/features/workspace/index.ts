@@ -14,7 +14,6 @@ export {
   isNavItemActive,
   pipelineStepForPath,
 } from "@/lib/workspace/routes";
-export { getWorkspaceSummaries } from "@/lib/workspace/getWorkspaceSummaries";
 export { useWorkspaceStore } from "@/stores/workspaceStore";
 export type {
   PipelineStepId,
