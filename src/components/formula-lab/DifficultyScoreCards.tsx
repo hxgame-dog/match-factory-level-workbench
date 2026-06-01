@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DifficultyDiagnosisResult } from "@/types/difficulty";
 
 export function DifficultyScoreCards({ diagnosis }: { diagnosis?: DifficultyDiagnosisResult | null }) {
-  if (!diagnosis) return <div className="text-sm text-gray-500">暂无诊断结果</div>;
+  if (!diagnosis) return <div className="text-sm text-muted-foreground">暂无诊断结果</div>;
   return (
     <div className="grid gap-3 md:grid-cols-5">
       <Card><CardHeader><CardTitle>P</CardTitle></CardHeader><CardContent>{diagnosis.score.P.toFixed(3)} <Badge>{diagnosis.score.label}</Badge></CardContent></Card>

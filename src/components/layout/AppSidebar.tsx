@@ -20,7 +20,7 @@ import {
 
 import { WorkspaceSidebarLink } from "@/components/shell/WorkspaceSidebarLink";
 import { navItems, zh, type NavKey } from "@/lib/i18n/zh";
-import { pipelineStepForPath } from "@/lib/workspace/routes";
+import { pipelineStepForPath } from "@/features/workspace";
 import { useLayoutStore } from "@/stores/layoutStore";
 import { cn } from "@/lib/utils";
 

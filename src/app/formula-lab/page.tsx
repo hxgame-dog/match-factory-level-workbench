@@ -1,6 +1,6 @@
-import { FormulaLabPage } from "@/components/formula-lab/FormulaLabPage";
+import { FormulaLabPage } from "@/features/formula-lab";
+import { WorkspacePageLayout } from "@/features/workspace";
 import { zh } from "@/lib/i18n/zh";
-import { WorkspacePageLayout } from "@/lib/workspace/pageShell";
 import { getAiStatus } from "@/lib/ai/gemini";
 import { diagnoseLevelDifficulty } from "@/lib/difficulty/diagnoseLevelDifficulty";
 import { getDefaultFormulaPreset } from "@/lib/difficulty/formulaPresetService";

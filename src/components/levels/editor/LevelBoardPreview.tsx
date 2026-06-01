@@ -42,7 +42,7 @@ export function LevelBoardPreview({ preview, level, onRefresh }: Props) {
   }, [preview, level]);
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card>
       <CardHeader>
         <CardTitle className="text-lg">2D 关卡预览区</CardTitle>
       </CardHeader>
@@ -82,10 +82,10 @@ export function LevelBoardPreview({ preview, level, onRefresh }: Props) {
         </div>
 
         {!preview || !level ? (
-          <div className="rounded-md border border-dashed border-gray-300 p-8 text-sm text-gray-500">暂无预览数据</div>
+          <div className="rounded-md border border-dashed border-border p-8 text-sm text-muted-foreground">暂无预览数据</div>
         ) : (
           <>
-            <div className="space-y-1 text-sm text-gray-700">
+            <div className="space-y-1 text-sm text-foreground">
               <p>容量 {preview.stats.capacity} / 已使用 {preview.stats.used} / 溢出 {preview.stats.overflow} / 空格 {preview.stats.empty}</p>
               {preview.warnings.length > 0 ? <p className="text-amber-700">{preview.warnings.join("；")}</p> : null}
             </div>
@@ -108,7 +108,7 @@ export function LevelBoardPreview({ preview, level, onRefresh }: Props) {
               ))}
             </div>
             {selectedCell?.item ? (
-              <div className="rounded-md border border-gray-200 p-3 text-xs text-gray-700">
+              <div className="rounded-md border border-border p-3 text-xs text-foreground">
                 <p>Name: {selectedCell.item.name}</p>
                 <p>Role: {selectedCell.item.role}</p>
                 <p>Category: {selectedCell.item.category1}</p>

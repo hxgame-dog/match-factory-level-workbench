@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { LEVEL_DESIGN_TOOLS } from "@/lib/workspace/routes";
-import { hrefWithWorkspace } from "@/lib/workspace/pipeline";
+import { hrefWithWorkspace } from "@/features/workspace";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function WorkspaceLevelToolsBar() {

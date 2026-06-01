@@ -20,7 +20,7 @@ export function WeightSliderInput({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="space-y-1 rounded-md border border-gray-200 p-2">
+    <div className="space-y-1 rounded-md border border-border p-2">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{label}</p>
         <Input
@@ -30,7 +30,7 @@ export function WeightSliderInput({
           onChange={(e) => onChange(Math.min(max, Math.max(min, Number(e.target.value) || min)))}
         />
       </div>
-      {description ? <p className="text-xs text-gray-500">{description}</p> : null}
+      {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
       <input
         type="range"
         min={min}

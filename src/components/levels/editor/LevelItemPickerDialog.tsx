@@ -42,7 +42,7 @@ export function LevelItemPickerDialog({ open, sourceItems, mode, onPick, onClose
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-      <div className="w-full max-w-3xl rounded-md border border-gray-200 bg-white p-4">
+      <div className="w-full max-w-3xl rounded-md border border-border bg-card p-4">
         <h3 className="mb-3 font-semibold">选择道具</h3>
         <div className="mb-3 grid gap-2 md:grid-cols-4">
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索 name/displayName" />
@@ -61,10 +61,10 @@ export function LevelItemPickerDialog({ open, sourceItems, mode, onPick, onClose
         </div>
         <div className="max-h-[45vh] space-y-2 overflow-auto">
           {filtered.map((item, i) => (
-            <div key={`${item.name}-${i}`} className="flex items-center justify-between rounded-md border border-gray-200 p-2 text-sm">
+            <div key={`${item.name}-${i}`} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
               <div>
                 <p className="font-medium">{item.name}</p>
-                <p className="text-gray-500">{item.category1} / {item.role}</p>
+                <p className="text-muted-foreground">{item.category1} / {item.role}</p>
               </div>
               <Button
                 size="sm"

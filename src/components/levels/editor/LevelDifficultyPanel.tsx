@@ -13,11 +13,11 @@ type Difficulty = {
 
 export function LevelDifficultyPanel({ difficulty }: { difficulty?: Difficulty }) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card>
       <CardHeader><CardTitle className="text-lg">Difficulty</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
         {!difficulty ? (
-          <p className="text-gray-500">暂无难度估算</p>
+          <p className="text-muted-foreground">暂无难度估算</p>
         ) : (
           <>
             <Badge>{difficulty.label}</Badge>

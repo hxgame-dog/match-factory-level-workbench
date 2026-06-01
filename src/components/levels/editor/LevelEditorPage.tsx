@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -19,7 +20,10 @@ import { LevelJsonPreviewDialog } from "./LevelJsonPreviewDialog";
 import { LevelSelector } from "./LevelSelector";
 import { LevelValidationPanel } from "./LevelValidationPanel";
 import { LevelEditorAnalyticsPanel } from "@/components/analytics/LevelEditorAnalyticsPanel";
+import { buttonVariants } from "@/components/ui/button";
 import { WorkspaceFilterBanner } from "@/components/shell/WorkspaceFilterBanner";
+import { hrefWithWorkspace } from "@/features/workspace";
+import { cn } from "@/lib/utils";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 type LevelRow = {
@@ -218,7 +222,12 @@ export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }
         >
           Run Playtest
         </Button>
-        <a href="/playtest-simulator" className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">Open in Playtest Simulator</a>
+        <Link
+          href={hrefWithWorkspace("/playtest-simulator", activeWorkspaceId)}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          在试玩模拟器中打开
+        </Link>
       </div>
       {playtestBrief ? (
         <Alert>
@@ -270,7 +279,7 @@ export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }
                 />
               </>
             ) : (
-              <div className="rounded-md border border-dashed border-gray-300 p-8 text-sm text-gray-500">请先加载关卡</div>
+              <div className="rounded-md border border-dashed border-border p-8 text-sm text-muted-foreground">请先加载关卡</div>
             )}
           </CardContent>
         </Card>

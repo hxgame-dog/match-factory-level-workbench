@@ -43,9 +43,9 @@ export function LevelItemTable({ items, assets, mode, onCountChange, onRoleChang
               <TableCell>
                 {asset?.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={asset.imageUrl} alt={item.name} className="h-10 w-10 rounded border border-gray-200 object-contain" />
+                  <img src={asset.imageUrl} alt={item.name} className="h-10 w-10 rounded border border-border object-contain" />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-gray-100 text-xs">{item.name.slice(0, 1)}</div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded border border-border bg-muted text-xs">{item.name.slice(0, 1)}</div>
                 )}
               </TableCell>
               {mode === "spawn" ? (
@@ -86,7 +86,7 @@ export function LevelItemTable({ items, assets, mode, onCountChange, onRoleChang
           );
         })}
         {items.length === 0 ? (
-          <TableRow><TableCell colSpan={mode === "spawn" ? 11 : 10} className="text-center text-gray-500">暂无道具</TableCell></TableRow>
+          <TableRow><TableCell colSpan={mode === "spawn" ? 11 : 10} className="text-center text-muted-foreground">暂无道具</TableCell></TableRow>
         ) : null}
       </TableBody>
     </Table>

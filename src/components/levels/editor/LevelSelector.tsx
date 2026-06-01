@@ -28,7 +28,7 @@ type Props = {
 export function LevelSelector(props: Props) {
   const selected = props.levels.find((level) => level.id === props.selectedLevelId);
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card>
       <CardHeader><CardTitle className="text-lg">Level 选择区</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <Select value={props.selectedLevelId || "none"} onValueChange={(v) => props.onSelect(v === "none" ? "" : v ?? "")}>
@@ -45,7 +45,7 @@ export function LevelSelector(props: Props) {
           <Button variant="outline" onClick={props.onExport}>Export JSON</Button>
         </div>
         {selected ? (
-          <div className="rounded-md border border-gray-200 p-3 text-sm text-gray-700">
+          <div className="rounded-md border border-border p-3 text-sm text-foreground">
             <p>Level Name: {selected.name}</p>
             <p>Level Index: {selected.levelIndex ?? "-"}</p>
             <p>Theme: {selected.theme ?? "-"}</p>

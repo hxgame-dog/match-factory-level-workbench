@@ -17,11 +17,11 @@ type Validation = {
 
 export function LevelValidationPanel({ validation }: { validation?: Validation }) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card>
       <CardHeader><CardTitle className="text-lg">Validation</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
         {!validation ? (
-          <p className="text-gray-500">暂无校验结果</p>
+          <p className="text-muted-foreground">暂无校验结果</p>
         ) : (
           <>
             <p>isValid: {validation.isValid ? "true" : "false"}</p>

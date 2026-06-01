@@ -1,5 +1,5 @@
+import { WorkspacePageLayout } from "@/features/workspace";
 import { zh } from "@/lib/i18n/zh";
-import { WorkspacePageLayout } from "@/lib/workspace/pageShell";
 import { AnalyticsFeedbackPage } from "@/components/analytics/AnalyticsFeedbackPage";
 import { prisma } from "@/lib/prisma";
 

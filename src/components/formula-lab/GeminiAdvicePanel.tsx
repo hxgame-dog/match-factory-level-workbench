@@ -15,7 +15,7 @@ export function GeminiAdvicePanel({
   onAsk: () => void;
 }) {
   return (
-    <div className="space-y-3 rounded-md border border-gray-200 p-3">
+    <div className="space-y-3 rounded-md border border-border p-3">
       <div className="flex items-center gap-2">
         <Button onClick={onAsk}>Ask Gemini for Diagnosis Advice</Button>
         {mockMode ? <Badge>Mock Mode</Badge> : null}
@@ -33,7 +33,7 @@ export function GeminiAdvicePanel({
           <p className="text-blue-700">{advice.balancingAdvice}</p>
         </div>
       ) : (
-        <p className="text-sm text-gray-500">暂无 Gemini 建议</p>
+        <p className="text-sm text-muted-foreground">暂无 Gemini 建议</p>
       )}
     </div>
   );

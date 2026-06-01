@@ -24,6 +24,9 @@ import { SimilarityPairsTable } from "./SimilarityPairsTable";
 import { SingleLevelDiagnosisPanel } from "./SingleLevelDiagnosisPanel";
 import { FormulaCalibrationChart } from "./FormulaCalibrationChart";
 import type { CalibrationPoint } from "@/lib/analytics/compareFormulaPlaytestAnalytics";
+import { FormulaBatchReplayResultsCard } from "@/features/formula-lab/components/FormulaBatchReplayResultsCard";
+import { FormulaPlaytestCompareTable } from "@/features/formula-lab/components/FormulaPlaytestCompareTable";
+import type { PlaytestCompareRow } from "@/features/formula-lab/types";
 
 type PresetRow = {
   id: string;
@@ -34,16 +37,6 @@ type PresetRow = {
 };
 
 type LevelOption = { id: string; name: string; levelIndex?: number | null };
-
-type PlaytestCompareRow = {
-  id: string;
-  name: string;
-  levelIndex?: number | null;
-  formulaP: number;
-  formulaLabel: string;
-  playtestPassRate: number | null;
-  consistency: string;
-};
 
 type DiagnosisRun = {
   id: string;
@@ -413,7 +406,7 @@ export function FormulaLabPage({
         />
       </div>
 
-      {loading ? <p className="text-sm text-gray-500">处理中…</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">处理中…</p> : null}
 
       <DifficultyScoreCards diagnosis={singleDiagnosis} />
 
@@ -436,70 +429,17 @@ export function FormulaLabPage({
 
       <GeminiAdvicePanel advice={advice} mockMode={mockMode} onAsk={() => void handleAskGemini()} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">批量回放结果</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {batchSummary ? (
-            <div className="grid gap-2 text-sm text-gray-600 md:grid-cols-4">
-              <p>关卡数：{batchSummary.count}</p>
-              <p>平均 P：{batchSummary.avgP.toFixed(3)}</p>
-              <p>最小 P：{batchSummary.minP.toFixed(3)}</p>
-              <p>最大 P：{batchSummary.maxP.toFixed(3)}</p>
-            </div>
-          ) : null}
-          <DifficultyCurveChart results={batchResults} />
-          <AnomalyList anomalies={batchAnomalies} />
-        </CardContent>
-      </Card>
+      <FormulaBatchReplayResultsCard
+        summary={batchSummary}
+        results={batchResults}
+        anomalies={batchAnomalies}
+      />
 
       <FormulaCalibrationChart points={calibrationPoints} summary={calibrationSummary ?? undefined} />
 
       <DiagnosisRunHistory runs={runs} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">公式 vs 试玩对比</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto text-xs">
-            <table className="w-full min-w-[640px] border-collapse">
-              <thead className="sticky top-0 bg-card">
-                <tr className="border-b border-border">
-                  <th className="py-2 text-left font-medium text-gray-700">关卡</th>
-                  <th className="py-2 text-left font-medium text-gray-700">Formula P</th>
-                  <th className="py-2 text-left font-medium text-gray-700">难度标签</th>
-                  <th className="py-2 text-left font-medium text-gray-700">Playtest 通关率</th>
-                  <th className="py-2 text-left font-medium text-gray-700">一致性</th>
-                </tr>
-              </thead>
-              <tbody>
-                {playtestCompare.map((row) => (
-                  <tr key={row.id} className="border-b border-gray-100">
-                    <td className="py-2">
-                      {row.levelIndex ?? "-"} · {row.name}
-                    </td>
-                    <td className="py-2">{row.formulaP.toFixed(3)}</td>
-                    <td className="py-2">{row.formulaLabel}</td>
-                    <td className="py-2">
-                      {row.playtestPassRate != null ? `${Math.round(row.playtestPassRate * 100)}%` : "-"}
-                    </td>
-                    <td className="py-2">{row.consistency}</td>
-                  </tr>
-                ))}
-                {playtestCompare.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-4 text-center text-gray-500">
-                      暂无关卡或 Playtest 数据
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <FormulaPlaytestCompareTable rows={playtestCompare} />
         </div>
       </div>
     </div>

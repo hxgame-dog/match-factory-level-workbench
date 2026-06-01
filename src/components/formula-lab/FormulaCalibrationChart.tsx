@@ -80,7 +80,7 @@ export function FormulaCalibrationChart({
             </ResponsiveContainer>
           </div>
         )}
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-muted-foreground">
           绿色：公式与真实表现较一致；红色：公式低估或高估难度（medium/high）。横轴为 Formula P，纵轴为玩家真实通关率。
         </p>
       </CardContent>

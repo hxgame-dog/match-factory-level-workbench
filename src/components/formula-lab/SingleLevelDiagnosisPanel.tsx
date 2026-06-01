@@ -17,7 +17,7 @@ export function SingleLevelDiagnosisPanel({
   onDiagnose: () => void;
 }) {
   return (
-    <div className="space-y-2 rounded-md border border-gray-200 p-3">
+    <div className="space-y-2 rounded-md border border-border p-3">
       <p className="font-medium">单关诊断区</p>
       <Select value={selectedLevelId || "none"} onValueChange={(v) => onSelectLevel(v ?? "")}>
         <SelectTrigger><SelectValue placeholder="选择关卡" /></SelectTrigger>

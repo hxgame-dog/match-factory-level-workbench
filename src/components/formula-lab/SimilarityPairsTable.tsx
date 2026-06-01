@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 export function SimilarityPairsTable({ diagnosis }: { diagnosis?: DifficultyDiagnosisResult | null }) {
   const pairs = diagnosis?.breakdown.similarity.highSimilarityPairs ?? [];
   return (
-    <div className="rounded-md border border-gray-200">
+    <div className="rounded-md border border-border">
       <Table>
         <TableHeader><TableRow><TableHead>ItemA</TableHead><TableHead>ItemB</TableHead><TableHead>Similarity</TableHead><TableHead>Reasons</TableHead></TableRow></TableHeader>
         <TableBody>
@@ -19,7 +19,7 @@ export function SimilarityPairsTable({ diagnosis }: { diagnosis?: DifficultyDiag
               <TableCell>{p.reasons.join(", ")}</TableCell>
             </TableRow>
           ))}
-          {pairs.length === 0 ? <TableRow><TableCell colSpan={4} className="text-center text-gray-500">无高相似度道具对</TableCell></TableRow> : null}
+          {pairs.length === 0 ? <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">无高相似度道具对</TableCell></TableRow> : null}
         </TableBody>
       </Table>
     </div>
