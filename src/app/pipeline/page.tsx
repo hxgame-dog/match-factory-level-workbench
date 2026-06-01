@@ -1,8 +1,12 @@
+import { Suspense } from "react";
+
 import { zh } from "@/lib/i18n/zh";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageContent } from "@/components/layout/PageContent";
 import { PipelinePage } from "@/components/pipeline/PipelinePage";
+import { WorkspaceRouteHydrator } from "@/components/shell/WorkspaceRouteHydrator";
+import { WorkspaceShell } from "@/components/shell/WorkspaceShell";
 import { prisma } from "@/lib/prisma";
 
 export default async function PipelineRoute() {
@@ -13,13 +17,30 @@ export default async function PipelineRoute() {
   ]);
   return (
     <AppShell>
-      <AppHeader title={zh.pages.pipeline.title} description={zh.pages.pipeline.description} />
-      <PageContent>
-        <PipelinePage
-          levels={levels.map((l) => ({ id: l.id, name: l.name }))}
-          packages={packages.map((p) => ({ id: p.id, name: p.name, version: p.version, status: p.status, exportPath: p.exportPath }))}
-          exportJobs={exportJobs.map((j) => ({ id: j.id, type: j.type, status: j.status, name: j.name, filePath: j.filePath }))}
-        />
+      <AppHeader title={zh.pages.pipeline.title} description={zh.pages.pipeline.description} fluid />
+      <PageContent fluid>
+        <Suspense fallback={null}>
+          <WorkspaceRouteHydrator />
+        </Suspense>
+        <WorkspaceShell step="delivery">
+          <PipelinePage
+            levels={levels.map((l) => ({ id: l.id, name: l.name }))}
+            packages={packages.map((p) => ({
+              id: p.id,
+              name: p.name,
+              version: p.version,
+              status: p.status,
+              exportPath: p.exportPath,
+            }))}
+            exportJobs={exportJobs.map((j) => ({
+              id: j.id,
+              type: j.type,
+              status: j.status,
+              name: j.name,
+              filePath: j.filePath,
+            }))}
+          />
+        </WorkspaceShell>
       </PageContent>
     </AppShell>
   );

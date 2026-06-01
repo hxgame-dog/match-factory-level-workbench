@@ -14,6 +14,7 @@ import { parseStoredGenerationConfig } from "@/lib/generatedItemSetPayload";
 import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import { zh } from "@/lib/i18n/zh";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { GenerateItemsResult } from "@/types/ai";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
 
@@ -40,6 +41,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
   const [history, setHistory] = useState<GeneratedItemSetListItem[]>(initialHistory);
   const [dirty, setDirty] = useState(false);
   const [savedSetId, setSavedSetId] = useState<string | null>(null);
+  const setActiveWorkspace = useWorkspaceStore((s) => s.setActive);
 
   const expectedTotal = itemTypeCount * colorCount;
   const colorLabels = useMemo(
@@ -105,7 +107,11 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.error ?? "保存失败");
-      setSavedSetId(payload.data.id ?? savedSetId);
+      const id = payload.data.id ?? savedSetId;
+      setSavedSetId(id);
+      if (id) {
+        setActiveWorkspace(id, setName);
+      }
       setDirty(false);
       await loadHistory();
     } catch (e) {
@@ -122,6 +128,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     const set = payload.data;
     const cfg = parseStoredGenerationConfig(set.constraints);
     setSavedSetId(set.id);
+    setActiveWorkspace(set.id, set.name);
     setSetName(set.name);
     setDescription(set.theme ?? set.prompt ?? "");
     setItemTypeCount(cfg.itemTypeCount);

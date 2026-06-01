@@ -1,8 +1,12 @@
+import { Suspense } from "react";
+
 import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
 import { ItemGeneratorWorkspace } from "@/components/generator/ItemGeneratorWorkspace";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageContent } from "@/components/layout/PageContent";
+import { WorkspaceRouteHydrator } from "@/components/shell/WorkspaceRouteHydrator";
+import { WorkspaceShell } from "@/components/shell/WorkspaceShell";
 import { getAiStatus } from "@/lib/ai/gemini";
 import { zh } from "@/lib/i18n/zh";
 import { prisma } from "@/lib/prisma";
@@ -39,33 +43,38 @@ export default async function ItemGeneratorPage() {
 
   return (
     <AppShell>
-      <AppHeader title={zh.pages.itemGenerator.title} description={zh.pages.itemGenerator.description} />
+      <AppHeader title={zh.pages.itemGenerator.title} description={zh.pages.itemGenerator.description} fluid />
       <PageContent fluid className="space-y-4">
-        <GeminiStatusCompact
-          mode="text"
-          textModel={aiStatus.textModel}
-          available={aiStatus.hasGeminiKey && !aiStatus.mockMode}
-        />
-        <ItemGeneratorWorkspace
-          initialHistory={historyRows.map((set) => ({
-            id: set.id,
-            name: set.name,
-            theme: set.theme,
-            itemCount: set.items.length,
-            createdAt: set.createdAt.toISOString(),
-          }))}
-          initialCatalogTotal={catalogTotal}
-          initialCatalogRows={catalogRows.map((row) => ({
-            ...row,
-            createdAt: row.createdAt.toISOString(),
-            updatedAt: row.updatedAt.toISOString(),
-          }))}
-          initialCatalogFilters={{
-            category1: categoryList.map((x) => x.category1),
-            color1: colorList.map((x) => x.color1).filter((v): v is string => Boolean(v)),
-            size: sizeList.map((x) => x.size).filter((v): v is string => Boolean(v)),
-          }}
-        />
+        <Suspense fallback={null}>
+          <WorkspaceRouteHydrator />
+        </Suspense>
+        <WorkspaceShell step="items">
+          <GeminiStatusCompact
+            mode="text"
+            textModel={aiStatus.textModel}
+            available={aiStatus.hasGeminiKey && !aiStatus.mockMode}
+          />
+          <ItemGeneratorWorkspace
+            initialHistory={historyRows.map((set) => ({
+              id: set.id,
+              name: set.name,
+              theme: set.theme,
+              itemCount: set.items.length,
+              createdAt: set.createdAt.toISOString(),
+            }))}
+            initialCatalogTotal={catalogTotal}
+            initialCatalogRows={catalogRows.map((row) => ({
+              ...row,
+              createdAt: row.createdAt.toISOString(),
+              updatedAt: row.updatedAt.toISOString(),
+            }))}
+            initialCatalogFilters={{
+              category1: categoryList.map((x) => x.category1),
+              color1: colorList.map((x) => x.color1).filter((v): v is string => Boolean(v)),
+              size: sizeList.map((x) => x.size).filter((v): v is string => Boolean(v)),
+            }}
+          />
+        </WorkspaceShell>
       </PageContent>
     </AppShell>
   );

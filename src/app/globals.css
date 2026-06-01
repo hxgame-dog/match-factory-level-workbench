@@ -90,6 +90,8 @@
   --status-success: oklch(0.527 0.154 150.069);
   --status-warning: oklch(0.666 0.179 58.318);
   --status-info: oklch(0.488 0.243 264.376);
+  --accent-brand: oklch(0.488 0.243 264.376);
+  --surface-elevated: oklch(0.985 0.002 264);
 }
 
 .dark {

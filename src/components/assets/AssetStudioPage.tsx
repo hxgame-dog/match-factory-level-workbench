@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +89,14 @@ export function AssetStudioPage({
   const [error, setError] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState({ total: 0, done: 0, failed: 0 });
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
+
+  useEffect(() => {
+    if (!activeWorkspaceId || activeWorkspaceId === selectedSetId) return;
+    setSelectedSetId(activeWorkspaceId);
+    void loadItemSet(activeWorkspaceId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在工作区切换时自动加载
+  }, [activeWorkspaceId]);
 
   async function refreshItemSets() {
     const response = await fetch("/api/generated-item-sets");
@@ -100,10 +110,12 @@ export function AssetStudioPage({
     if (payload.success) setBatches(payload.data);
   }
 
-  async function loadItemSet() {
-    if (!selectedSetId) return;
+  async function loadItemSet(setId?: string) {
+    const id = setId ?? selectedSetId;
+    if (!id) return;
+    if (!setId) setSelectedSetId(id);
     setError(null);
-    const response = await fetch(`/api/generated-item-sets/${selectedSetId}`);
+    const response = await fetch(`/api/generated-item-sets/${id}`);
     const payload = await response.json();
     if (!payload.success) {
       setError(payload.error ?? "加载失败");

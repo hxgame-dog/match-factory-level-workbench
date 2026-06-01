@@ -6,8 +6,14 @@ const workflowSteps = [
   {
     step: 1,
     title: "准备数据",
-    bullets: ["在 AI 配置中心配置 Gemini API 并测试连接"],
-    links: [{ href: "/ai-lab", label: "AI 配置中心" }],
+    bullets: [
+      "在首页选择或新建工作区（道具集）",
+      "在 AI 配置中心配置 Gemini API 并测试连接",
+    ],
+    links: [
+      { href: "/", label: "工作区中心" },
+      { href: "/ai-lab", label: "AI 配置中心" },
+    ],
   },
   {
     step: 2,
@@ -52,24 +58,24 @@ const workflowSteps = [
 export function WorkflowGuideSection() {
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-serif text-lg text-gray-900">推荐工作流</h2>
-        <Link href="/ai-lab" className="text-sm text-blue-600 hover:underline">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-serif text-lg font-semibold text-foreground">推荐工作流</h2>
+        <Link href="/ai-lab" className="text-sm text-primary hover:underline">
           先在 AI 配置中心检查连接 →
         </Link>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {workflowSteps.map((item) => (
-          <Card key={item.step} className="border border-gray-200 shadow-sm">
+          <Card key={item.step}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 font-serif text-base">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-sm text-gray-700">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted text-sm text-foreground">
                   {item.step}
                 </span>
                 {item.title}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-gray-600">
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
               <ul className="list-disc space-y-1 pl-4">
                 {item.bullets.map((bullet) => (
                   <li key={bullet}>{bullet}</li>
@@ -80,7 +86,7 @@ export function WorkflowGuideSection() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="rounded-sm border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                    className="rounded-sm border border-border px-2 py-1 text-xs text-foreground hover:bg-muted"
                   >
                     {link.label} →
                   </Link>

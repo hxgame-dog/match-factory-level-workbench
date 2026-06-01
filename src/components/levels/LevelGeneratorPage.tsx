@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -65,6 +67,16 @@ export function LevelGeneratorPage(props: {
   const [error, setError] = useState<string | null>(null);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
+
+  useEffect(() => {
+    if (!activeWorkspaceId || activeWorkspaceId === selectedItemSetId) return;
+    if (!itemSets.some((s) => s.id === activeWorkspaceId)) return;
+    setSelectedItemSetId(activeWorkspaceId);
+    const batch = batches.find((b) => b.itemSetId === activeWorkspaceId && b.successCount > 0);
+    if (batch) setSelectedBatchId(batch.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在工作区切换时预选道具集
+  }, [activeWorkspaceId]);
 
   async function generateCandidates() {
     setLoading(true);
@@ -195,7 +207,7 @@ export function LevelGeneratorPage(props: {
         selectedRefreshRuleId={config.refreshRuleId}
         onChange={(next) => setConfig((prev) => ({ ...prev, ...next }))}
       />
-      <Card className="border border-gray-200 shadow-sm">
+      <Card>
         <CardHeader><CardTitle className="text-lg">候选关卡生成区</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-2">
@@ -203,7 +215,7 @@ export function LevelGeneratorPage(props: {
             <Button variant="outline" onClick={() => void generateCandidates()}>Regenerate</Button>
             <Button variant="outline" onClick={() => { setCandidates([]); setWarnings([]); setSummary(""); }}>Clear</Button>
           </div>
-          {summary ? <p className="text-sm text-gray-700">{summary}</p> : null}
+          {summary ? <p className="text-sm text-muted-foreground">{summary}</p> : null}
           {warnings.length > 0 ? <p className="text-sm text-amber-700">{warnings.join("；")}</p> : null}
           <LevelCandidateList
             candidates={candidates}
