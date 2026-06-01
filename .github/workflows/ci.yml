@@ -30,3 +30,9 @@ jobs:
 
       - name: TypeScript
         run: npx tsc --noEmit
+
+      - name: Prisma migrate deploy
+        if: ${{ secrets.DATABASE_URL != '' }}
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
