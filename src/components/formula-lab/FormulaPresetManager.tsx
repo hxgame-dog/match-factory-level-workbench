@@ -25,7 +25,7 @@ export function FormulaPresetManager(props: {
 }) {
   const active = props.presets.find((p) => p.id === props.selectedId);
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card>
       <CardHeader><CardTitle className="text-lg">Formula Preset 管理区</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <Select value={props.selectedId || "none"} onValueChange={(v) => props.onSelect(v ?? "")}>
@@ -46,7 +46,7 @@ export function FormulaPresetManager(props: {
           <Button variant="outline" onClick={props.onResetDefault}>重置默认</Button>
         </div>
         {active ? (
-          <div className="rounded-md border border-gray-200 p-3 text-xs text-gray-600">
+          <div className="rounded-md border border-border p-3 text-xs text-muted-foreground">
             <p>Is Default: {active.isDefault ? "Yes" : "No"}</p>
             <p>Updated At: {new Date(active.updatedAt).toLocaleString()}</p>
           </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FlaskConical,
@@ -19,7 +18,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { WorkspaceSidebarLink } from "@/components/shell/WorkspaceSidebarLink";
 import { navItems, zh, type NavKey } from "@/lib/i18n/zh";
+import { pipelineStepForPath } from "@/lib/workspace/routes";
 import { useLayoutStore } from "@/stores/layoutStore";
 import { cn } from "@/lib/utils";
 
@@ -37,12 +38,16 @@ const iconMap: Record<string, LucideIcon> = {
   LineChart,
 };
 
-const navGroups: { label: string; keys: NavKey[] }[] = [
+/** 与顶栏流水线顺序一致 */
+const navGroups: { label: string; keys: NavKey[]; workspaceAware?: boolean }[] = [
   { label: "概览", keys: ["dashboard"] },
-  { label: "工作台配置", keys: ["aiLab"] },
-  { label: "内容生成", keys: ["itemGenerator", "assetStudio"] },
-  { label: "关卡设计", keys: ["levelGenerator", "levelEditor", "formulaLab", "autoLevelGenerator"] },
-  { label: "验证交付", keys: ["playtestSimulator", "analyticsFeedback", "pipeline"] },
+  {
+    label: "生产流水线",
+    keys: ["aiLab", "itemGenerator", "assetStudio", "levelGenerator", "playtestSimulator", "pipeline"],
+    workspaceAware: true,
+  },
+  { label: "关卡扩展", keys: ["levelEditor", "formulaLab", "autoLevelGenerator"], workspaceAware: true },
+  { label: "数据校准", keys: ["analyticsFeedback"], workspaceAware: true },
 ];
 
 export function AppSidebar() {
@@ -52,6 +57,7 @@ export function AppSidebar() {
     NavKey,
     (typeof navItems)[number]
   >;
+  const activePipelineStep = pipelineStepForPath(pathname);
 
   return (
     <aside
@@ -88,23 +94,27 @@ export function AppSidebar() {
                 if (!item) return null;
                 const Icon = iconMap[item.icon] ?? LayoutDashboard;
                 const label = zh.nav[key];
-                const active = pathname === item.href;
+                const pipelineHighlight =
+                  activePipelineStep != null &&
+                  pipelineStepForPath(item.href) === activePipelineStep &&
+                  pathname !== item.href;
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={sidebarCollapsed ? label : undefined}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors",
-                      sidebarCollapsed && "justify-center px-2",
-                      active
-                        ? "border-l-2 border-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                        : "border-l-2 border-transparent text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {!sidebarCollapsed && <span className="truncate">{label}</span>}
-                  </Link>
+                  <div key={item.href} className="relative">
+                    <WorkspaceSidebarLink
+                      href={item.href}
+                      label={label}
+                      icon={Icon}
+                      pathname={pathname}
+                      collapsed={sidebarCollapsed}
+                      withWorkspace={group.workspaceAware}
+                    />
+                    {!sidebarCollapsed && pipelineHighlight ? (
+                      <span
+                        className="pointer-events-none absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary"
+                        title="同属当前流水线阶段"
+                      />
+                    ) : null}
+                  </div>
                 );
               })}
             </div>

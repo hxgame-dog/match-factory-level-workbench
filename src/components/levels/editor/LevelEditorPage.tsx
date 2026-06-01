@@ -19,6 +19,8 @@ import { LevelJsonPreviewDialog } from "./LevelJsonPreviewDialog";
 import { LevelSelector } from "./LevelSelector";
 import { LevelValidationPanel } from "./LevelValidationPanel";
 import { LevelEditorAnalyticsPanel } from "@/components/analytics/LevelEditorAnalyticsPanel";
+import { WorkspaceFilterBanner } from "@/components/shell/WorkspaceFilterBanner";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 type LevelRow = {
   id: string;
@@ -27,12 +29,18 @@ type LevelRow = {
   theme: string | null;
   targetDifficulty: string | null;
   status: string;
+  itemSetId: string;
   createdAt: string;
   updatedAt: string;
 };
 
 export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }) {
   const [levels, setLevels] = useState(initialLevels);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
+  const visibleLevels = useMemo(() => {
+    if (!activeWorkspaceId) return levels;
+    return levels.filter((l) => l.itemSetId === activeWorkspaceId);
+  }, [levels, activeWorkspaceId]);
   const [selectedId, setSelectedId] = useState("");
   const [jsonOpen, setJsonOpen] = useState(false);
   const [playtestBrief, setPlaytestBrief] = useState<{
@@ -62,8 +70,27 @@ export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }
   async function refreshLevels() {
     const response = await fetch("/api/generated-levels");
     const payload = await response.json();
-    if (payload.success) setLevels(payload.data);
+    if (payload.success) {
+      setLevels(
+        payload.data.map((row: LevelRow & { itemSetId?: string }) => ({
+          id: row.id,
+          name: row.name,
+          levelIndex: row.levelIndex,
+          theme: row.theme,
+          targetDifficulty: row.targetDifficulty,
+          status: row.status,
+          itemSetId: row.itemSetId ?? "",
+          createdAt: typeof row.createdAt === "string" ? row.createdAt : new Date(row.createdAt).toISOString(),
+          updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : new Date(row.updatedAt).toISOString(),
+        })),
+      );
+    }
   }
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (!visibleLevels.some((l) => l.id === selectedId)) setSelectedId("");
+  }, [visibleLevels, selectedId]);
 
   async function loadContext() {
     if (!selectedId) return;
@@ -207,8 +234,9 @@ export function LevelEditorPage({ initialLevels }: { initialLevels: LevelRow[] }
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
+      <WorkspaceFilterBanner totalCount={levels.length} filteredCount={visibleLevels.length} />
       <LevelSelector
-        levels={levels}
+        levels={visibleLevels}
         selectedLevelId={selectedId}
         onSelect={setSelectedId}
         onLoad={() => void loadContext()}

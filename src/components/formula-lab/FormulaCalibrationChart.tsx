@@ -27,11 +27,11 @@ export function FormulaCalibrationChart({
     }));
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card>
       <CardHeader>
         <CardTitle className="text-lg">Formula P vs 真实通关率校准</CardTitle>
         {summary ? (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             共 {summary.total} 关，有真实通关率 {summary.withActualPassRate} 关，公式偏差 {summary.formulaMismatchCount} 关
           </p>
         ) : null}

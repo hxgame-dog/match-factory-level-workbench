@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 
 import { WorkspaceContextBar } from "@/components/shell/WorkspaceContextBar";
+import { WorkspaceLevelToolsBar } from "@/components/shell/WorkspaceLevelToolsBar";
 import { WorkspaceStepper } from "@/components/shell/WorkspaceStepper";
+import { WorkspaceValidateToolsBar } from "@/components/shell/WorkspaceValidateToolsBar";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { PipelineStepId, WorkspaceProgress } from "@/types/workspace";
 
@@ -44,6 +46,8 @@ export function WorkspaceShell({ step, children, workspaceProgress = null }: Pro
     <div className="flex w-full min-w-0 flex-col gap-4">
       <div className="rounded-lg border border-border bg-card/50 px-3 py-3 sm:px-4">
         <WorkspaceStepper currentStep={step} workspaceId={activeId} progress={progress} />
+        {step === "levels" ? <WorkspaceLevelToolsBar /> : null}
+        {step === "validate" ? <WorkspaceValidateToolsBar /> : null}
       </div>
       <WorkspaceContextBar
         workspaceId={activeId}

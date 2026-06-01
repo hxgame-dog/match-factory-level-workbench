@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { WorkspaceFilterBanner } from "@/components/shell/WorkspaceFilterBanner";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { AutoGenerateLevelsResult, SourceLevelPatternAnalysis } from "@/types/autoLevel";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +22,7 @@ export function AutoLevelGeneratorPage({
   presets,
   initialRuns,
 }: {
-  levels: Array<{ id: string; name: string; levelIndex: number; status: string }>;
+  levels: Array<{ id: string; name: string; levelIndex: number; status: string; itemSetId: string }>;
   presets: Array<{ id: string; name: string; isDefault: boolean }>;
   initialRuns: Array<{ id: string; name: string; status: string; generateCount: number; createdAt: string }>;
 }) {
@@ -39,14 +42,23 @@ export function AutoLevelGeneratorPage({
   const [result, setResult] = useState<AutoGenerateLevelsResult | null>(null);
   const [runs, setRuns] = useState(initialRuns);
   const [previewJson, setPreviewJson] = useState<unknown>(null);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
+  const visibleLevels = useMemo(() => {
+    if (!activeWorkspaceId) return levels;
+    return levels.filter((l) => l.itemSetId === activeWorkspaceId);
+  }, [levels, activeWorkspaceId]);
+
+  useEffect(() => {
+    setSelectedLevelIds((prev) => prev.filter((id) => visibleLevels.some((l) => l.id === id)));
+  }, [visibleLevels]);
 
   const sourceLine = useMemo(() => {
     if (!analysis?.difficulty || selectedLevelIds.length === 0) return [];
-    const picked = levels.filter((l) => selectedLevelIds.includes(l.id)).sort((a, b) => a.levelIndex - b.levelIndex);
+    const picked = visibleLevels.filter((l) => selectedLevelIds.includes(l.id)).sort((a, b) => a.levelIndex - b.levelIndex);
     const min = analysis.difficulty.minP ?? 0;
     const max = analysis.difficulty.maxP ?? 1;
     return picked.map((x, idx) => ({ levelIndex: x.levelIndex, P: min + (max - min) * (idx / Math.max(1, picked.length - 1)) }));
-  }, [analysis, levels, selectedLevelIds]);
+  }, [analysis, visibleLevels, selectedLevelIds]);
 
   async function analyze() {
     const res = await fetch("/api/auto-level-generator/analyze", {
@@ -122,12 +134,17 @@ export function AutoLevelGeneratorPage({
 
   return (
     <div className="space-y-4">
+      <WorkspaceFilterBanner totalCount={levels.length} filteredCount={visibleLevels.length} />
       <div className="grid gap-4 lg:grid-cols-2">
         <SourceLevelSelector
-          levels={levels}
+          levels={visibleLevels}
           selectedIds={selectedLevelIds}
           onToggle={(id) => setSelectedLevelIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))}
-          onQuickPick={(count) => setSelectedLevelIds([...levels].sort((a, b) => b.levelIndex - a.levelIndex).slice(0, count).map((x) => x.id))}
+          onQuickPick={(count) =>
+            setSelectedLevelIds(
+              [...visibleLevels].sort((a, b) => b.levelIndex - a.levelIndex).slice(0, count).map((x) => x.id),
+            )
+          }
         />
         <FormulaPresetSelector presets={presets} value={formulaPresetId} onChange={setFormulaPresetId} />
       </div>
