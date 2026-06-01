@@ -42,12 +42,12 @@ export function BatchResultsPanel({
 
   if (!batchResult?.results?.length) {
     return (
-      <Card className="border border-gray-200">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle className="text-sm">批量模拟结果</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500">暂无批量结果，请选择关卡后运行批量模拟。</p>
+          <p className="text-sm text-muted-foreground">暂无批量结果，请选择关卡后运行批量模拟。</p>
         </CardContent>
       </Card>
     );
@@ -56,12 +56,12 @@ export function BatchResultsPanel({
   const { summary } = batchResult;
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">批量模拟结果</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid gap-2 text-xs text-gray-600 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3 lg:grid-cols-6">
           <p>关卡数：{summary.levelCount}</p>
           <p>每关样本：{summary.simulationCountPerLevel}</p>
           <p>平均通关率：{Math.round(summary.avgPassRate * 100)}%</p>
@@ -98,14 +98,14 @@ export function BatchResultsPanel({
           />
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           显示 {filtered.length} / {batchResult.results.length} 关
         </p>
 
-        <div className="overflow-x-auto rounded border border-gray-200">
+        <div className="overflow-x-auto rounded border border-border">
           <table className="w-full border-collapse text-xs">
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-muted">
                 <th className="px-2 py-2 text-left">关卡</th>
                 <th className="px-2 py-2 text-left">通关率</th>
                 <th className="px-2 py-2 text-left">剩余时间</th>
@@ -117,7 +117,7 @@ export function BatchResultsPanel({
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.levelId} className="border-b hover:bg-gray-50">
+                <tr key={r.levelId} className="border-b hover:bg-muted">
                   <td className="px-2 py-2">{r.levelIndex ?? "-"} · {r.levelName}</td>
                   <td className="px-2 py-2">{(r.metrics.passRate * 100).toFixed(1)}%</td>
                   <td className="px-2 py-2">{r.metrics.avgRemainingTime.toFixed(1)}s</td>
@@ -135,7 +135,7 @@ export function BatchResultsPanel({
               ))}
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-2 py-6 text-center text-gray-500">
+                  <td colSpan={7} className="px-2 py-6 text-center text-muted-foreground">
                     无符合筛选条件的关卡
                   </td>
                 </tr>

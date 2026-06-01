@@ -27,7 +27,7 @@ export function PlaytestLevelSelector({
   }, [levels, search]);
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">关卡选择</CardTitle>
       </CardHeader>
@@ -44,24 +44,24 @@ export function PlaytestLevelSelector({
             清空
           </Button>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           已选择 {selectedIds.length} / {levels.length} 关
           {search ? `（筛选显示 ${filtered.length} 关）` : ""}
         </p>
-        <div className="max-h-52 overflow-auto rounded border border-gray-200 p-2 text-xs">
+        <div className="max-h-52 overflow-auto rounded border border-border p-2 text-xs">
           {filtered.map((l) => (
             <button
               key={l.id}
               type="button"
               onClick={() => onToggle(l.id)}
               className={`mb-1 block w-full rounded px-2 py-1 text-left ${
-                selectedIds.includes(l.id) ? "bg-blue-50 text-blue-900" : "bg-gray-50 hover:bg-gray-100"
+                selectedIds.includes(l.id) ? "bg-blue-50 text-blue-900" : "bg-muted hover:bg-muted"
               }`}
             >
               L{l.levelIndex ?? "-"} · {l.name}
             </button>
           ))}
-          {filtered.length === 0 ? <p className="text-center text-gray-500">无匹配关卡</p> : null}
+          {filtered.length === 0 ? <p className="text-center text-muted-foreground">无匹配关卡</p> : null}
         </div>
       </CardContent>
     </Card>

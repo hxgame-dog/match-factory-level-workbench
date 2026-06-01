@@ -13,4 +13,5 @@ export type BatchReplaySummary = {
   avgP: number;
   minP: number;
   maxP: number;
+  labelDistribution?: Record<string, number>;
 };

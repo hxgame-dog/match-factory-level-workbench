@@ -30,7 +30,7 @@ type Props = {
 
 export function ItemSetSelector(props: Props) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader>
         <CardTitle className="text-lg">Item Set 选择区</CardTitle>
       </CardHeader>
@@ -55,7 +55,7 @@ export function ItemSetSelector(props: Props) {
           </Button>
         </div>
         {props.detail ? (
-          <div className="rounded-md border border-gray-200 p-3 text-sm text-gray-700">
+          <div className="rounded-md border border-border p-3 text-sm text-foreground">
             <p>名称：{props.detail.name}</p>
             <p>主题：{props.detail.theme}</p>
             <p>道具数量：{props.detail.total}</p>

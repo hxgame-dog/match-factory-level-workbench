@@ -15,14 +15,14 @@ export function PlaytestRunHistory({
   onDelete: (id: string) => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Simulation Run History</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-xs">
         {runs.map((run) => (
-          <div key={run.id} className="flex items-center justify-between rounded border border-gray-200 p-2">
+          <div key={run.id} className="flex items-center justify-between rounded border border-border p-2">
             <div>
               <p className="font-medium">{run.name}</p>
-              <p className="text-gray-500">{run.status} · {new Date(run.createdAt).toLocaleString("zh-CN")}</p>
+              <p className="text-muted-foreground">{run.status} · {new Date(run.createdAt).toLocaleString("zh-CN")}</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => onOpen(run.id)}>Open</Button>

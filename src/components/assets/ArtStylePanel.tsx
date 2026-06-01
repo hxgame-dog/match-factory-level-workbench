@@ -30,7 +30,7 @@ type Props = {
 
 export function ArtStylePanel(props: Props) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader>
         <CardTitle className="text-lg">全局美术风格区</CardTitle>
       </CardHeader>

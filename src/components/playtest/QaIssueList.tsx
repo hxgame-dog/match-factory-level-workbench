@@ -59,13 +59,13 @@ export function QaIssueList({ issues }: { issues: QaIssueRow[] }) {
   }, [issues, severityFilter, codeFilter, levelFilter, search]);
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">QA 问题</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {issues.length === 0 ? (
-          <p className="text-sm text-gray-500">无 QA 问题</p>
+          <p className="text-sm text-muted-foreground">无 QA 问题</p>
         ) : (
           <>
             <div className="grid gap-2 md:grid-cols-2">
@@ -99,23 +99,23 @@ export function QaIssueList({ issues }: { issues: QaIssueRow[] }) {
                 </Select>
               ) : null}
             </div>
-            <p className="text-xs text-gray-500">显示 {filtered.length} / {issues.length} 条</p>
+            <p className="text-xs text-muted-foreground">显示 {filtered.length} / {issues.length} 条</p>
             <div className="max-h-72 space-y-2 overflow-auto text-xs">
               {filtered.map((issue, idx) => (
-                <div key={`${issue.code}_${issue.levelId ?? ""}_${idx}`} className="rounded border border-gray-200 p-2">
+                <div key={`${issue.code}_${issue.levelId ?? ""}_${idx}`} className="rounded border border-border p-2">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
                     <span className="font-medium">{issue.title}</span>
                     <Badge variant="outline">{SEVERITY_LABEL[issue.severity] ?? issue.severity}</Badge>
-                    <span className="text-gray-500">{issue.code}</span>
+                    <span className="text-muted-foreground">{issue.code}</span>
                   </div>
                   {issue.levelName ? (
-                    <p className="text-gray-500">关卡：{issue.levelIndex ?? "-"} · {issue.levelName}</p>
+                    <p className="text-muted-foreground">关卡：{issue.levelIndex ?? "-"} · {issue.levelName}</p>
                   ) : null}
                   <p>{issue.detail}</p>
                 </div>
               ))}
               {filtered.length === 0 ? (
-                <p className="text-center text-gray-500">无符合筛选条件的问题</p>
+                <p className="text-center text-muted-foreground">无符合筛选条件的问题</p>
               ) : null}
             </div>
           </>

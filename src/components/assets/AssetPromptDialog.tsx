@@ -17,8 +17,8 @@ export function AssetPromptDialog(props: Props) {
   if (!props.open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-      <div className="w-full max-w-2xl rounded-md border border-gray-200 bg-white p-4">
-        <h3 className="mb-3 font-semibold text-gray-900">编辑 Prompt</h3>
+      <div className="w-full max-w-2xl rounded-md border border-border bg-card p-4">
+        <h3 className="mb-3 font-semibold text-foreground">编辑 Prompt</h3>
         <Textarea value={props.prompt} onChange={(e) => props.onChange({ prompt: e.target.value, negativePrompt: props.negativePrompt })} className="mb-2 min-h-28" />
         <Input value={props.negativePrompt} onChange={(e) => props.onChange({ prompt: props.prompt, negativePrompt: e.target.value })} />
         <div className="mt-3 flex gap-2">

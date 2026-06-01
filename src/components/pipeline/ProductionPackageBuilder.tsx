@@ -16,7 +16,7 @@ export function ProductionPackageBuilder({
   onBuild: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Production Package Builder</CardTitle></CardHeader>
       <CardContent className="grid gap-2 md:grid-cols-3">
         <Input value={form.name} onChange={(e) => onChange("name", e.target.value)} placeholder="包名称" />

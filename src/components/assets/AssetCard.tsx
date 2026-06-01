@@ -32,23 +32,23 @@ export function AssetCard(props: Props) {
   return (
     <Card>
       <CardContent className="space-y-2 p-3">
-        <div className="aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+        <div className="aspect-square overflow-hidden rounded-md border border-border bg-muted">
           {asset.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={asset.imageUrl} alt={asset.name} className="h-full w-full object-contain" />
           ) : (
-            <div className="flex h-full items-center justify-center text-xs text-gray-400">暂无图片</div>
+            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">暂无图片</div>
           )}
         </div>
-        <p className="font-medium text-gray-900">{asset.name}</p>
-        <p className="text-xs text-gray-500">{asset.displayName ?? "-"}</p>
+        <p className="font-medium text-foreground">{asset.name}</p>
+        <p className="text-xs text-muted-foreground">{asset.displayName ?? "-"}</p>
         <div className="flex flex-wrap gap-1">
           {asset.role ? <Badge variant="secondary">{asset.role}</Badge> : null}
           <Badge variant="outline">{asset.category1}</Badge>
           {asset.size ? <Badge variant="outline">{asset.size}</Badge> : null}
           <StatusBadge status={asset.status} />
         </div>
-        <p className="line-clamp-2 text-xs text-gray-600">{asset.prompt}</p>
+        <p className="line-clamp-2 text-xs text-muted-foreground">{asset.prompt}</p>
         {asset.status === "failed" && asset.error ? (
           <p className="line-clamp-3 text-xs text-red-600" title={asset.error}>
             {asset.error}

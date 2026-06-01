@@ -18,15 +18,15 @@ export function SingleLevelSimulationPanel({
   onRun: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">单关模拟</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           {levelName ? `当前关卡：${levelName}` : "请先在左侧选择至少 1 关（取第一关作为单关目标）"}
         </p>
-        <label className="flex items-center justify-between gap-2 text-xs text-gray-600">
+        <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>记录样本分布（用于直方图，略增耗时）</span>
           <Switch checked={includeSamples} onCheckedChange={onIncludeSamplesChange} />
         </label>

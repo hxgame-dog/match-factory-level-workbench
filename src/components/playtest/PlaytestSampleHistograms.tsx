@@ -57,8 +57,8 @@ export function PlaytestSampleHistograms({
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="rounded-md border border-gray-200 p-2">
-        <p className="mb-2 text-xs font-medium text-gray-700">剩余时间分布</p>
+      <div className="rounded-md border border-border p-2">
+        <p className="mb-2 text-xs font-medium text-foreground">剩余时间分布</p>
         {remaining.length === 0 ? (
           <PlaytestChartEmpty message="无剩余时间样本" />
         ) : (
@@ -75,8 +75,8 @@ export function PlaytestSampleHistograms({
           </div>
         )}
       </div>
-      <div className="rounded-md border border-gray-200 p-2">
-        <p className="mb-2 text-xs font-medium text-gray-700">步数分布</p>
+      <div className="rounded-md border border-border p-2">
+        <p className="mb-2 text-xs font-medium text-foreground">步数分布</p>
         {moves.length === 0 ? (
           <PlaytestChartEmpty message="无步数样本" />
         ) : (
@@ -93,8 +93,8 @@ export function PlaytestSampleHistograms({
           </div>
         )}
       </div>
-      <div className="rounded-md border border-gray-200 p-2 md:col-span-2">
-        <p className="mb-2 text-xs font-medium text-gray-700">通关 / 失败样本数</p>
+      <div className="rounded-md border border-border p-2 md:col-span-2">
+        <p className="mb-2 text-xs font-medium text-foreground">通关 / 失败样本数</p>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={passFail}>

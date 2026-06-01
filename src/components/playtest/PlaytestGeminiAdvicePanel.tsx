@@ -15,7 +15,7 @@ export function PlaytestGeminiAdvicePanel({
   onAsk: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">Gemini 试玩建议</CardTitle>
       </CardHeader>
@@ -27,10 +27,10 @@ export function PlaytestGeminiAdvicePanel({
           {mockMode ? <Badge variant="outline">Mock 模式</Badge> : null}
         </div>
         {advice ? (
-          <div className="space-y-1 rounded border border-gray-200 p-2">
+          <div className="space-y-1 rounded border border-border p-2">
             <p className="font-medium">{advice.summary}</p>
             <p>风险等级：{advice.riskLevel}</p>
-            <ul className="list-disc pl-4 text-gray-600">
+            <ul className="list-disc pl-4 text-muted-foreground">
               {(advice.keyFindings ?? []).map((k) => (
                 <li key={k}>{k}</li>
               ))}
@@ -38,7 +38,7 @@ export function PlaytestGeminiAdvicePanel({
             {advice.designerNotes ? <p className="text-blue-700">{advice.designerNotes}</p> : null}
           </div>
         ) : (
-          <p className="text-gray-500">完成单关模拟后可请求建议</p>
+          <p className="text-muted-foreground">完成单关模拟后可请求建议</p>
         )}
       </CardContent>
     </Card>

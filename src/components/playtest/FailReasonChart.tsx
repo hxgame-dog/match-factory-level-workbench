@@ -21,7 +21,7 @@ export function FailReasonChart({ rows }: { rows: Array<{ reason: string; ratio:
   }));
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">失败原因分布</CardTitle>
       </CardHeader>

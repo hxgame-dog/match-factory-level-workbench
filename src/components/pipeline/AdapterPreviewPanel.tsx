@@ -13,7 +13,7 @@ export function AdapterPreviewPanel({
   onRuntime: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Adapter Preview</CardTitle></CardHeader>
       <CardContent className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={onUnity}>Unity JSON Preview</Button>

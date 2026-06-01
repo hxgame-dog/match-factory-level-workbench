@@ -11,7 +11,7 @@ type Props = {
 
 export function AssetPromptPanel(props: Props) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card >
       <CardHeader>
         <CardTitle className="text-lg">Prompt 生成区</CardTitle>
       </CardHeader>

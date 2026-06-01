@@ -25,12 +25,12 @@ export function BatchSimulationPanel({
   const pct = progress && progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">批量模拟</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-xs text-gray-500">已选择 {selectedCount} 关，将逐关模拟并显示进度。</p>
+        <p className="text-xs text-muted-foreground">已选择 {selectedCount} 关，将逐关模拟并显示进度。</p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={onRun} disabled={running || selectedCount === 0}>
             {running ? "模拟中…" : "运行批量模拟"}
@@ -43,7 +43,7 @@ export function BatchSimulationPanel({
         </div>
         {running && progress ? (
           <div className="space-y-1">
-            <div className="flex justify-between text-xs text-gray-600">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>
                 {progress.currentLevelName
                   ? `正在模拟：${progress.currentLevelName}`
@@ -53,7 +53,7 @@ export function BatchSimulationPanel({
                 {progress.current} / {progress.total}（{pct}%）
               </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full bg-blue-600 transition-all duration-300"
                 style={{ width: `${pct}%` }}

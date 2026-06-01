@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { PlaytestCompareRow } from "@/features/formula-lab/types";
+import type { PlaytestCompareRow } from "../types";
 
 export function FormulaPlaytestCompareTable({ rows }: { rows: PlaytestCompareRow[] }) {
   return (

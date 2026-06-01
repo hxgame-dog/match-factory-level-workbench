@@ -9,7 +9,7 @@ export function ProfileBreakdownChart({ rows }: { rows: Array<{ profileName: str
   const data = rows.map((r) => ({ ...r, passRatePct: Math.round(r.passRate * 1000) / 10 }));
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">玩家画像通关率</CardTitle>
       </CardHeader>

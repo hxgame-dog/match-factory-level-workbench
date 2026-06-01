@@ -18,7 +18,7 @@ export function SnapshotCenter({
   onCreate: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Snapshot Center</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         <Input value={levelId} onChange={(e) => onLevelIdChange(e.target.value)} placeholder="GeneratedLevel ID" />

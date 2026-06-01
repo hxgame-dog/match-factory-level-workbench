@@ -8,25 +8,12 @@ import type {
   GeminiDifficultyAdviceResult,
 } from "@/types/difficulty";
 import { defaultFormulaConfig } from "@/lib/difficulty/defaultFormulaConfig";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-import { AnomalyList } from "./AnomalyList";
-import { BatchReplayPanel } from "./BatchReplayPanel";
-import { DiagnosisRunHistory } from "./DiagnosisRunHistory";
-import { DifficultyCurveChart } from "./DifficultyCurveChart";
-import { DifficultyScoreCards } from "./DifficultyScoreCards";
-import { DistributionCharts } from "./DistributionCharts";
-import { FormulaPresetManager } from "./FormulaPresetManager";
-import { FormulaWeightTabs } from "./FormulaWeightTabs";
-import { GeminiAdvicePanel } from "./GeminiAdvicePanel";
-import { SimilarityPairsTable } from "./SimilarityPairsTable";
-import { SingleLevelDiagnosisPanel } from "./SingleLevelDiagnosisPanel";
-import { FormulaCalibrationChart } from "./FormulaCalibrationChart";
 import type { CalibrationPoint } from "@/lib/analytics/compareFormulaPlaytestAnalytics";
-import { FormulaBatchReplayResultsCard } from "@/features/formula-lab/components/FormulaBatchReplayResultsCard";
-import { FormulaPlaytestCompareTable } from "@/features/formula-lab/components/FormulaPlaytestCompareTable";
-import type { PlaytestCompareRow } from "@/features/formula-lab/types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { PlaytestCompareRow } from "../types";
+
+import { FormulaDiagnosisWorkbench } from "./FormulaDiagnosisWorkbench";
+import { FormulaPresetSidebar } from "./FormulaPresetSidebar";
 
 type PresetRow = {
   id: string;
@@ -364,83 +351,44 @@ export function FormulaLabPage({
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(280px,320px)_1fr]">
-        <div className="space-y-4">
-      <FormulaPresetManager
-        presets={presets}
-        selectedId={selectedPresetId}
-        name={presetName}
-        description={presetDescription}
-        onSelect={(id) => void handleSelectPreset(id === "none" ? "" : id)}
-        onNameChange={setPresetName}
-        onDescriptionChange={setPresetDescription}
-        onCreate={() => void handleCreatePreset()}
-        onCopy={() => void handleCopyPreset()}
-        onSave={() => void handleSavePreset()}
-        onDelete={() => void handleDeletePreset()}
-        onSetDefault={() => void handleSetDefault()}
-        onResetDefault={handleResetDefault}
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">公式权重配置</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FormulaWeightTabs config={formulaConfig} onChange={setFormulaConfig} />
-        </CardContent>
-      </Card>
-        </div>
-
-        <div className="space-y-4 min-w-0">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SingleLevelDiagnosisPanel
+        <FormulaPresetSidebar
+          presets={presets}
+          selectedPresetId={selectedPresetId}
+          presetName={presetName}
+          presetDescription={presetDescription}
+          formulaConfig={formulaConfig}
+          onSelectPreset={(id) => void handleSelectPreset(id)}
+          onNameChange={setPresetName}
+          onDescriptionChange={setPresetDescription}
+          onCreate={() => void handleCreatePreset()}
+          onCopy={() => void handleCopyPreset()}
+          onSave={() => void handleSavePreset()}
+          onDelete={() => void handleDeletePreset()}
+          onSetDefault={() => void handleSetDefault()}
+          onResetDefault={handleResetDefault}
+          onFormulaConfigChange={setFormulaConfig}
+        />
+        <FormulaDiagnosisWorkbench
           levels={levels}
           selectedLevelId={selectedLevelId}
           onSelectLevel={setSelectedLevelId}
           onDiagnose={() => void handleDiagnose()}
-        />
-        <BatchReplayPanel
           recentCount={recentCount}
           onRecentCountChange={setRecentCount}
-          onReplay={() => void handleBatchReplay()}
+          onBatchReplay={() => void handleBatchReplay()}
+          loading={loading}
+          singleDiagnosis={singleDiagnosis}
+          batchSummary={batchSummary}
+          batchResults={batchResults}
+          batchAnomalies={batchAnomalies}
+          advice={advice}
+          mockMode={mockMode}
+          onAskGemini={() => void handleAskGemini()}
+          calibrationPoints={calibrationPoints}
+          calibrationSummary={calibrationSummary ?? undefined}
+          runs={runs}
+          playtestCompare={playtestCompare}
         />
-      </div>
-
-      {loading ? <p className="text-sm text-muted-foreground">处理中…</p> : null}
-
-      <DifficultyScoreCards diagnosis={singleDiagnosis} />
-
-      {singleDiagnosis?.warnings?.length ? (
-        <Alert>
-          <AlertTitle>警告</AlertTitle>
-          <AlertDescription>{singleDiagnosis.warnings.join("；")}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      {singleDiagnosis?.suggestions?.length ? (
-        <Alert>
-          <AlertTitle>本地建议</AlertTitle>
-          <AlertDescription>{singleDiagnosis.suggestions.join("；")}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      <DistributionCharts diagnosis={singleDiagnosis} />
-      <SimilarityPairsTable diagnosis={singleDiagnosis} />
-
-      <GeminiAdvicePanel advice={advice} mockMode={mockMode} onAsk={() => void handleAskGemini()} />
-
-      <FormulaBatchReplayResultsCard
-        summary={batchSummary}
-        results={batchResults}
-        anomalies={batchAnomalies}
-      />
-
-      <FormulaCalibrationChart points={calibrationPoints} summary={calibrationSummary ?? undefined} />
-
-      <DiagnosisRunHistory runs={runs} />
-
-      <FormulaPlaytestCompareTable rows={playtestCompare} />
-        </div>
       </div>
     </div>
   );

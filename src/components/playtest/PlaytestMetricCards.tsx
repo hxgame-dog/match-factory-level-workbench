@@ -6,15 +6,15 @@ import type { PlaytestLevelSimulationResult } from "@/types/playtest";
 export function PlaytestMetricCards({ metrics }: { metrics: PlaytestLevelSimulationResult["metrics"] | null }) {
   if (!metrics) {
     return (
-      <p className="text-sm text-gray-500">运行单关模拟后，将在此显示核心指标。</p>
+      <p className="text-sm text-muted-foreground">运行单关模拟后，将在此显示核心指标。</p>
     );
   }
   const item = (label: string, value: string | number) => (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader className="pb-1">
-        <CardTitle className="text-xs text-gray-500">{label}</CardTitle>
+        <CardTitle className="text-xs text-muted-foreground">{label}</CardTitle>
       </CardHeader>
-      <CardContent className="text-lg font-semibold text-gray-900">{value}</CardContent>
+      <CardContent className="text-lg font-semibold text-foreground">{value}</CardContent>
     </Card>
   );
   return (

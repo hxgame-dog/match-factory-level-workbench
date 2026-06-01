@@ -16,7 +16,7 @@ export function ImportCenter({
   onConfirm: () => void;
 }) {
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Import Center（Level JSON）</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         <Textarea value={content} onChange={(e) => onContentChange(e.target.value)} rows={8} />

@@ -49,14 +49,14 @@ export function SimulatorConfigPanel({
   }
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="text-sm">模拟器配置</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="mb-1 block text-xs text-gray-500">每关模拟次数</label>
+            <label className="mb-1 block text-xs text-muted-foreground">每关模拟次数</label>
             <Input
               value={config.simulationCount}
               type="number"
@@ -64,7 +64,7 @@ export function SimulatorConfigPanel({
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-500">槽位容量</label>
+            <label className="mb-1 block text-xs text-muted-foreground">槽位容量</label>
             <Input
               value={config.rules.slotCapacity}
               type="number"
@@ -72,7 +72,7 @@ export function SimulatorConfigPanel({
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-500">消除所需数量</label>
+            <label className="mb-1 block text-xs text-muted-foreground">消除所需数量</label>
             <Input
               value={config.rules.matchRequiredCount}
               type="number"
@@ -82,7 +82,7 @@ export function SimulatorConfigPanel({
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-500">时间上限覆盖（秒，可选）</label>
+            <label className="mb-1 block text-xs text-muted-foreground">时间上限覆盖（秒，可选）</label>
             <Input
               value={config.rules.timeLimitSecOverride ?? ""}
               type="number"

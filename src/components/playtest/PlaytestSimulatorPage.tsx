@@ -232,7 +232,7 @@ export function PlaytestSimulatorPage({
   }
 
   if (!storageLoaded) {
-    return <p className="text-sm text-gray-500">加载配置中…</p>;
+    return <p className="text-sm text-muted-foreground">加载配置中…</p>;
   }
 
   return (
@@ -282,7 +282,7 @@ export function PlaytestSimulatorPage({
         />
       </div>
 
-      {persisting ? <p className="text-xs text-gray-500">正在保存批量任务记录…</p> : null}
+      {persisting ? <p className="text-xs text-muted-foreground">正在保存批量任务记录…</p> : null}
 
       <PlaytestMetricCards metrics={singleResult?.metrics ?? null} />
 

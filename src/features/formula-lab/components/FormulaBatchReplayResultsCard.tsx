@@ -1,9 +1,9 @@
 import type { DifficultyAnomaly, DifficultyDiagnosisResult } from "@/types/difficulty";
 
-import { AnomalyList } from "@/components/formula-lab/AnomalyList";
-import { DifficultyCurveChart } from "@/components/formula-lab/DifficultyCurveChart";
+import { AnomalyList } from "./AnomalyList";
+import { DifficultyCurveChart } from "./DifficultyCurveChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { BatchReplaySummary } from "@/features/formula-lab/types";
+import type { BatchReplaySummary } from "../types";
 
 export function FormulaBatchReplayResultsCard({
   summary,

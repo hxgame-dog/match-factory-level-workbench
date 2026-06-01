@@ -6,7 +6,7 @@ import type { PackageValidationResult } from "@/types/pipeline";
 export function PackageValidationPanel({ validation }: { validation: PackageValidationResult | null }) {
   if (!validation) return null;
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardHeader><CardTitle className="text-sm">Package Validation Panel</CardTitle></CardHeader>
       <CardContent className="space-y-1 text-xs">
         <p>关卡数量：{validation.summary?.levelCount ?? 0}</p>
