@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getPaletteColorEnglish } from "@/lib/items/colorPalette";
+import { getItemBaseName } from "@/lib/items/itemName";
 import { zh } from "@/lib/i18n/zh";
 import type { GenerateItemsResult } from "@/types/ai";
 
@@ -53,6 +54,22 @@ export function GeneratedItemsDimensionTable({ items }: Props) {
     setPage,
   } = useGeneratedItemsFilter(items);
 
+  const dimensionSummary = [
+    { label: "物品名", values: [...new Set(items.map((item) => getItemBaseName(item)))] },
+    { label: "一级分类", values: [...new Set(items.map((item) => item.category1).filter(Boolean))] },
+    { label: "二级分类", values: [...new Set(items.map((item) => item.category2 ?? "").filter(Boolean))] },
+    { label: "主色", values: [...new Set(items.map((item) => item.color1 ?? "").filter(Boolean))] },
+    { label: "辅色", values: [...new Set(items.map((item) => item.color2 ?? "").filter(Boolean))] },
+    { label: "形态", values: [...new Set(items.map((item) => item.shape ?? "").filter(Boolean))] },
+    { label: "尺寸", values: [...new Set(items.map((item) => item.size ?? "").filter(Boolean))] },
+    { label: "花纹", values: [...new Set(items.map((item) => item.pattern ?? "纯色").filter(Boolean))] },
+    { label: "移动速度", values: [...new Set(items.map((item) => String(item.moveSpeed ?? 3)))] },
+    {
+      label: "目标缩放",
+      values: [...new Set(items.map((item) => (item.targetScale == null ? "" : String(item.targetScale))).filter(Boolean))],
+    },
+  ] as const;
+
   return (
     <div className="w-full min-w-0 space-y-3">
       <Alert>
@@ -63,6 +80,20 @@ export function GeneratedItemsDimensionTable({ items }: Props) {
               <li key={h.field} className="text-xs">
                 <span className="font-medium text-foreground">{h.field}</span>
                 <span className="text-muted-foreground"> — {h.desc}</span>
+              </li>
+            ))}
+          </ul>
+        </AlertDescription>
+      </Alert>
+
+      <Alert>
+        <AlertTitle>维度预览方案</AlertTitle>
+        <AlertDescription>
+          <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+            {dimensionSummary.map((row) => (
+              <li key={row.label} className="text-xs">
+                <span className="font-medium text-foreground">{row.label}：</span>
+                <span className="text-muted-foreground">{row.values.length ? row.values.join(" ") : "—"}</span>
               </li>
             ))}
           </ul>

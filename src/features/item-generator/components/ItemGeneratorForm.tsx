@@ -28,6 +28,7 @@ import { FormField } from "./FormField";
 import { GeneratedItemSetHistory } from "./GeneratedItemSetHistory";
 import { GeneratedItemsDimensionTable } from "./GeneratedItemsDimensionTable";
 import { GeneratedItemsExcelPreviewDialog } from "./GeneratedItemsExcelPreviewDialog";
+import { GeneratedItemNamesPreviewTable } from "./GeneratedItemNamesPreviewTable";
 import { GeneratedItemsTable } from "./GeneratedItemsTable";
 import { useGeneratedItemsFilter } from "../hooks/useGeneratedItemsFilter";
 
@@ -470,12 +471,16 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
                   <TabsList>
                     <TabsTrigger value="items">{t.previewTabItems}</TabsTrigger>
                     <TabsTrigger value="dimension">{t.previewTabDimension}</TabsTrigger>
+                    <TabsTrigger value="names">{t.previewTabNames}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="items" className="mt-4">
                     <GeneratedItemsTable items={result.items} onChange={updateItems} />
                   </TabsContent>
                   <TabsContent value="dimension" className="mt-4">
                     <GeneratedItemsDimensionTable items={result.items} />
+                  </TabsContent>
+                  <TabsContent value="names" className="mt-4">
+                    <GeneratedItemNamesPreviewTable items={result.items} />
                   </TabsContent>
                 </Tabs>
               </div>

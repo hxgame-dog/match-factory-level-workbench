@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { getPaletteColorEnglish } from "@/lib/items/colorPalette";
+import { getItemBaseName } from "@/lib/items/itemName";
 import { zh } from "@/lib/i18n/zh";
 import { notify } from "@/lib/ui/notify";
 import type { GenerateItemsResult } from "@/types/ai";
@@ -83,6 +84,7 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">道具 ID</TableHead>
+              <TableHead className="min-w-[120px]">物品名</TableHead>
               <TableHead className="min-w-[120px]">名称</TableHead>
               <TableHead className="min-w-[120px]">显示名</TableHead>
               <TableHead>一级分类</TableHead>
@@ -106,6 +108,7 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
                 <TableCell className="tabular-nums text-muted-foreground">
                   {item.itemId ?? index + 1}
                 </TableCell>
+                <TableCell className="font-medium">{getItemBaseName(item)}</TableCell>
                 <TableCell>
                   <Input
                     className="min-w-[100px]"

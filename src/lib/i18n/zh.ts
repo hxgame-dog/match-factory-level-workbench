@@ -59,6 +59,7 @@ export const zh = {
       previewTitle: "道具表预览",
       previewTabItems: "道具表预览",
       previewTabDimension: "维度表预览",
+      previewTabNames: "物品表预览",
       dimensionHintTitle: "维度字段说明",
       previewEmptyTitle: "尚未生成道具表",
       previewEmptyDesc: "填写左侧配置后点击「生成道具表」",
