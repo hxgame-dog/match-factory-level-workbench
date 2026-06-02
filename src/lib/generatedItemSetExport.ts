@@ -103,12 +103,14 @@ export function createGeneratedItemSetExcelResponse(
 ) {
   const workbook = buildGeneratedItemSetWorkbook(payload);
   const date = new Date().toISOString().slice(0, 10);
-  const fileName = `generated_item_set_${cleanGeneratedItemSetFileName(fileNameBase)}_${date}.xlsx`;
+  const safeBase = cleanGeneratedItemSetFileName(fileNameBase);
+  const fileName = `generated_item_set_${safeBase}_${date}.xlsx`;
+  const encodedFileName = encodeURIComponent(fileName);
   return new NextResponse(new Uint8Array(workbook), {
     headers: {
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Disposition": `attachment; filename="generated_item_set_${date}.xlsx"; filename*=UTF-8''${encodedFileName}`,
       "Content-Length": String(workbook.length),
     },
   });
