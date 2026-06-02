@@ -1,8 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { GenerateItemsResult } from "@/types/ai";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +15,14 @@ import {
 import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { getPaletteColorEnglish } from "@/lib/items/colorPalette";
 import { zh } from "@/lib/i18n/zh";
+import { notify } from "@/lib/ui/notify";
+import type { GenerateItemsResult } from "@/types/ai";
 
-const PAGE_SIZE = 24;
+import { useGeneratedItemsFilter } from "../hooks/useGeneratedItemsFilter";
+
 const MOVE_SPEEDS = [1, 2, 3, 4, 5] as const;
 const moveSpeedLabels = zh.pages.itemGenerator.moveSpeedLabels;
+const patternOptions = zh.pages.itemGenerator.patternOptions;
 
 type Props = {
   items: GenerateItemsResult["items"];
@@ -29,41 +30,19 @@ type Props = {
 };
 
 export function GeneratedItemsTable({ items, onChange }: Props) {
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [page, setPage] = useState(1);
-
-  const categories = useMemo(
-    () => [...new Set(items.map((item) => item.category1))].filter(Boolean),
-    [items],
-  );
-
-  const filteredWithIndex = useMemo(() => {
-    return items
-      .map((item, index) => ({ item, index }))
-      .filter(({ item }) => {
-        const matchSearch =
-          !search ||
-          item.name.toLowerCase().includes(search.toLowerCase()) ||
-          (item.displayName ?? "").toLowerCase().includes(search.toLowerCase());
-        const matchCategory = categoryFilter === "all" || item.category1 === categoryFilter;
-        return matchSearch && matchCategory;
-      });
-  }, [items, search, categoryFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredWithIndex.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageSlice = filteredWithIndex.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, categoryFilter, items.length]);
-
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
+  const {
+    search,
+    setSearch,
+    categoryFilter,
+    setCategoryFilter,
+    categories,
+    pageSlice,
+    safePage,
+    totalPages,
+    pageSize,
+    filteredWithIndex,
+    setPage,
+  } = useGeneratedItemsFilter(items);
 
   function patchItem(index: number, patch: Partial<GenerateItemsResult["items"][number]>) {
     const next = [...items];
@@ -73,6 +52,7 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
 
   function removeItem(index: number) {
     onChange(assignSequentialItemIds(items.filter((_, i) => i !== index)));
+    notify.success("已删除并重编号");
   }
 
   function commitItems(next: GenerateItemsResult["items"]) {
@@ -109,11 +89,11 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
               <TableHead>二级分类</TableHead>
               <TableHead>主色</TableHead>
               <TableHead className="min-w-[100px]">辅色</TableHead>
-              <TableHead>形状</TableHead>
+              <TableHead>形态</TableHead>
               <TableHead>尺寸</TableHead>
+              <TableHead className="min-w-[100px]">花纹</TableHead>
               <TableHead className="min-w-[100px]">移动速度</TableHead>
               <TableHead>目标缩放</TableHead>
-              <TableHead>数量</TableHead>
               <TableHead>新建</TableHead>
               <TableHead className="min-w-[140px]">选用理由</TableHead>
               <TableHead className="min-w-[180px]">出图 Prompt</TableHead>
@@ -157,6 +137,23 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
                 <TableCell>{item.size ?? "—"}</TableCell>
                 <TableCell>
                   <Select
+                    value={item.pattern ?? "纯色"}
+                    onValueChange={(value) => patchItem(index, { pattern: value ?? "纯色" })}
+                  >
+                    <SelectTrigger className="w-[108px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patternOptions.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Select
                     value={String(item.moveSpeed ?? 3)}
                     onValueChange={(value) =>
                       patchItem(index, { moveSpeed: Number(value) as (typeof MOVE_SPEEDS)[number] })
@@ -175,14 +172,6 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
                   </Select>
                 </TableCell>
                 <TableCell>{item.targetScale ?? "—"}</TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    className="w-20"
-                    value={item.count}
-                    onChange={(e) => patchItem(index, { count: Math.max(1, Number(e.target.value) || 1) })}
-                  />
-                </TableCell>
                 <TableCell>
                   <button
                     type="button"
@@ -218,7 +207,7 @@ export function GeneratedItemsTable({ items, onChange }: Props) {
         <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>
             第 {safePage} / {totalPages} 页，本页 {pageSlice.length} 条，共 {filteredWithIndex.length} 条（每页{" "}
-            {PAGE_SIZE} 条）
+            {pageSize} 条）
           </span>
           <div className="flex gap-2">
             <Button

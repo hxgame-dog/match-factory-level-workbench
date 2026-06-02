@@ -1,5 +1,5 @@
 /** 流水线阶段（与侧栏「创作→验证→交付」对齐） */
-export type PipelineStepId = "config" | "items" | "assets" | "levels" | "validate" | "delivery";
+export type PipelineStepId = "items" | "assets" | "levels" | "validate" | "delivery";
 
 export type PipelineStepStatus = "pending" | "current" | "done" | "skipped";
 

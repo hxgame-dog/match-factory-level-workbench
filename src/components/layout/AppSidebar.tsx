@@ -42,9 +42,10 @@ const iconMap: Record<string, LucideIcon> = {
 /** 与顶栏流水线顺序一致 */
 const navGroups: { label: string; keys: NavKey[]; workspaceAware?: boolean }[] = [
   { label: "概览", keys: ["dashboard"] },
+  { label: "AI 与设置", keys: ["aiLab"] },
   {
     label: "生产流水线",
-    keys: ["aiLab", "itemGenerator", "assetStudio", "levelGenerator", "playtestSimulator", "pipeline"],
+    keys: ["itemGenerator", "assetStudio", "levelGenerator", "playtestSimulator", "pipeline"],
     workspaceAware: true,
   },
   { label: "关卡扩展", keys: ["levelEditor", "formulaLab", "autoLevelGenerator"], workspaceAware: true },

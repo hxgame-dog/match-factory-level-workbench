@@ -2,7 +2,10 @@ import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 
 import { getPaletteColorEnglish } from "@/lib/items/colorPalette";
+import { zh } from "@/lib/i18n/zh";
 import type { GeneratedItemSetPayload } from "@/types/generatedItemSet";
+
+const moveSpeedLabels = zh.pages.itemGenerator.moveSpeedLabels;
 
 export function cleanGeneratedItemSetFileName(name: string) {
   return name.replace(/[^\w\u4e00-\u9fa5-]/g, "_");
@@ -16,6 +19,22 @@ export function parseRiskTagsJson(json: string | null | undefined): string[] {
   } catch {
     return [];
   }
+}
+
+function dimensionRow(item: GeneratedItemSetPayload["items"][number], index: number) {
+  const speed = item.moveSpeed ?? 3;
+  return {
+    道具ID: item.itemId ?? index + 1,
+    一级分类: item.category1,
+    二级分类: item.category2 ?? "",
+    主色: item.color1 ? getPaletteColorEnglish(item.color1) : "",
+    辅色: item.color2 ?? "",
+    形态: item.shape ?? "",
+    尺寸: item.size ?? "",
+    花纹: item.pattern ?? "纯色",
+    移动速度: `${speed} · ${moveSpeedLabels[speed as 1 | 2 | 3 | 4 | 5] ?? speed}`,
+    目标缩放: item.targetScale ?? "",
+  };
 }
 
 export function buildGeneratedItemSetWorkbook(
@@ -35,15 +54,18 @@ export function buildGeneratedItemSetWorkbook(
     Color2: item.color2 ?? "",
     Shape: item.shape ?? "",
     Size: item.size ?? "",
+    Pattern: item.pattern ?? "纯色",
     MoveSpeed: item.moveSpeed ?? "",
     TargetScale: item.targetScale ?? "",
-    Count: item.count,
     IsNew: item.isNew ? "true" : "false",
     Reason: item.reason,
     ImagePrompt: item.imagePrompt,
     RiskTags: (item.riskTags ?? []).join(", "),
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(generatedItems), "GeneratedItems");
+
+  const dimensionRows = payload.items.map((item, index) => dimensionRow(item, index));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dimensionRows), "DimensionView");
 
   const config = [
     {
@@ -87,6 +109,7 @@ export function createGeneratedItemSetExcelResponse(
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Length": String(workbook.length),
     },
   });
 }

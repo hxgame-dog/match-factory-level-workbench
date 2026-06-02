@@ -35,7 +35,7 @@ export function WorkspaceHubSection({ workspaces }: Props) {
       {workspaces.length === 0 ? (
         <EmptyState
           title="尚无工作区"
-          description="在 AI 道具表生成器中生成并保存道具集后，将在此显示为工作区。"
+          description="在道具表生成中生成并保存道具集后，将在此显示为工作区。"
           action={
             <Link href="/item-generator" className={cn(buttonVariants())}>
               去生成道具表

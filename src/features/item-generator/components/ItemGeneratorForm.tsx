@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Table2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -9,19 +10,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { parseStoredGenerationConfig } from "@/lib/generatedItemSetPayload";
 import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
+import { createDefaultGeneratedItemRow } from "@/lib/items/defaultGeneratedItemRow";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import { zh } from "@/lib/i18n/zh";
 import { notify } from "@/lib/ui/notify";
+import { useItemGeneratorStore } from "@/stores/itemGeneratorStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { GenerateItemsResult } from "@/types/ai";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
 
+import { BatchAddItemsDialog } from "./BatchAddItemsDialog";
 import { FormField } from "./FormField";
 import { GeneratedItemSetHistory } from "./GeneratedItemSetHistory";
+import { GeneratedItemsDimensionTable } from "./GeneratedItemsDimensionTable";
+import { GeneratedItemsExcelPreviewDialog } from "./GeneratedItemsExcelPreviewDialog";
 import { GeneratedItemsTable } from "./GeneratedItemsTable";
+import { useGeneratedItemsFilter } from "../hooks/useGeneratedItemsFilter";
 
 const t = zh.pages.itemGenerator;
 
@@ -29,7 +37,26 @@ type Props = {
   initialHistory: GeneratedItemSetListItem[];
 };
 
+function mapLoadedItems(
+  items: Array<GenerateItemsResult["items"][number] & { moveSpeed?: number | null; pattern?: string | null }>,
+): GenerateItemsResult["items"] {
+  return assignSequentialItemIds(
+    items.map((item) => ({
+      ...item,
+      role: item.role ?? "target",
+      moveSpeed: item.moveSpeed ?? 3,
+      pattern: item.pattern ?? "纯色",
+      count: item.count > 0 ? item.count : 9,
+    })),
+  );
+}
+
 export function ItemGeneratorForm({ initialHistory }: Props) {
+  const searchParams = useSearchParams();
+  const workspaceFromUrl = searchParams.get("workspace");
+  const defaultItemSetId = useItemGeneratorStore((s) => s.defaultItemSetId);
+  const setDefaultItemSetId = useItemGeneratorStore((s) => s.setDefaultItemSetId);
+
   const [setName, setSetName] = useState("海洋生物道具集");
   const [description, setDescription] = useState("海里、河里的鱼、虾、贝类等，卡通 3D 风格，适合三消关卡");
   const [itemTypeCount, setItemTypeCount] = useState(12);
@@ -37,12 +64,21 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [batchAddOpen, setBatchAddOpen] = useState(false);
+  const [excelPreviewOpen, setExcelPreviewOpen] = useState(false);
+  const [excelBlob, setExcelBlob] = useState<Blob | null>(null);
+  const [excelFileName, setExcelFileName] = useState("export.xlsx");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateItemsResult | null>(null);
   const [history, setHistory] = useState<GeneratedItemSetListItem[]>(initialHistory);
   const [dirty, setDirty] = useState(false);
   const [savedSetId, setSavedSetId] = useState<string | null>(null);
+  const [autoLoaded, setAutoLoaded] = useState(false);
   const setActiveWorkspace = useWorkspaceStore((s) => s.setActive);
+  const autoLoadRef = useRef(false);
+
+  const { filteredWithIndex } = useGeneratedItemsFilter(result?.items ?? []);
 
   const expectedTotal = itemTypeCount * colorCount;
   const colorLabels = useMemo(
@@ -50,6 +86,20 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     [colorCount],
   );
   const summary = useMemo(() => result?.summary ?? "", [result]);
+  const cloneTemplate = filteredWithIndex[0]?.item ?? null;
+
+  const exportBody = useMemo(() => {
+    if (!result) return null;
+    return {
+      name: setName,
+      description,
+      itemTypeCount,
+      colorCount,
+      summary: result.summary,
+      warnings: result.warnings,
+      items: result.items,
+    };
+  }, [result, setName, description, itemTypeCount, colorCount]);
 
   async function loadHistory() {
     const response = await fetch("/api/generated-item-sets");
@@ -58,6 +108,41 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       setHistory(payload.data);
     }
   }
+
+  const onOpenHistory = useCallback(
+    async (id: string) => {
+      const response = await fetch(`/api/generated-item-sets/${id}`);
+      const payload = await response.json();
+      if (!payload.success) {
+        notify.error("打开失败", payload.error);
+        return;
+      }
+      const set = payload.data;
+      const cfg = parseStoredGenerationConfig(set.constraints);
+      setSavedSetId(set.id);
+      setActiveWorkspace(set.id, set.name);
+      setSetName(set.name);
+      setDescription(set.theme ?? set.prompt ?? "");
+      setItemTypeCount(cfg.itemTypeCount);
+      setColorCount(cfg.colorCount);
+      setResult({
+        summary: set.summary ?? "",
+        warnings: set.warnings ?? [],
+        items: mapLoadedItems(set.items),
+      });
+      setDirty(false);
+      setAutoLoaded(true);
+    },
+    [setActiveWorkspace],
+  );
+
+  useEffect(() => {
+    if (autoLoadRef.current || result) return;
+    const targetId = workspaceFromUrl ?? defaultItemSetId;
+    if (!targetId) return;
+    autoLoadRef.current = true;
+    void onOpenHistory(targetId);
+  }, [workspaceFromUrl, defaultItemSetId, onOpenHistory, result]);
 
   async function onGenerate() {
     setLoading(true);
@@ -130,40 +215,42 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     }
   }
 
-  async function onOpenHistory(id: string) {
-    const response = await fetch(`/api/generated-item-sets/${id}`);
-    const payload = await response.json();
-    if (!payload.success) return;
-    const set = payload.data;
-    const cfg = parseStoredGenerationConfig(set.constraints);
-    setSavedSetId(set.id);
-    setActiveWorkspace(set.id, set.name);
-    setSetName(set.name);
-    setDescription(set.theme ?? set.prompt ?? "");
-    setItemTypeCount(cfg.itemTypeCount);
-    setColorCount(cfg.colorCount);
-    setResult({
-      summary: set.summary ?? "",
-      warnings: set.warnings ?? [],
-      items: assignSequentialItemIds(
-        set.items.map(
-          (item: GenerateItemsResult["items"][number] & { moveSpeed?: number | null }) => ({
-            ...item,
-            role: item.role ?? "target",
-            moveSpeed: item.moveSpeed ?? 3,
-          }),
-        ),
-      ),
-    });
-    setDirty(false);
-  }
-
   async function onDeleteHistory(id: string) {
     await fetch(`/api/generated-item-sets/${id}`, { method: "DELETE" });
     await loadHistory();
     if (savedSetId === id) {
       setSavedSetId(null);
     }
+    if (defaultItemSetId === id) {
+      setDefaultItemSetId(null);
+    }
+  }
+
+  function handleSetDefault(id: string) {
+    setDefaultItemSetId(id);
+    notify.success("已设为默认道具集", "下次打开道具表生成将自动载入预览。");
+  }
+
+  async function fetchExportBlob(): Promise<Blob> {
+    if (!exportBody) throw new Error("无数据可导出");
+    const response = await fetch("/api/generated-item-sets/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(exportBody),
+    });
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!response.ok) {
+      let message = "导出失败";
+      if (contentType.includes("application/json")) {
+        const payload = (await response.json()) as { error?: string };
+        message = payload.error ?? message;
+      }
+      throw new Error(message);
+    }
+    if (!contentType.includes("spreadsheet") && !contentType.includes("octet-stream")) {
+      throw new Error("导出响应格式异常，请稍后重试");
+    }
+    return response.blob();
   }
 
   async function onExport() {
@@ -171,33 +258,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     setExporting(true);
     setError(null);
     try {
-      const exportBody = {
-        name: setName,
-        description,
-        itemTypeCount,
-        colorCount,
-        summary: result.summary,
-        warnings: result.warnings,
-        items: result.items,
-      };
-      const response = await fetch("/api/generated-item-sets/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(exportBody),
-      });
-      const contentType = response.headers.get("content-type") ?? "";
-      if (!response.ok) {
-        let message = "导出失败";
-        if (contentType.includes("application/json")) {
-          const payload = (await response.json()) as { error?: string };
-          message = payload.error ?? message;
-        }
-        throw new Error(message);
-      }
-      if (!contentType.includes("spreadsheet") && !contentType.includes("octet-stream")) {
-        throw new Error("导出响应格式异常，请稍后重试");
-      }
-      const blob = await response.blob();
+      const blob = await fetchExportBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -214,33 +275,92 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     }
   }
 
+  async function onPreviewExcel() {
+    if (!result) return;
+    setPreviewing(true);
+    setError(null);
+    try {
+      const blob = await fetchExportBlob();
+      setExcelBlob(blob);
+      setExcelFileName(`generated_item_set_${setName.replace(/[^\w\u4e00-\u9fa5-]/g, "_")}.xlsx`);
+      setExcelPreviewOpen(true);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "预览失败";
+      setError(message);
+      notify.error("Excel 预览失败", message);
+    } finally {
+      setPreviewing(false);
+    }
+  }
+
   async function onCopyJson() {
     if (!result) return;
     await navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+    notify.success("已复制 JSON");
   }
 
-  function onClear() {
-    setResult(null);
-    setError(null);
-    setSavedSetId(null);
-    setDirty(false);
+  function updateItems(items: GenerateItemsResult["items"]) {
+    if (!result) return;
+    setResult({ ...result, items });
+    setDirty(true);
+  }
+
+  function onAddRow() {
+    if (!result) return;
+    const nextIndex = result.items.length + 1;
+    updateItems([...result.items, createDefaultGeneratedItemRow(nextIndex)]);
+    notify.success("已添加一行");
+  }
+
+  function onBatchAdd(options: {
+    count: number;
+    mode: "blank" | "clone";
+    defaults: { category1: string; shape: string; size: string; pattern: string };
+  }) {
+    if (!result) return;
+    const base = result.items.length;
+    const rows: GenerateItemsResult["items"] = [];
+    for (let i = 0; i < options.count; i += 1) {
+      if (options.mode === "clone" && cloneTemplate) {
+        rows.push({
+          ...cloneTemplate,
+          name: `${cloneTemplate.name}_copy_${base + i + 1}`,
+          displayName: `${cloneTemplate.displayName ?? cloneTemplate.name} ${base + i + 1}`,
+          isNew: true,
+        });
+      } else {
+        const row = createDefaultGeneratedItemRow(base + i + 1);
+        rows.push({
+          ...row,
+          category1: options.defaults.category1,
+          shape: options.defaults.shape,
+          size: options.defaults.size,
+          pattern: options.defaults.pattern,
+        });
+      }
+    }
+    updateItems(assignSequentialItemIds([...result.items, ...rows]));
+    notify.success(`已批量添加 ${options.count} 行`);
   }
 
   const previewActions = (
     <div className="flex flex-wrap gap-2">
-      <Button size="sm" onClick={onSave} disabled={!result || saving}>
+      <Button size="sm" variant="outline" onClick={onAddRow}>
+        {t.actions.addRow}
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => setBatchAddOpen(true)}>
+        {t.actions.batchAdd}
+      </Button>
+      <Button size="sm" onClick={() => void onSave()} disabled={!result || saving}>
         {saving ? t.actions.saving : t.actions.save}
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => void onPreviewExcel()} disabled={!result || previewing}>
+        {previewing ? "加载中…" : t.actions.previewExcel}
       </Button>
       <Button size="sm" variant="outline" onClick={() => void onExport()} disabled={!result || exporting}>
         {exporting ? "导出中…" : t.actions.export}
       </Button>
-      <Button size="sm" variant="outline" onClick={() => void onGenerate()} disabled={loading}>
-        {t.actions.regenerate}
-      </Button>
-      <Button size="sm" variant="outline" onClick={onClear} disabled={!result}>
-        {t.actions.clear}
-      </Button>
-      <Button size="sm" variant="outline" onClick={onCopyJson} disabled={!result}>
+      <Button size="sm" variant="outline" onClick={() => void onCopyJson()} disabled={!result}>
         {t.actions.copyJson}
       </Button>
     </div>
@@ -315,6 +435,9 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
                   <span>
                     共 {result.items.length} 条 · 约 {itemTypeCount} 种 × {colorCount} 色
                   </span>
+                  {autoLoaded && defaultItemSetId === savedSetId ? (
+                    <span className="block text-xs text-muted-foreground">已载入默认道具集</span>
+                  ) : null}
                   {summary ? <span className="block text-foreground/80">{summary}</span> : null}
                   {dirty ? (
                     <Badge variant="secondary" className="mt-1">
@@ -338,18 +461,23 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
             {result ? (
               <div className="space-y-4">
                 {result.warnings.length > 0 ? (
-                  <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+                  <Alert className="border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
                     <AlertTitle>{t.warnings}</AlertTitle>
                     <AlertDescription>{result.warnings.join("；")}</AlertDescription>
                   </Alert>
                 ) : null}
-                <GeneratedItemsTable
-                  items={result.items}
-                  onChange={(items) => {
-                    setResult({ ...result, items });
-                    setDirty(true);
-                  }}
-                />
+                <Tabs defaultValue="items">
+                  <TabsList>
+                    <TabsTrigger value="items">{t.previewTabItems}</TabsTrigger>
+                    <TabsTrigger value="dimension">{t.previewTabDimension}</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="items" className="mt-4">
+                    <GeneratedItemsTable items={result.items} onChange={updateItems} />
+                  </TabsContent>
+                  <TabsContent value="dimension" className="mt-4">
+                    <GeneratedItemsDimensionTable items={result.items} />
+                  </TabsContent>
+                </Tabs>
               </div>
             ) : (
               <EmptyState
@@ -367,7 +495,27 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
         </Card>
       </div>
 
-      <GeneratedItemSetHistory data={history} onOpen={onOpenHistory} onDelete={onDeleteHistory} />
+      <GeneratedItemSetHistory
+        data={history}
+        defaultId={defaultItemSetId}
+        onOpen={(id) => void onOpenHistory(id)}
+        onDelete={(id) => void onDeleteHistory(id)}
+        onSetDefault={handleSetDefault}
+      />
+
+      <BatchAddItemsDialog
+        open={batchAddOpen}
+        onOpenChange={setBatchAddOpen}
+        cloneTemplate={cloneTemplate}
+        onConfirm={onBatchAdd}
+      />
+
+      <GeneratedItemsExcelPreviewDialog
+        open={excelPreviewOpen}
+        onOpenChange={setExcelPreviewOpen}
+        blob={excelBlob}
+        fileName={excelFileName}
+      />
     </div>
   );
 }

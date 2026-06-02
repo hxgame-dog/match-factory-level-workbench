@@ -37,7 +37,8 @@ export function normalizeGeneratedItemsForExport(
     reason: (item.reason ?? "").trim() || "-",
     role: item.role ?? "target",
     moveSpeed: item.moveSpeed ?? 3,
-    count: item.count > 0 ? item.count : 1,
+    pattern: (item.pattern ?? "").trim() || "纯色",
+    count: item.count > 0 ? item.count : 9,
   }));
 }
 

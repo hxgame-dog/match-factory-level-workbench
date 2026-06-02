@@ -10,7 +10,6 @@ export type PipelineStepDef = {
 };
 
 export const PIPELINE_STEPS: PipelineStepDef[] = [
-  { id: "config", label: "AI 配置", shortLabel: "配置", href: "/ai-lab" },
   { id: "items", label: "道具表", shortLabel: "道具", href: "/item-generator", requiresWorkspace: false },
   { id: "assets", label: "资源出图", shortLabel: "资源", href: "/asset-studio", requiresWorkspace: true },
   { id: "levels", label: "关卡设计", shortLabel: "关卡", href: "/level-generator", requiresWorkspace: true },
@@ -30,10 +29,8 @@ export function hrefWithWorkspace(href: string, workspaceId: string | null) {
 }
 
 function stepCompleted(id: PipelineStepId, progress: WorkspaceProgress | null): boolean {
-  if (!progress) return id === "config";
+  if (!progress) return id === "items";
   switch (id) {
-    case "config":
-      return true;
     case "items":
       return progress.itemsReady;
     case "assets":

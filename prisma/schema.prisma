@@ -73,6 +73,7 @@ model GeneratedItem {
   color2        String?
   shape         String?
   size          String?
+  pattern       String?
   targetScale   Float?
   moveSpeed     Int?
 

@@ -22,6 +22,7 @@ export function expandItemTypesWithColors(
           : `${baseSlug} (${color.en})`,
         color1: color.key,
         color2: base.color2,
+        pattern: base.pattern ?? "纯色",
         moveSpeed: base.moveSpeed ?? 3,
         role: base.role ?? "target",
         imagePrompt: `${base.imagePrompt.replace(/\s*,\s*(red|orange|yellow|green|blue|purple|pink|gray)(\s+color)?/gi, "")}, ${color.en} color, dominant ${color.en} tones`,

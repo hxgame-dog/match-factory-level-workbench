@@ -58,6 +58,7 @@ export async function PUT(request: Request, { params }: Params) {
               color2: item.color2,
               shape: item.shape,
               size: item.size,
+              pattern: item.pattern,
               targetScale: item.targetScale,
               moveSpeed: item.moveSpeed,
               role: item.role ?? "target",

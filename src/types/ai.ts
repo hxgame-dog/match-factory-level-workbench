@@ -23,6 +23,8 @@ export type GenerateItemsResult = {
     color2?: string;
     shape?: string;
     size?: string;
+    /** 花纹：纯色、纵纹、斑点等 */
+    pattern?: string;
     targetScale?: number;
     /** 移动速度档位 1–5（很慢 → 很快） */
     moveSpeed?: number;

@@ -27,7 +27,7 @@ export const pageGuides: Record<string, PageGuide> = {
     sections: [
       {
         heading: "提示",
-        bullets: ["本页已合并至 AI 道具表生成器 →「上传道具表」标签"],
+        bullets: ["本页已合并至道具表生成 →「上传道具表」标签"],
       },
     ],
   },
@@ -49,14 +49,14 @@ export const pageGuides: Record<string, PageGuide> = {
     ],
   },
   "/item-generator": {
-    title: "AI 道具表生成器",
+    title: "道具表生成",
     sections: [
       {
         heading: "生成道具表",
         bullets: [
           "填写描述、物品种类数、颜色数量（种类×颜色=总条数）",
-          "标准 8 色：红橙黄绿蓝紫粉灰",
-          "右侧为主预览区，可保存为道具集",
+          "标准 8 色：红橙黄绿蓝紫粉灰；AI 会为每种造型生成花纹（纯色、纵纹等）",
+          "右侧可切换道具表预览与维度表预览，支持在线编辑与 Excel 导出",
         ],
       },
       {

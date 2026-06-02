@@ -43,6 +43,7 @@ export function buildMockFreeItems(input: GenerateItemsInput): GenerateItemsResu
       displayName: `示例道具${index + 1}`,
       category1: "mock_category",
       color2: "cream",
+      pattern: ["纯色", "纵纹", "斑点"][index % 3],
       moveSpeed: (index % 5) + 1,
       count: 9,
       isNew: true,
