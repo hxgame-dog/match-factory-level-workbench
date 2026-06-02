@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 import { notify } from "@/lib/ui/notify";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -43,8 +42,7 @@ export function LevelGeneratorPage(props: {
   generatorRules: Rule[];
   refreshRules: Rule[];
 }) {
-  const searchParams = useSearchParams();
-  const batchFromUrl = searchParams.get("assetBatch") ?? "";
+  const [batchFromUrl, setBatchFromUrl] = useState("");
   const [itemSets] = useState(props.itemSets);
   const [batches] = useState(props.batches);
   const [history, setHistory] = useState(props.history);
@@ -72,6 +70,12 @@ export function LevelGeneratorPage(props: {
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setBatchFromUrl(params.get("assetBatch") ?? "");
+  }, []);
 
   useEffect(() => {
     if (batchFromUrl && batches.some((b) => b.id === batchFromUrl)) {
