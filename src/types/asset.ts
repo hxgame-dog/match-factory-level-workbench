@@ -16,6 +16,7 @@ export type GenerateAssetPromptInput = {
     color2?: string;
     shape?: string;
     size?: string;
+    pattern?: string;
     role?: string;
   };
   globalArtStyle: string;
@@ -30,6 +31,8 @@ export type GenerateAssetPromptResult = {
 
 export type GenerateAssetImageInput = {
   assetId?: string;
+  /** 可选：母版参考图（data URL），用于变体一致性约束 */
+  referenceImageDataUrl?: string;
   item: {
     generatedItemId?: string;
     sourceItemId?: number;
@@ -42,6 +45,7 @@ export type GenerateAssetImageInput = {
     color2?: string;
     shape?: string;
     size?: string;
+    pattern?: string;
     role?: string;
     count?: number;
   };

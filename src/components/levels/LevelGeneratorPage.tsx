@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { notify } from "@/lib/ui/notify";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -42,6 +43,8 @@ export function LevelGeneratorPage(props: {
   generatorRules: Rule[];
   refreshRules: Rule[];
 }) {
+  const searchParams = useSearchParams();
+  const batchFromUrl = searchParams.get("assetBatch") ?? "";
   const [itemSets] = useState(props.itemSets);
   const [batches] = useState(props.batches);
   const [history, setHistory] = useState(props.history);
@@ -71,13 +74,22 @@ export function LevelGeneratorPage(props: {
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
 
   useEffect(() => {
+    if (batchFromUrl && batches.some((b) => b.id === batchFromUrl)) {
+      setSelectedBatchId(batchFromUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- URL 参数仅用于初始化预选
+  }, [batchFromUrl]);
+
+  useEffect(() => {
     if (!activeWorkspaceId || activeWorkspaceId === selectedItemSetId) return;
     if (!itemSets.some((s) => s.id === activeWorkspaceId)) return;
     setSelectedItemSetId(activeWorkspaceId);
-    const batch = batches.find((b) => b.itemSetId === activeWorkspaceId && b.successCount > 0);
+    const batch =
+      batches.find((b) => b.id === batchFromUrl && b.itemSetId === activeWorkspaceId) ??
+      batches.find((b) => b.itemSetId === activeWorkspaceId && b.successCount > 0);
     if (batch) setSelectedBatchId(batch.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在工作区切换时预选道具集
-  }, [activeWorkspaceId]);
+  }, [activeWorkspaceId, batchFromUrl]);
 
   async function generateCandidates() {
     setLoading(true);

@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 import { env } from "@/lib/env";
-import { generateGeminiImage } from "@/lib/ai/geminiImageGeneration";
+import { generateGeminiImageWithReference } from "@/lib/ai/geminiImageGeneration";
 import { getGeminiRuntime, type GeminiRuntime } from "@/lib/ai/geminiRuntime";
 import { generateMockAssetImage } from "@/lib/assets/mockImage";
 import { estimateBasicDifficulty } from "@/lib/level/estimateDifficulty";
@@ -319,13 +319,14 @@ export async function generateImageAsset(
       };
     }
 
-    const generated = await generateGeminiImage({
+    const generated = await generateGeminiImageWithReference({
       apiKey: runtime.apiKey,
       model: runtime.imageModel,
       prompt: input.prompt,
       negativePrompt: input.negativePrompt,
       imageSize: input.imageSize,
       itemName: input.item.name,
+      referenceImageDataUrl: input.referenceImageDataUrl,
     });
 
     await prisma.aiGenerationLog.create({
@@ -334,7 +335,11 @@ export async function generateImageAsset(
         provider: env.AI_PROVIDER,
         model: generated.model,
         prompt: input.prompt,
-        resultJson: JSON.stringify({ imageUrl: generated.imageUrl, localPath: generated.localPath }),
+        resultJson: JSON.stringify({
+          imageUrl: generated.imageUrl,
+          localPath: generated.localPath,
+          consistencyMode: generated.consistencyMode,
+        }),
         status: "success",
       },
     });

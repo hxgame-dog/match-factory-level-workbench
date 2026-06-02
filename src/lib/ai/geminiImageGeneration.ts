@@ -73,6 +73,7 @@ export async function generateGeminiImage(input: {
   negativePrompt?: string;
   imageSize?: string;
   itemName?: string;
+  referenceImageDataUrl?: string;
 }): Promise<{ imageUrl: string; localPath: string; model: string }> {
   const client = new GoogleGenAI({ apiKey: input.apiKey });
   const modelId = input.model.replace(/^models\//, "");
@@ -100,7 +101,24 @@ export async function generateGeminiImage(input: {
 
   const response = await client.models.generateContent({
     model: modelId,
-    contents: fullPrompt,
+    contents: input.referenceImageDataUrl
+      ? [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  data: input.referenceImageDataUrl.split(",")[1] ?? "",
+                  mimeType:
+                    input.referenceImageDataUrl.match(/^data:([^;]+);/)?.[1] ??
+                    "image/png",
+                },
+              },
+              { text: `${fullPrompt}\n\nUse the reference image as visual identity anchor.` },
+            ],
+          },
+        ]
+      : fullPrompt,
     config: {
       responseModalities: ["IMAGE"],
     },
@@ -112,6 +130,31 @@ export async function generateGeminiImage(input: {
   }
   const saved = await persistImageBytes(extracted.bytes, extracted.mimeType, input.itemName ?? "asset");
   return { ...saved, model: modelId };
+}
+
+// 若模型不支持参考图输入，自动降级到普通文生图
+export async function generateGeminiImageWithReference(input: {
+  apiKey: string;
+  model: string;
+  prompt: string;
+  negativePrompt?: string;
+  imageSize?: string;
+  itemName?: string;
+  referenceImageDataUrl?: string;
+}): Promise<{ imageUrl: string; localPath: string; model: string; consistencyMode: "reference" | "prompt-only" }> {
+  try {
+    const out = await generateGeminiImage({
+      ...input,
+      referenceImageDataUrl: input.referenceImageDataUrl,
+    });
+    return { ...out, consistencyMode: input.referenceImageDataUrl ? "reference" : "prompt-only" };
+  } catch {
+    const out = await generateGeminiImage({
+      ...input,
+      referenceImageDataUrl: undefined,
+    });
+    return { ...out, consistencyMode: "prompt-only" };
+  }
 }
 
 export type ListedGeminiModel = {

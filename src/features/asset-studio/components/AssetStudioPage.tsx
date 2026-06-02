@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
@@ -8,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
 
 import { ArtStylePanel } from "./ArtStylePanel";
@@ -19,6 +21,8 @@ import { GeminiStatusCompact } from "@/components/ai/GeminiStatusCompact";
 import { pickAssetItemPayload } from "@/lib/assets/pickAssetItemPayload";
 import { TaskProgressCard } from "@/components/ui/task-progress";
 import { notify } from "@/lib/ui/notify";
+import { ItemMasterWorkbench } from "./ItemMasterWorkbench";
+import { GroupedAssetPreview } from "./GroupedAssetPreview";
 
 import { ItemSetSelector } from "./ItemSetSelector";
 
@@ -34,6 +38,7 @@ type LoadedItem = {
   color2?: string;
   shape?: string;
   size?: string;
+  pattern?: string;
   role?: string;
   count?: number;
   imagePrompt?: string;
@@ -77,6 +82,7 @@ export function AssetStudioPage({
   imageModel,
   imageGenerationReady,
 }: Props) {
+  const router = useRouter();
   const [itemSets, setItemSets] = useState(initSets);
   const [batches, setBatches] = useState(initBatches);
   const [selectedSetId, setSelectedSetId] = useState("");
@@ -89,6 +95,8 @@ export function AssetStudioPage({
   const [backgroundMode, setBackgroundMode] = useState<"transparent" | "plain" | "studio">("plain");
   const [outputFormat, setOutputFormat] = useState<"svg" | "png">("svg");
   const [error, setError] = useState<string | null>(null);
+  const [styleReferenceFile, setStyleReferenceFile] = useState<File | null>(null);
+  const [styleBibleLoading, setStyleBibleLoading] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState({ total: 0, done: 0, failed: 0 });
   const [batchGenerating, setBatchGenerating] = useState(false);
@@ -96,6 +104,7 @@ export function AssetStudioPage({
   const [promptProgress, setPromptProgress] = useState<{ current: number; total: number; label: string } | null>(
     null,
   );
+  const [plannedMasterBatchId, setPlannedMasterBatchId] = useState<string>("");
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
 
   useEffect(() => {
@@ -104,6 +113,34 @@ export function AssetStudioPage({
     void loadItemSet(activeWorkspaceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在工作区切换时自动加载
   }, [activeWorkspaceId]);
+
+  async function analyzeStyleBible() {
+    if (!styleReferenceFile) {
+      notify.warning("请先上传风格参考图");
+      return;
+    }
+    setStyleBibleLoading(true);
+    const loadingToast = notify.loading("正在分析风格参考图…");
+    try {
+      const form = new FormData();
+      form.set("file", styleReferenceFile);
+      const res = await fetch("/api/assets/style-profile/analyze", { method: "POST", body: form }).then((r) => r.json());
+      if (!res.success) {
+        throw new Error(res.error ?? "风格分析失败");
+      }
+      const { stylePrompt, negativePrompt: nextNegative } = res.data as { stylePrompt: string; negativePrompt: string };
+      if (stylePrompt) setGlobalArtStyle(stylePrompt);
+      if (nextNegative) setNegativePrompt(nextNegative);
+      notify.success("风格已分析完成", "已自动更新全局美术风格块与负面词。");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "风格分析失败";
+      setError(message);
+      notify.error("风格分析失败", message);
+    } finally {
+      notify.dismiss(loadingToast);
+      setStyleBibleLoading(false);
+    }
+  }
 
   async function refreshItemSets() {
     const response = await fetch("/api/generated-item-sets");
@@ -410,6 +447,22 @@ export function AssetStudioPage({
           onRefresh={refreshItemSets}
           detail={detailInfo}
         />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">风格参考图（Style Bible）</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setStyleReferenceFile(e.target.files?.[0] ?? null)}
+            />
+            <Button onClick={() => void analyzeStyleBible()} disabled={styleBibleLoading}>
+              {styleBibleLoading ? "分析中…" : "分析风格并生成 Style Bible"}
+            </Button>
+            <p className="text-xs text-muted-foreground">上传参考图后，会自动生成全局美术风格块与负面词（可继续手动微调）。</p>
+          </CardContent>
+        </Card>
         <ArtStylePanel
           globalArtStyle={globalArtStyle}
           negativePrompt={negativePrompt}
@@ -431,9 +484,43 @@ export function AssetStudioPage({
             setAssets((prev) => prev.map((asset) => ({ ...asset, prompt: "", status: "pending" })))
           }
         />
+        <ItemMasterWorkbench
+          selectedSetId={selectedSetId}
+          itemSetName={detail?.name}
+          currentItems={currentItems}
+          globalArtStyle={globalArtStyle}
+          negativePrompt={negativePrompt}
+          imageSize={imageSize}
+          backgroundMode={backgroundMode}
+          onPlanned={(batchId) => setPlannedMasterBatchId(batchId)}
+        />
         </div>
 
         <div className="space-y-4 min-w-0">
+      <Tabs defaultValue="variant">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="style">1) 风格设置</TabsTrigger>
+          <TabsTrigger value="master">2) 母版工作台</TabsTrigger>
+          <TabsTrigger value="variant">3) 变体批量</TabsTrigger>
+          <TabsTrigger value="publish">4) 预览发布</TabsTrigger>
+        </TabsList>
+        <TabsContent value="style" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle className="text-lg">风格设置</CardTitle></CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              左侧已提供参考图上传、Style Bible 分析、全局风格块与负面词编辑；完成后再进入母版工作台。
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="master" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle className="text-lg">母版门禁</CardTitle></CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              每个物品组必须先生成并确认母版，确认后才可批量生成颜色变体。操作入口在左侧母版工作台。
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="variant" className="mt-4">
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">图片生成与预览</CardTitle>
@@ -456,6 +543,7 @@ export function AssetStudioPage({
             <Button variant="outline" onClick={() => void refreshBatches()}>
               刷新批次
             </Button>
+            <Badge variant="outline">母版批次：{plannedMasterBatchId || "未创建"}</Badge>
             <Button variant="outline" onClick={() => void exportZip()}>
               导出 ZIP
             </Button>
@@ -488,6 +576,34 @@ export function AssetStudioPage({
           />
         </CardContent>
       </Card>
+        </TabsContent>
+        <TabsContent value="publish" className="mt-4 space-y-4">
+          <GroupedAssetPreview assets={assets} />
+          <Card>
+            <CardHeader><CardTitle className="text-lg">发布到关卡生成器</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">发布时会自动携带 `assetBatchId`，并提示缺图数量。</p>
+              <Button
+                onClick={() => {
+                  const selectedBatch = plannedMasterBatchId || batches[0]?.id || "";
+                  if (!selectedBatch) {
+                    notify.warning("请先创建并生成资源批次");
+                    return;
+                  }
+                  const missing = assets.filter((a) => !a.imageUrl).length;
+                  if (missing > 0) notify.warning(`当前有 ${missing} 张缺图，建议补齐后再发布`);
+                  const query = new URLSearchParams();
+                  if (activeWorkspaceId) query.set("workspace", activeWorkspaceId);
+                  query.set("assetBatch", selectedBatch);
+                  router.push(`/level-generator?${query.toString()}`);
+                }}
+              >
+                发布到关卡生成器
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
         </div>
       </div>
 

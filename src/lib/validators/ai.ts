@@ -142,6 +142,7 @@ export const generateAssetPromptInputSchema = z.object({
     color2: z.string().optional(),
     shape: z.string().optional(),
     size: z.string().optional(),
+    pattern: z.string().optional(),
     role: z.string().optional(),
   }),
   globalArtStyle: z.string().min(1),

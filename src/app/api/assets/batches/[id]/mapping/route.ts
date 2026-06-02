@@ -20,9 +20,13 @@ export async function GET(_: Request, { params }: Params) {
       assets: batch.assets.map((asset) => ({
         name: asset.name,
         displayName: asset.displayName,
+        baseItemName: asset.baseItemName,
+        isMaster: asset.isMaster,
+        masterTemplateId: asset.masterTemplateId,
         sourceItemId: asset.sourceItemId,
         catalogItemId: asset.catalogItemId,
         generatedItemId: asset.generatedItemId,
+        pattern: asset.pattern,
         role: asset.role,
         count: asset.count,
         imageUrl: asset.imageUrl,

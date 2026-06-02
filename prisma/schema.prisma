@@ -95,6 +95,8 @@ model AssetGenerationBatch {
   itemSetName    String
   name           String
   globalArtStyle String?
+  styleProfileId String?
+  styleProfile   AssetStyleProfile? @relation(fields: [styleProfileId], references: [id])
   provider       String
   model          String?
   status         String
@@ -105,6 +107,52 @@ model AssetGenerationBatch {
   updatedAt      DateTime         @updatedAt
 
   assets         GeneratedAsset[]
+  masters        ItemMasterTemplate[]
+}
+
+model AssetStyleProfile {
+  id              String           @id @default(cuid())
+  referenceImageUrl String?
+  stylePrompt    String?
+  negativePrompt String?
+  styleBibleJson String?
+  imageSize      String?
+  backgroundMode  String?
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  batches         AssetGenerationBatch[]
+}
+
+model ItemMasterTemplate {
+  id                 String             @id @default(cuid())
+  batchId            String
+  batch              AssetGenerationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  baseItemName      String
+  anchorGeneratedItemId String?
+
+  shape             String?
+  size              String?
+  pattern           String?
+  color1            String?
+  color2            String?
+
+  masterPrompt      String?
+  masterImageUrl    String?
+  masterAssetId     String?
+
+  status            String           @default("draft")
+  approvedAt        DateTime?
+  approvedBy        String?
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  assets GeneratedAsset[]
+
+  @@unique([batchId, baseItemName])
 }
 
 model GeneratedAsset {
@@ -125,6 +173,12 @@ model GeneratedAsset {
   size            String?
   role            String?
   count           Int?
+
+  baseItemName    String?
+  isMaster        Boolean            @default(false)
+  masterTemplateId String?
+  pattern         String?
+  masterTemplate  ItemMasterTemplate? @relation(fields: [masterTemplateId], references: [id])
 
   prompt          String
   negativePrompt  String?

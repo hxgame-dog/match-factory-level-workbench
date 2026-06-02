@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { generateAssetPrompt, generateImageAsset } from "@/lib/ai/gemini";
 import { getGeminiRuntime } from "@/lib/ai/geminiRuntime";
+import { getItemBaseName } from "@/lib/items/itemName";
 import { prisma } from "@/lib/prisma";
 import { generateAssetBatchInputSchema } from "@/lib/validators/asset";
+import type { GenerateItemsResult } from "@/types/ai";
 
 export async function POST(request: Request) {
   try {
@@ -67,8 +69,11 @@ export async function POST(request: Request) {
           color2: item.color2 ?? undefined,
           shape: item.shape ?? undefined,
           size: item.size ?? undefined,
+          pattern: item.pattern ?? undefined,
           role: item.role,
           count: item.count,
+          baseItemName: getItemBaseName(item as unknown as GenerateItemsResult["items"][number]),
+          isMaster: false,
           prompt: item.imagePrompt ?? promptRes.prompt,
           negativePrompt: promptRes.negativePrompt ?? input.negativePrompt,
           provider: useMock ? "mock" : env.AI_PROVIDER,

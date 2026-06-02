@@ -9,6 +9,7 @@ export function pickAssetItemPayload(item: Record<string, unknown>) {
     color2: item.color2 != null ? String(item.color2) : undefined,
     shape: item.shape != null ? String(item.shape) : undefined,
     size: item.size != null ? String(item.size) : undefined,
+    pattern: item.pattern != null ? String(item.pattern) : undefined,
     role: item.role != null ? String(item.role) : undefined,
     count: typeof item.count === "number" ? item.count : undefined,
     generatedItemId: item.generatedItemId != null ? String(item.generatedItemId) : undefined,

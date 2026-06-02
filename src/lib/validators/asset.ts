@@ -24,6 +24,7 @@ const assetItemSchema = z.object({
   color2: optStr,
   shape: optStr,
   size: optStr,
+  pattern: optStr,
   role: optStr,
   count: optInt,
   imagePrompt: optStr,
@@ -32,6 +33,7 @@ const assetItemSchema = z.object({
 
 export const generateAssetImageInputSchema = z.object({
   assetId: z.string().optional(),
+  referenceImageDataUrl: z.string().optional(),
   item: assetItemSchema,
   prompt: z.string().min(1),
   negativePrompt: z.string().optional(),
