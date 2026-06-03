@@ -62,3 +62,20 @@ export function isTextCapableModel(modelName: string): boolean {
   if (name.includes("imagen") && !name.includes("gemini")) return false;
   return name.includes("gemini") || name.includes("flash") || name.includes("pro");
 }
+
+/** 风格参考图分析：优先 AI 配置中心的图像模型，必要时回退文本模型 */
+export function resolveStyleAnalysisModel(
+  runtime: Pick<GeminiRuntime, "imageModel" | "textModel">,
+): {
+  primary: string;
+  fallback?: string;
+} {
+  const image = runtime.imageModel.trim();
+  const text = runtime.textModel.trim();
+  const primary = image || text;
+  if (!primary) {
+    return { primary: env.GEMINI_IMAGE_MODEL };
+  }
+  const fallback = text && text !== primary && isTextCapableModel(text) ? text : undefined;
+  return { primary, fallback };
+}

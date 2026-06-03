@@ -27,13 +27,20 @@ export async function POST(request: Request) {
 
     const result = await generateStyleBibleFromReference({
       apiKey: runtime.apiKey ?? "",
+      runtime: { imageModel: runtime.imageModel, textModel: runtime.textModel },
       referenceBytes: bytes,
       referenceMimeType: mimeType,
       userHint: typeof hint === "string" ? hint : undefined,
       useMock,
     });
 
-    return NextResponse.json({ success: true, data: result });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...result,
+        configuredImageModel: runtime.imageModel,
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "生成 Style Bible 失败";
     return NextResponse.json({ success: false, error: message }, { status: 400 });

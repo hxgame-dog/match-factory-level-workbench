@@ -135,7 +135,11 @@ export function AssetStudioPage({
       const { stylePrompt, negativePrompt: nextNegative } = res.data as { stylePrompt: string; negativePrompt: string };
       if (stylePrompt) setGlobalArtStyle(stylePrompt);
       if (nextNegative) setNegativePrompt(nextNegative);
-      notify.success("风格已分析完成", "已自动更新全局美术风格块与负面词。");
+      const modelUsed = (res.data as { modelUsed?: string }).modelUsed;
+      notify.success(
+        "风格已分析完成",
+        modelUsed ? `已使用模型 ${modelUsed}，并更新全局风格块与负面词。` : "已自动更新全局美术风格块与负面词。",
+      );
     } catch (e) {
       const message = e instanceof Error ? e.message : "风格分析失败";
       setError(message);
@@ -621,6 +625,25 @@ export function AssetStudioPage({
             onPlanned={(batchId) => {
               setCurrentBatchId(batchId);
               void openBatch(batchId);
+            }}
+            onBatchAssetsUpdated={(batchAssets) => {
+              setAssets(
+                batchAssets.map((asset) => ({
+                  name: asset.name,
+                  displayName: asset.displayName ?? undefined,
+                  category1: asset.category1,
+                  color1: asset.color1 ?? undefined,
+                  size: asset.size ?? undefined,
+                  pattern: asset.pattern ?? undefined,
+                  role: asset.role ?? undefined,
+                  assetId: asset.id,
+                  prompt: asset.prompt,
+                  negativePrompt,
+                  status: asset.status,
+                  imageUrl: asset.imageUrl ?? undefined,
+                  error: asset.error ?? undefined,
+                })),
+              );
             }}
           />
         </TabsContent>

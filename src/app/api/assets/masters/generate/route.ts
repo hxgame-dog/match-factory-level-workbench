@@ -155,9 +155,19 @@ export async function POST(request: Request) {
       },
     });
 
+    const updatedAsset = await prisma.generatedAsset.findUnique({ where: { id: asset.id } });
+
     return NextResponse.json({
       success: true,
-      data: { templateId: template.id, anchorAssetId: asset.id, status: imageRes.status },
+      data: {
+        templateId: template.id,
+        anchorAssetId: asset.id,
+        status: imageRes.status,
+        masterImageUrl: updatedAsset?.imageUrl ?? imageRes.imageUrl,
+        masterPrompt: promptRes.prompt,
+        anchorName: anchor.name,
+        anchorDisplayName: anchor.displayName,
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "生成母版失败";
