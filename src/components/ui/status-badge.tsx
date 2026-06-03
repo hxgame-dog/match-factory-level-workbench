@@ -14,6 +14,9 @@ const STATUS_MAP: Record<
   prompt_ready: { label: "Prompt 就绪", variant: "secondary" },
   skipped: { label: "已跳过", variant: "outline" },
   draft: { label: "草稿", variant: "outline" },
+  ready: { label: "待确认", variant: "secondary", className: "bg-amber-50 text-amber-900" },
+  approved: { label: "已确认", variant: "default", className: "bg-emerald-600 hover:bg-emerald-600" },
+  split: { label: "已切图", variant: "default", className: "bg-emerald-600 hover:bg-emerald-600" },
   needs_review: { label: "待复核", variant: "secondary", className: "bg-amber-50 text-amber-900" },
 };
 

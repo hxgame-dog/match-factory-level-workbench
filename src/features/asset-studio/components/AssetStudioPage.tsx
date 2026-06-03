@@ -98,6 +98,9 @@ export function AssetStudioPage({
   const [outputFormat, setOutputFormat] = useState<"svg" | "png">("svg");
   const [error, setError] = useState<string | null>(null);
   const [styleReferenceFile, setStyleReferenceFile] = useState<File | null>(null);
+  const [styleProfileId, setStyleProfileId] = useState<string>("");
+  const [referenceImageUrl, setReferenceImageUrl] = useState<string>("");
+  const [sheetSize] = useState("2048x1024");
   const [styleBibleLoading, setStyleBibleLoading] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState({ total: 0, done: 0, failed: 0 });
@@ -135,10 +138,18 @@ export function AssetStudioPage({
       const { stylePrompt, negativePrompt: nextNegative } = res.data as { stylePrompt: string; negativePrompt: string };
       if (stylePrompt) setGlobalArtStyle(stylePrompt);
       if (nextNegative) setNegativePrompt(nextNegative);
-      const modelUsed = (res.data as { modelUsed?: string }).modelUsed;
+      const data = res.data as {
+        modelUsed?: string;
+        styleProfileId?: string;
+        referenceImageUrl?: string;
+      };
+      if (data.styleProfileId) setStyleProfileId(data.styleProfileId);
+      if (data.referenceImageUrl) setReferenceImageUrl(data.referenceImageUrl);
       notify.success(
         "风格已分析完成",
-        modelUsed ? `已使用模型 ${modelUsed}，并更新全局风格块与负面词。` : "已自动更新全局美术风格块与负面词。",
+        data.modelUsed
+          ? `已使用模型 ${data.modelUsed}，参考图已保存，可进入色板工作台。`
+          : "参考图已保存，可进入色板工作台。",
       );
     } catch (e) {
       const message = e instanceof Error ? e.message : "风格分析失败";
@@ -557,7 +568,18 @@ export function AssetStudioPage({
             <Button onClick={() => void analyzeStyleBible()} disabled={styleBibleLoading}>
               {styleBibleLoading ? "分析中…" : "分析风格并生成 Style Bible"}
             </Button>
-            <p className="text-xs text-muted-foreground">上传参考图后，会自动生成全局美术风格块与负面词（可继续手动微调）。</p>
+            {referenceImageUrl ? (
+              <div className="overflow-hidden rounded-md border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={referenceImageUrl} alt="风格参考" className="max-h-40 w-full object-contain" />
+              </div>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              上传参考图并分析后，参考图会持久化并在色板生成时直接注入模型（非仅文本 Style Bible）。
+            </p>
+            {styleProfileId ? (
+              <Badge variant="secondary">风格配置已绑定</Badge>
+            ) : null}
           </CardContent>
         </Card>
         <ArtStylePanel
@@ -587,8 +609,8 @@ export function AssetStudioPage({
       <Tabs defaultValue="variant">
         <TabsList className="grid w-full grid-cols-2 gap-2 md:grid-cols-4">
           <TabsTrigger value="style">1) 风格设置 {stepDone.style ? "✓" : ""}</TabsTrigger>
-          <TabsTrigger value="master">2) 母版工作台 {stepDone.master ? "✓" : ""}</TabsTrigger>
-          <TabsTrigger value="variant">3) 变体批量 {stepDone.variant ? "✓" : ""}</TabsTrigger>
+          <TabsTrigger value="master">2) 色板工作台 {stepDone.master ? "✓" : ""}</TabsTrigger>
+          <TabsTrigger value="variant">3) 单张出图（旧） {stepDone.variant ? "✓" : ""}</TabsTrigger>
           <TabsTrigger value="publish">4) 预览发布 {stepDone.publish ? "✓" : ""}</TabsTrigger>
         </TabsList>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -609,7 +631,7 @@ export function AssetStudioPage({
           <Card>
             <CardHeader><CardTitle className="text-lg">风格设置</CardTitle></CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              左侧已提供参考图上传、Style Bible 分析、全局风格块与负面词编辑；完成后再进入母版工作台。
+              上传参考图并分析 → 编辑全局风格块 → 进入「色板工作台」按物品组一次生成 2×4 图并切图。
             </CardContent>
           </Card>
         </TabsContent>
@@ -622,6 +644,9 @@ export function AssetStudioPage({
             negativePrompt={negativePrompt}
             imageSize={imageSize}
             backgroundMode={backgroundMode}
+            styleProfileId={styleProfileId}
+            sheetSize={sheetSize}
+            currentBatchId={currentBatchId}
             onPlanned={(batchId) => {
               setCurrentBatchId(batchId);
               void openBatch(batchId);
@@ -650,9 +675,12 @@ export function AssetStudioPage({
         <TabsContent value="variant" className="mt-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">图片生成与预览</CardTitle>
+          <CardTitle className="text-lg">单张出图（旧流程）</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            推荐使用「色板工作台」一次生成 8 色并切图。此处保留逐张 Prompt + 出图，仅供补图或旧批次。
+          </p>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => void generateAll()} disabled={batchGenerating || promptGenerating || !selectedSetId}>
               {batchGenerating ? "出图中…" : "批量出图"}

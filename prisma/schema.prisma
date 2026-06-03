@@ -111,18 +111,20 @@ model AssetGenerationBatch {
 }
 
 model AssetStyleProfile {
-  id              String           @id @default(cuid())
+  id                String           @id @default(cuid())
   referenceImageUrl String?
-  stylePrompt    String?
-  negativePrompt String?
-  styleBibleJson String?
-  imageSize      String?
-  backgroundMode  String?
+  referenceLocalPath String?
+  stylePrompt       String?
+  negativePrompt    String?
+  styleBibleJson    String?
+  imageSize         String?
+  backgroundMode    String?
+  sheetSize         String?          @default("2048x1024")
 
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  batches         AssetGenerationBatch[]
+  batches           AssetGenerationBatch[]
 }
 
 model ItemMasterTemplate {
@@ -142,6 +144,14 @@ model ItemMasterTemplate {
   masterPrompt      String?
   masterImageUrl    String?
   masterAssetId     String?
+
+  sheetImageUrl     String?
+  sheetLocalPath    String?
+  sheetPrompt       String?
+  sheetModel        String?
+  sheetSize         String?          @default("2048x1024")
+  gridRows          Int              @default(2)
+  gridCols          Int              @default(4)
 
   status            String           @default("draft")
   approvedAt        DateTime?
@@ -177,6 +187,7 @@ model GeneratedAsset {
   baseItemName    String?
   isMaster        Boolean            @default(false)
   masterTemplateId String?
+  sheetIndex      Int?
   pattern         String?
   masterTemplate  ItemMasterTemplate? @relation(fields: [masterTemplateId], references: [id])
 

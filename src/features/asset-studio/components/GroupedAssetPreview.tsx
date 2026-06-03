@@ -45,7 +45,6 @@ export function GroupedAssetPreview({ assets, assetIndices, onRetryFiltered, ret
     const merged = Array.from(map.entries()).map(([baseItemName, rows]) => ({
       baseItemName,
       rows,
-      master: rows.find((r) => r.isMaster),
     }));
     if (statusFilter === "missing") {
       return merged.filter((g) => g.rows.some((r) => !r.imageUrl));
@@ -150,7 +149,7 @@ export function GroupedAssetPreview({ assets, assetIndices, onRetryFiltered, ret
               </summary>
               <div className="mt-3 space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  母版：{g.master?.displayName ?? g.master?.name ?? "未标记"} / 变体：{g.rows.filter((r) => !r.isMaster).length}
+                  已切图 {g.rows.filter((r) => r.imageUrl).length} / {g.rows.length} 张
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">图分页：{currentAssetPage}/{assetTotalPages}</Badge>

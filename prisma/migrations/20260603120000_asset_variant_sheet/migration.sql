@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "AssetStyleProfile" ADD COLUMN IF NOT EXISTS "referenceLocalPath" TEXT;
+ALTER TABLE "AssetStyleProfile" ADD COLUMN IF NOT EXISTS "sheetSize" TEXT DEFAULT '2048x1024';
+
+-- AlterTable
+ALTER TABLE "ItemMasterTemplate" ADD COLUMN IF NOT EXISTS "sheetImageUrl" TEXT;
+ALTER TABLE "ItemMasterTemplate" ADD COLUMN IF NOT EXISTS "sheetLocalPath" TEXT;
+ALTER TABLE "ItemMasterTemplate" ADD COLUMN IF NOT EXISTS "sheetPrompt" TEXT;
+ALTER TABLE "ItemMasterTemplate" ADD COLUMN IF NOT EXISTS "sheetModel" TEXT;
+ALTER TABLE "ItemMasterTemplate" ADD COLUMN IF NOT EXISTS "sheetSize" TEXT DEFAULT '2048x1024';
+ALTER TABLE "ItemMasterTemplate" ADD COLUMN IF NOT EXISTS "gridRows" INTEGER NOT NULL DEFAULT 2;
+ALTER TABLE "ItemMasterTemplate" ADD COLUMN IF NOT EXISTS "gridCols" INTEGER NOT NULL DEFAULT 4;
+
+-- AlterTable
+ALTER TABLE "GeneratedAsset" ADD COLUMN IF NOT EXISTS "sheetIndex" INTEGER;

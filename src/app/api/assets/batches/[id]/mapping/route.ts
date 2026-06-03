@@ -22,6 +22,7 @@ export async function GET(_: Request, { params }: Params) {
         displayName: asset.displayName,
         baseItemName: asset.baseItemName,
         isMaster: asset.isMaster,
+        sheetIndex: asset.sheetIndex,
         masterTemplateId: asset.masterTemplateId,
         sourceItemId: asset.sourceItemId,
         catalogItemId: asset.catalogItemId,

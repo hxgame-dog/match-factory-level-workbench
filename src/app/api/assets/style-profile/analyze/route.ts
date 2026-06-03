@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 
 import { generateStyleBibleFromReference } from "@/lib/ai/styleBibleFromReference";
 import { getGeminiRuntime } from "@/lib/ai/geminiRuntime";
+import { saveStyleReferenceImage } from "@/lib/assets/saveReferenceImage";
 import { env } from "@/lib/env";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -25,6 +27,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "请先保存 Gemini API Key" }, { status: 400 });
     }
 
+    const savedRef = await saveStyleReferenceImage(bytes, mimeType);
+
     const result = await generateStyleBibleFromReference({
       apiKey: runtime.apiKey ?? "",
       runtime: { imageModel: runtime.imageModel, textModel: runtime.textModel },
@@ -34,10 +38,22 @@ export async function POST(request: Request) {
       useMock,
     });
 
+    const profile = await prisma.assetStyleProfile.create({
+      data: {
+        referenceImageUrl: savedRef.referenceImageUrl,
+        referenceLocalPath: savedRef.referenceLocalPath,
+        stylePrompt: result.stylePrompt,
+        negativePrompt: result.negativePrompt,
+        styleBibleJson: JSON.stringify(result.styleBibleJson),
+      },
+    });
+
     return NextResponse.json({
       success: true,
       data: {
         ...result,
+        styleProfileId: profile.id,
+        referenceImageUrl: savedRef.referenceImageUrl,
         configuredImageModel: runtime.imageModel,
       },
     });

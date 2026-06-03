@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Loader2, Scissors } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getItemBaseName } from "@/lib/items/itemName";
+import { getPaletteColorLabel } from "@/lib/items/colorPalette";
 import { notify } from "@/lib/ui/notify";
 
 import { MasterItemCard } from "./MasterItemCard";
+import { VariantSheetCard } from "./VariantSheetCard";
 
 type ItemLike = {
   id?: string;
@@ -37,17 +39,18 @@ type BatchAsset = {
   prompt: string;
   imageUrl?: string | null;
   error?: string | null;
-  isMaster?: boolean;
+  sheetIndex?: number | null;
   generatedItemId?: string | null;
 };
 
-type MasterTemplate = {
+type SheetTemplate = {
   id: string;
   baseItemName: string;
-  status: "draft" | "generating" | "ready" | "approved" | "failed";
+  status: "draft" | "generating" | "ready" | "approved" | "split" | "failed";
   anchorGeneratedItemId?: string;
-  masterImageUrl?: string;
-  masterPrompt?: string;
+  sheetImageUrl?: string | null;
+  sheetPrompt?: string | null;
+  sheetSize?: string | null;
   shape?: string;
   size?: string;
   pattern?: string;
@@ -61,19 +64,22 @@ type Props = {
   negativePrompt: string;
   imageSize: "512x512" | "768x768" | "1024x1024";
   backgroundMode: "transparent" | "plain" | "studio";
+  styleProfileId?: string;
+  sheetSize?: string;
+  currentBatchId?: string;
   onPlanned?: (batchId: string) => void;
   onBatchAssetsUpdated?: (assets: BatchAsset[]) => void;
 };
 
 export function ItemMasterWorkbench(props: Props) {
-  const [batchId, setBatchId] = useState<string>("");
-  const [templates, setTemplates] = useState<MasterTemplate[]>([]);
+  const sheetSize = props.sheetSize ?? "2048x1024";
+  const [batchId, setBatchId] = useState<string>(props.currentBatchId ?? "");
+  const [templates, setTemplates] = useState<SheetTemplate[]>([]);
   const [batchAssets, setBatchAssets] = useState<BatchAsset[]>([]);
   const [activeBaseItemName, setActiveBaseItemName] = useState<string>("");
-  const [variantsExpanded, setVariantsExpanded] = useState(false);
   const [planning, setPlanning] = useState(false);
-  const [masterGenerating, setMasterGenerating] = useState(false);
-  const [variantGenerating, setVariantGenerating] = useState(false);
+  const [sheetGenerating, setSheetGenerating] = useState(false);
+  const [splitting, setSplitting] = useState(false);
   const [approving, setApproving] = useState(false);
 
   const grouped = useMemo(() => {
@@ -90,51 +96,28 @@ export function ItemMasterWorkbench(props: Props) {
   const activeTemplate = templates.find((t) => t.baseItemName === activeBaseItemName);
   const activeGroup = grouped.find((g) => g.baseItemName === activeBaseItemName);
 
-  const anchorItem = useMemo(() => {
-    if (!activeGroup) return undefined;
-    if (activeTemplate?.anchorGeneratedItemId) {
-      return activeGroup.items.find((i) => i.id === activeTemplate.anchorGeneratedItemId) ?? activeGroup.items[0];
-    }
-    return activeGroup.items[0];
-  }, [activeGroup, activeTemplate?.anchorGeneratedItemId]);
-
-  const masterAsset = useMemo(() => {
-    if (!anchorItem) return undefined;
-    return (
-      batchAssets.find((a) => a.generatedItemId === anchorItem.id) ??
-      batchAssets.find((a) => a.name === anchorItem.name && a.isMaster) ??
-      batchAssets.find((a) => a.name === anchorItem.name)
-    );
-  }, [batchAssets, anchorItem]);
-
-  const variantItems = useMemo(() => {
-    if (!activeGroup || !anchorItem) return [];
-    return activeGroup.items.filter((i) => i.name !== anchorItem.name);
-  }, [activeGroup, anchorItem]);
+  const groupItems = activeGroup?.items ?? [];
 
   const templateStats = useMemo(() => {
     const total = templates.length;
+    const split = templates.filter((t) => t.status === "split").length;
     const approved = templates.filter((t) => t.status === "approved").length;
     const ready = templates.filter((t) => t.status === "ready").length;
-    const failed = templates.filter((t) => t.status === "failed").length;
-    return { total, approved, ready, failed };
+    return { total, split, approved, ready };
   }, [templates]);
 
-  const showVariantsPanel =
-    variantsExpanded &&
-    Boolean(activeTemplate && ["ready", "approved", "failed"].includes(activeTemplate.status));
-
-  function getStatusLabel(status?: MasterTemplate["status"]) {
+  function getStatusLabel(status?: SheetTemplate["status"]) {
     switch (status) {
+      case "split":
+        return "已切图";
       case "approved":
-        return "已通过";
+        return "已确认";
       case "ready":
         return "待确认";
       case "generating":
         return "生成中";
       case "failed":
         return "失败";
-      case "draft":
       default:
         return "草稿";
     }
@@ -143,14 +126,42 @@ export function ItemMasterWorkbench(props: Props) {
   async function refreshBatchAssets(id: string) {
     const payload = await fetch(`/api/assets/batches/${id}`).then((r) => r.json());
     if (!payload.success) return;
-    const assets = payload.data.assets as BatchAsset[];
-    setBatchAssets(assets);
-    props.onBatchAssetsUpdated?.(assets);
+    const data = payload.data as { assets: BatchAsset[]; masters?: SheetTemplate[] };
+    setBatchAssets(data.assets);
+    if (data.masters?.length) {
+      setTemplates(
+        data.masters.map((m) => ({
+          id: m.id,
+          baseItemName: m.baseItemName,
+          status: m.status as SheetTemplate["status"],
+          anchorGeneratedItemId: m.anchorGeneratedItemId ?? undefined,
+          sheetImageUrl: m.sheetImageUrl,
+          sheetPrompt: m.sheetPrompt,
+          sheetSize: m.sheetSize,
+          shape: m.shape ?? undefined,
+          size: m.size ?? undefined,
+          pattern: m.pattern ?? undefined,
+        })),
+      );
+    }
+    props.onBatchAssetsUpdated?.(data.assets);
   }
+
+  useEffect(() => {
+    if (props.currentBatchId && props.currentBatchId !== batchId) {
+      setBatchId(props.currentBatchId);
+      void refreshBatchAssets(props.currentBatchId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅随外部批次切换同步
+  }, [props.currentBatchId]);
 
   async function createPlan() {
     if (!props.selectedSetId) {
       notify.warning("请先选择道具集");
+      return;
+    }
+    if (!props.styleProfileId) {
+      notify.warning("请先在风格设置中上传参考图并完成分析");
       return;
     }
     setPlanning(true);
@@ -160,76 +171,74 @@ export function ItemMasterWorkbench(props: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           itemSetId: props.selectedSetId,
-          batchName: `${props.itemSetName ?? "master-batch"}-${Date.now()}`,
+          batchName: `${props.itemSetName ?? "sheet-batch"}-${Date.now()}`,
           globalArtStyle: props.globalArtStyle,
           negativePrompt: props.negativePrompt,
           imageSize: props.imageSize,
           backgroundMode: props.backgroundMode,
+          styleProfileId: props.styleProfileId,
+          sheetSize,
         }),
       }).then((r) => r.json());
-      if (!payload.success) throw new Error(payload.error ?? "创建母版计划失败");
+      if (!payload.success) throw new Error(payload.error ?? "创建色板计划失败");
 
       setBatchId(payload.data.batchId);
-      setTemplates(payload.data.templates);
-      setVariantsExpanded(false);
+      setTemplates(payload.data.templates ?? []);
       if (payload.data.templates?.[0]?.baseItemName) {
         setActiveBaseItemName(payload.data.templates[0].baseItemName);
       }
       props.onPlanned?.(payload.data.batchId);
       await refreshBatchAssets(payload.data.batchId);
-      notify.success("母版计划已创建", `共 ${payload.data.totalBaseItems} 个物品组`);
+      notify.success("色板计划已创建", `共 ${payload.data.totalBaseItems} 个物品组`);
     } catch (e) {
-      notify.error("创建母版计划失败", e instanceof Error ? e.message : "请稍后重试");
+      notify.error("创建计划失败", e instanceof Error ? e.message : "请稍后重试");
     } finally {
       setPlanning(false);
     }
   }
 
-  async function generateMaster() {
+  async function generateSheet() {
     if (!batchId || !activeBaseItemName) return;
-    setMasterGenerating(true);
+    setSheetGenerating(true);
     try {
-      const payload = await fetch("/api/assets/masters/generate", {
+      const payload = await fetch("/api/assets/sheets/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           batchId,
           baseItemName: activeBaseItemName,
           negativePrompt: props.negativePrompt,
-          imageSize: props.imageSize,
-          backgroundMode: props.backgroundMode,
+          sheetSize,
         }),
       }).then((r) => r.json());
-      if (!payload.success) throw new Error(payload.error ?? "母版生成失败");
+      if (!payload.success) throw new Error(payload.error ?? "色板生成失败");
 
-      const nextStatus = payload.data.status === "done" ? "ready" : "failed";
+      const nextStatus = payload.data.status === "ready" ? "ready" : "failed";
       setTemplates((prev) =>
         prev.map((t) =>
           t.baseItemName === activeBaseItemName
             ? {
                 ...t,
                 status: nextStatus,
-                masterImageUrl: payload.data.masterImageUrl,
-                masterPrompt: payload.data.masterPrompt,
+                sheetImageUrl: payload.data.sheetImageUrl,
+                sheetPrompt: payload.data.sheetPrompt,
               }
             : t,
         ),
       );
-      setVariantsExpanded(nextStatus === "ready" || nextStatus === "failed");
-      await refreshBatchAssets(batchId);
-      notify.success("母版生成完成", activeBaseItemName);
+      notify.success("色板图已生成", activeBaseItemName);
     } catch (e) {
-      notify.error("母版生成失败", e instanceof Error ? e.message : "请稍后重试");
+      notify.error("色板生成失败", e instanceof Error ? e.message : "请稍后重试");
     } finally {
-      setMasterGenerating(false);
+      setSheetGenerating(false);
     }
   }
 
-  async function approveMaster() {
+  async function approveSheet() {
     if (!batchId || !activeBaseItemName) return;
     setApproving(true);
     try {
-      const payload = await fetch("/api/assets/masters/approve", {
+      const payload = await fetch("/api/assets/sheets/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -238,66 +247,81 @@ export function ItemMasterWorkbench(props: Props) {
           approvedBy: "planner",
         }),
       }).then((r) => r.json());
-      if (!payload.success) throw new Error(payload.error ?? "母版确认失败");
+      if (!payload.success) throw new Error(payload.error ?? "色板确认失败");
       setTemplates((prev) =>
         prev.map((t) => (t.baseItemName === activeBaseItemName ? { ...t, status: "approved" } : t)),
       );
-      notify.success("母版已确认", "可批量生成颜色变体");
+      notify.success("色板已确认", "可进行切图分配");
     } catch (e) {
-      notify.error("母版确认失败", e instanceof Error ? e.message : "请稍后重试");
+      notify.error("色板确认失败", e instanceof Error ? e.message : "请稍后重试");
     } finally {
       setApproving(false);
     }
   }
 
-  async function generateVariants() {
+  async function splitSheet() {
     if (!batchId || !activeBaseItemName) return;
-    setVariantGenerating(true);
+    setSplitting(true);
     try {
-      const payload = await fetch("/api/assets/masters/variants/generate", {
+      const payload = await fetch("/api/assets/sheets/split", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           batchId,
           baseItemName: activeBaseItemName,
-          negativePrompt: props.negativePrompt,
           imageSize: props.imageSize,
-          backgroundMode: props.backgroundMode,
         }),
       }).then((r) => r.json());
-      if (!payload.success) throw new Error(payload.error ?? "变体生成失败");
+      if (!payload.success) throw new Error(payload.error ?? "切图失败");
+
+      setTemplates((prev) =>
+        prev.map((t) => (t.baseItemName === activeBaseItemName ? { ...t, status: "split" } : t)),
+      );
       await refreshBatchAssets(batchId);
-      notify.success("变体批量生成完成", `${activeBaseItemName} 成功 ${payload.data.successCount}`);
+      notify.success(
+        "切图完成",
+        `${activeBaseItemName}：已分配 ${payload.data.successCount} 张，跳过 ${payload.data.skippedCount} 格`,
+      );
     } catch (e) {
-      notify.error("变体生成失败", e instanceof Error ? e.message : "请稍后重试");
+      notify.error("切图失败", e instanceof Error ? e.message : "请稍后重试");
     } finally {
-      setVariantGenerating(false);
+      setSplitting(false);
     }
   }
 
-  function findVariantAsset(item: ItemLike) {
-    return batchAssets.find((a) => a.generatedItemId === item.id) ?? batchAssets.find((a) => a.name === item.name);
+  function findAsset(item: ItemLike) {
+    return (
+      batchAssets.find((a) => a.generatedItemId === item.id) ??
+      batchAssets.find((a) => a.name === item.name)
+    );
   }
+
+  const showVariants =
+    activeTemplate && ["ready", "approved", "split", "failed"].includes(activeTemplate.status);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">母版工作台（按物品名）</CardTitle>
+        <CardTitle className="text-lg">色板工作台（2×4 一次出图）</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => void createPlan()} disabled={planning || !props.selectedSetId}>
             {planning ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
-            创建母版计划
+            创建色板计划
           </Button>
           <Badge variant="outline">批次：{batchId || "未创建"}</Badge>
-          <Badge variant="secondary">总组数 {templateStats.total}</Badge>
-          <Badge variant="secondary">已通过 {templateStats.approved}</Badge>
-          <Badge variant="secondary">待确认 {templateStats.ready}</Badge>
+          <Badge variant="secondary">组数 {templateStats.total}</Badge>
+          <Badge variant="secondary">已切图 {templateStats.split}</Badge>
+          <Badge variant="outline">色板尺寸 {sheetSize}</Badge>
         </div>
 
+        {!props.styleProfileId ? (
+          <p className="text-sm text-amber-700">请先在「风格设置」上传参考图并分析，以绑定风格配置。</p>
+        ) : null}
+
         <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-          <div className="max-h-[520px] space-y-2 overflow-y-auto rounded-md border border-border p-3">
+          <div className="max-h-[560px] space-y-2 overflow-y-auto rounded-md border border-border p-3">
             <p className="text-sm font-medium">物品组</p>
             {grouped.map((g) => {
               const t = templates.find((x) => x.baseItemName === g.baseItemName);
@@ -308,13 +332,14 @@ export function ItemMasterWorkbench(props: Props) {
                   className={`flex w-full items-center justify-between rounded-sm border px-2 py-1.5 text-left text-sm ${
                     activeBaseItemName === g.baseItemName ? "border-primary bg-muted/50" : "border-border"
                   }`}
-                  onClick={() => {
-                    setActiveBaseItemName(g.baseItemName);
-                    setVariantsExpanded(Boolean(t && ["ready", "approved", "failed"].includes(t.status)));
-                  }}
+                  onClick={() => setActiveBaseItemName(g.baseItemName)}
                 >
                   <span className="truncate">{g.baseItemName}</span>
-                  <Badge variant={t?.status === "approved" ? "default" : t?.status === "failed" ? "destructive" : "outline"}>
+                  <Badge
+                    variant={
+                      t?.status === "split" ? "default" : t?.status === "failed" ? "destructive" : "outline"
+                    }
+                  >
                     {getStatusLabel(t?.status)}
                   </Badge>
                 </button>
@@ -323,109 +348,83 @@ export function ItemMasterWorkbench(props: Props) {
           </div>
 
           <div className="space-y-4">
-            {!anchorItem ? (
+            {!activeBaseItemName ? (
               <p className="text-sm text-muted-foreground">请选择左侧物品组</p>
             ) : (
               <>
-                <div className="max-w-sm">
-                  <MasterItemCard
-                    isMaster
-                    name={anchorItem.name}
-                    displayName={anchorItem.displayName}
-                    role={anchorItem.role}
-                    category1={anchorItem.category1}
-                    size={anchorItem.size}
-                    pattern={anchorItem.pattern ?? activeTemplate?.pattern}
-                    color1={anchorItem.color1}
-                    status={masterAsset?.status ?? activeTemplate?.status ?? "pending"}
-                    prompt={masterAsset?.prompt ?? activeTemplate?.masterPrompt}
-                    imageUrl={masterAsset?.imageUrl ?? activeTemplate?.masterImageUrl ?? undefined}
-                    error={masterAsset?.error ?? undefined}
-                    actions={
-                      <>
-                        <Button size="sm" onClick={() => void generateMaster()} disabled={!batchId || masterGenerating}>
-                          {masterGenerating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
-                          生成母版
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void approveMaster()}
-                          disabled={!batchId || approving || activeTemplate?.status !== "ready"}
-                        >
-                          {approving ? (
-                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="mr-1 h-3 w-3" />
-                          )}
-                          确认母版
-                        </Button>
-                      </>
-                    }
-                  />
-                </div>
+                <VariantSheetCard
+                  title={activeBaseItemName}
+                  subtitle={`${groupItems.length} 个颜色变体 · 一次生成 8 格色板`}
+                  status={activeTemplate?.status ?? "draft"}
+                  sheetImageUrl={activeTemplate?.sheetImageUrl ?? undefined}
+                  prompt={activeTemplate?.sheetPrompt ?? undefined}
+                  showGridOverlay={Boolean(activeTemplate?.sheetImageUrl)}
+                  actions={
+                    <>
+                      <Button size="sm" onClick={() => void generateSheet()} disabled={!batchId || sheetGenerating}>
+                        {sheetGenerating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+                        生成色板
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void approveSheet()}
+                        disabled={!batchId || approving || activeTemplate?.status !== "ready"}
+                      >
+                        {approving ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="mr-1 h-3 w-3" />
+                        )}
+                        确认色板
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => void splitSheet()}
+                        disabled={!batchId || splitting || activeTemplate?.status !== "approved"}
+                      >
+                        {splitting ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Scissors className="mr-1 h-3 w-3" />
+                        )}
+                        切图并分配
+                      </Button>
+                    </>
+                  }
+                />
 
-                {activeTemplate && ["ready", "approved", "failed"].includes(activeTemplate.status) ? (
-                  <div className="rounded-md border border-border">
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium"
-                      onClick={() => setVariantsExpanded((v) => !v)}
-                    >
-                      {showVariantsPanel ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      颜色变体（{variantItems.length}）
-                      {activeTemplate.status === "approved" ? (
-                        <Badge variant="default" className="ml-1">
-                          已解锁批量
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="ml-1">
-                          需先确认母版
-                        </Badge>
-                      )}
-                    </button>
-                    {showVariantsPanel ? (
-                      <div className="space-y-3 border-t border-border p-3">
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => void generateVariants()}
-                            disabled={
-                              !batchId || variantGenerating || activeTemplate.status !== "approved"
+                {showVariants ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">切图结果（{groupItems.length}）</p>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      {groupItems.map((item) => {
+                        const asset = findAsset(item);
+                        return (
+                          <MasterItemCard
+                            key={item.id ?? item.name}
+                            name={item.name}
+                            displayName={item.displayName}
+                            role={item.role}
+                            category1={item.category1}
+                            size={item.size}
+                            pattern={item.pattern}
+                            color1={item.color1}
+                            status={asset?.status ?? "pending"}
+                            prompt={asset?.prompt}
+                            imageUrl={asset?.imageUrl ?? undefined}
+                            error={asset?.error ?? undefined}
+                            actions={
+                              <span className="text-xs text-muted-foreground">
+                                {getPaletteColorLabel(item.color1)}
+                                {asset?.imageUrl ? " · 已切图" : " · 待切图"}
+                              </span>
                             }
-                          >
-                            {variantGenerating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
-                            批量生成变体
-                          </Button>
-                        </div>
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                          {variantItems.map((item) => {
-                            const asset = findVariantAsset(item);
-                            return (
-                              <MasterItemCard
-                                key={item.id ?? item.name}
-                                name={item.name}
-                                displayName={item.displayName}
-                                role={item.role}
-                                category1={item.category1}
-                                size={item.size}
-                                pattern={item.pattern}
-                                color1={item.color1}
-                                status={asset?.status ?? "pending"}
-                                prompt={asset?.prompt}
-                                imageUrl={asset?.imageUrl ?? undefined}
-                                error={asset?.error ?? undefined}
-                                actions={
-                                  <span className="text-xs text-muted-foreground">
-                                    {asset?.imageUrl ? "已生成" : "待生成"}
-                                  </span>
-                                }
-                              />
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : null}
               </>

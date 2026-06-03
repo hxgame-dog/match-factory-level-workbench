@@ -9,7 +9,7 @@ export async function GET(_: Request, { params }: Params) {
     const { id } = await params;
     const batch = await prisma.assetGenerationBatch.findUnique({
       where: { id },
-      include: { assets: true },
+      include: { assets: true, masters: true, styleProfile: true },
     });
     if (!batch) {
       return NextResponse.json({ success: false, error: "批次不存在" }, { status: 404 });

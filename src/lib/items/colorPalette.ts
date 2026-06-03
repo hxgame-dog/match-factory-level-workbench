@@ -32,3 +32,11 @@ export function getPaletteColorEnglish(colorKeyOrEn: string | undefined | null):
   );
   return found?.en ?? colorKeyOrEn;
 }
+
+/** 将 color1 规范为标准 palette key，无法匹配时返回 null */
+export function normalizeColorKey(color1: string | undefined | null): string | null {
+  if (!color1?.trim()) return null;
+  const v = color1.trim().toLowerCase();
+  const found = STANDARD_COLOR_PALETTE.find((c) => c.key === v || c.en === v);
+  return found?.key ?? null;
+}

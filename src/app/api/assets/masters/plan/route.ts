@@ -19,6 +19,8 @@ export async function POST(request: Request) {
       negativePrompt,
       imageSize = "512x512",
       backgroundMode = "plain",
+      styleProfileId,
+      sheetSize = "2048x1024",
     } = body as {
       itemSetId: string;
       batchName: string;
@@ -27,6 +29,8 @@ export async function POST(request: Request) {
       negativePrompt?: string;
       imageSize?: "512x512" | "768x768" | "1024x1024";
       backgroundMode?: "transparent" | "plain" | "studio";
+      styleProfileId?: string;
+      sheetSize?: string;
     };
 
     if (!itemSetId) return NextResponse.json({ success: false, error: "缺少 itemSetId" }, { status: 400 });
@@ -44,12 +48,20 @@ export async function POST(request: Request) {
     const runtime = await getGeminiRuntime();
     const useMock = env.AI_MOCK_MODE && !runtime.hasApiKey;
 
+    if (styleProfileId) {
+      const profile = await prisma.assetStyleProfile.findUnique({ where: { id: styleProfileId } });
+      if (!profile) {
+        return NextResponse.json({ success: false, error: "未找到风格配置" }, { status: 400 });
+      }
+    }
+
     const batch = await prisma.assetGenerationBatch.create({
       data: {
         itemSetId: itemSet.id,
         itemSetName: itemSet.name,
         name: batchName,
         globalArtStyle,
+        styleProfileId: styleProfileId ?? undefined,
         provider: useMock ? "mock" : env.AI_PROVIDER,
         model: useMock ? "mock-svg" : runtime.imageModel,
         status: "draft",
@@ -57,6 +69,13 @@ export async function POST(request: Request) {
       },
       include: { assets: true },
     });
+
+    if (styleProfileId && sheetSize) {
+      await prisma.assetStyleProfile.update({
+        where: { id: styleProfileId },
+        data: { sheetSize, imageSize, backgroundMode, negativePrompt: negativePrompt ?? undefined },
+      });
+    }
 
     const groups = new Map<
       string,
@@ -93,6 +112,9 @@ export async function POST(request: Request) {
             color1: anchor?.color1 ?? undefined,
             color2: anchor?.color2 ?? undefined,
             status: "draft",
+            sheetSize,
+            gridRows: 2,
+            gridCols: 4,
             masterPrompt: undefined,
             masterImageUrl: undefined,
             masterAssetId: undefined,
@@ -105,8 +127,13 @@ export async function POST(request: Request) {
             color1: anchor?.color1 ?? undefined,
             color2: anchor?.color2 ?? undefined,
             status: "draft",
+            sheetSize,
             approvedAt: null,
             approvedBy: null,
+            sheetImageUrl: null,
+            sheetLocalPath: null,
+            sheetPrompt: null,
+            sheetModel: null,
             masterPrompt: null,
             masterImageUrl: null,
             masterAssetId: null,
@@ -122,6 +149,7 @@ export async function POST(request: Request) {
         batchId: batch.id,
         itemSetId: itemSet.id,
         totalBaseItems: templates.length,
+        styleProfileId: styleProfileId ?? null,
         templates: templates.map((t) => ({
           id: t.id,
           baseItemName: t.baseItemName,
@@ -132,9 +160,11 @@ export async function POST(request: Request) {
           pattern: t.pattern,
           color1: t.color1,
           color2: t.color2,
+          sheetImageUrl: t.sheetImageUrl,
+          sheetSize: t.sheetSize,
         })),
-        // 便于前端直接计算缺失变体
         imageSize,
+        sheetSize,
         backgroundMode,
         negativePrompt: negativePrompt ?? "",
       },

@@ -36,7 +36,6 @@ export function MasterItemCard(props: Props) {
         <p className="font-medium text-foreground">{props.name}</p>
         <p className="text-xs text-muted-foreground">{props.displayName ?? "-"}</p>
         <div className="flex flex-wrap gap-1">
-          {props.isMaster ? <Badge variant="default">母版</Badge> : null}
           {props.role ? <Badge variant="secondary">{props.role}</Badge> : null}
           {props.category1 ? <Badge variant="outline">{props.category1}</Badge> : null}
           {props.size ? <Badge variant="outline">{props.size}</Badge> : null}
