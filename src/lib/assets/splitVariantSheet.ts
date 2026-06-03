@@ -1,28 +1,19 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
-
 import sharp from "sharp";
 
+import { persistGeneratedImageBytes } from "@/lib/assets/persistGeneratedImage";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import { loadImageBytesFromStoredPath } from "@/lib/assets/saveReferenceImage";
-
-function safeName(text: string) {
-  return text.replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 48);
-}
 
 export async function persistSheetBytes(
   bytes: Buffer,
   baseName: string,
 ): Promise<{ imageUrl: string; localPath: string }> {
-  const dir = path.join(process.cwd(), "public", "generated-assets", "sheets");
-  await mkdir(dir, { recursive: true });
-  const fileName = `${safeName(baseName)}_sheet_${Date.now()}.png`;
-  const absolutePath = path.join(dir, fileName);
-  await writeFile(absolutePath, bytes);
-  return {
-    imageUrl: `/generated-assets/sheets/${fileName}`,
-    localPath: absolutePath,
-  };
+  return persistGeneratedImageBytes(bytes, {
+    mimeType: "image/png",
+    subdir: "sheets",
+    baseName,
+    fileSuffix: "sheet",
+  });
 }
 
 export async function persistCroppedCellBytes(
@@ -30,15 +21,12 @@ export async function persistCroppedCellBytes(
   baseName: string,
   colorKey: string,
 ): Promise<{ imageUrl: string; localPath: string }> {
-  const dir = path.join(process.cwd(), "public", "generated-assets", "gemini");
-  await mkdir(dir, { recursive: true });
-  const fileName = `${safeName(baseName)}_${safeName(colorKey)}_${Date.now()}.png`;
-  const absolutePath = path.join(dir, fileName);
-  await writeFile(absolutePath, bytes);
-  return {
-    imageUrl: `/generated-assets/gemini/${fileName}`,
-    localPath: absolutePath,
-  };
+  return persistGeneratedImageBytes(bytes, {
+    mimeType: "image/png",
+    subdir: "gemini",
+    baseName,
+    fileSuffix: colorKey,
+  });
 }
 
 export type SplitVariantSheetResult = {

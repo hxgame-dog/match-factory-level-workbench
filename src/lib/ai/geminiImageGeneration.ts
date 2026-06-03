@@ -1,13 +1,7 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
-
 import { GoogleGenAI } from "@google/genai";
 
+import { persistGeneratedImageBytes } from "@/lib/assets/persistGeneratedImage";
 import { isImageCapableModel, isTextCapableModel } from "@/lib/ai/geminiRuntime";
-
-function safeName(text: string) {
-  return text.replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 48);
-}
 
 function parseImageSize(size: string): { width: number; height: number } {
   const [w, h] = size.split("x").map((v) => Number(v));
@@ -22,30 +16,12 @@ function aspectRatioFromSize(size: string): string {
   return "9:16";
 }
 
-async function saveImageBytes(bytes: Buffer, mimeType: string | undefined, baseName: string) {
-  const ext = mimeType?.includes("png") ? "png" : mimeType?.includes("jpeg") || mimeType?.includes("jpg") ? "jpg" : "png";
-  const dir = path.join(process.cwd(), "public", "generated-assets", "gemini");
-  await mkdir(dir, { recursive: true });
-  const fileName = `${safeName(baseName)}_${Date.now()}.${ext}`;
-  const absolutePath = path.join(dir, fileName);
-  await writeFile(absolutePath, bytes);
-  return {
-    imageUrl: `/generated-assets/gemini/${fileName}`,
-    localPath: absolutePath,
-  };
-}
-
 async function persistImageBytes(bytes: Buffer, mimeType: string | undefined, baseName: string) {
-  const resolvedMime = mimeType ?? "image/png";
-  try {
-    return await saveImageBytes(bytes, resolvedMime, baseName);
-  } catch {
-    const b64 = bytes.toString("base64");
-    return {
-      imageUrl: `data:${resolvedMime};base64,${b64}`,
-      localPath: "",
-    };
-  }
+  return persistGeneratedImageBytes(bytes, {
+    mimeType: mimeType ?? "image/png",
+    subdir: "gemini",
+    baseName,
+  });
 }
 
 function extractImageBytesFromGenerateContent(response: {

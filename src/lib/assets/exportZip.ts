@@ -35,13 +35,23 @@ export async function buildAssetBatchZip(params: {
   for (const asset of params.assets) {
     let fileName = `${safeName(asset.name)}.svg`;
     if (asset.imageUrl) {
-      const relative = asset.imageUrl.startsWith("/") ? asset.imageUrl.slice(1) : asset.imageUrl;
-      const localPath = path.join(process.cwd(), "public", relative);
       try {
-        const file = await fs.readFile(localPath);
-        const ext = path.extname(localPath) || ".svg";
-        fileName = `${safeName(asset.name)}${ext}`;
-        imagesFolder.file(fileName, file);
+        if (asset.imageUrl.startsWith("data:")) {
+          const match = asset.imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            const mime = match[1];
+            const ext = mime.includes("png") ? ".png" : mime.includes("jpeg") || mime.includes("jpg") ? ".jpg" : ".bin";
+            fileName = `${safeName(asset.name)}${ext}`;
+            imagesFolder.file(fileName, Buffer.from(match[2], "base64"));
+          }
+        } else {
+          const relative = asset.imageUrl.startsWith("/") ? asset.imageUrl.slice(1) : asset.imageUrl;
+          const localPath = path.join(process.cwd(), "public", relative);
+          const file = await fs.readFile(localPath);
+          const ext = path.extname(localPath) || ".svg";
+          fileName = `${safeName(asset.name)}${ext}`;
+          imagesFolder.file(fileName, file);
+        }
       } catch {
         // 跳过不存在的文件，仍输出映射供排查
       }

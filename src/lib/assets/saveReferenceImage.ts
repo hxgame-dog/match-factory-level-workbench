@@ -1,24 +1,18 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
+import { persistGeneratedImageBytes } from "@/lib/assets/persistGeneratedImage";
 
-function safeName(text: string) {
-  return text.replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 48);
-}
-
-/** 持久化风格参考图，供色板生成读取 */
+/** 持久化风格参考图，供色板生成读取（Vercel 下为 data URL 存库） */
 export async function saveStyleReferenceImage(bytes: Buffer, mimeType: string): Promise<{
   referenceImageUrl: string;
   referenceLocalPath: string;
 }> {
-  const ext = mimeType.includes("jpeg") || mimeType.includes("jpg") ? "jpg" : "png";
-  const dir = path.join(process.cwd(), "public", "generated-assets", "style-references");
-  await mkdir(dir, { recursive: true });
-  const fileName = `ref_${safeName("style")}_${Date.now()}.${ext}`;
-  const absolutePath = path.join(dir, fileName);
-  await writeFile(absolutePath, bytes);
+  const saved = await persistGeneratedImageBytes(bytes, {
+    mimeType: mimeType || "image/png",
+    subdir: "style-references",
+    baseName: "style",
+  });
   return {
-    referenceImageUrl: `/generated-assets/style-references/${fileName}`,
-    referenceLocalPath: absolutePath,
+    referenceImageUrl: saved.imageUrl,
+    referenceLocalPath: saved.localPath,
   };
 }
 
@@ -39,6 +33,7 @@ export async function loadImageBytesFromStoredPath(
     const b64 = imageUrl.split(",")[1];
     return b64 ? Buffer.from(b64, "base64") : null;
   }
+  const path = await import("path");
   const relative = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
   const absolutePath = path.join(process.cwd(), "public", relative.replace(/^public\//, ""));
   try {
