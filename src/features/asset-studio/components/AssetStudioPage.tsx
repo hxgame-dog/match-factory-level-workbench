@@ -23,6 +23,8 @@ import { TaskProgressCard } from "@/components/ui/task-progress";
 import { notify } from "@/lib/ui/notify";
 import { ItemMasterWorkbench } from "./ItemMasterWorkbench";
 import { GroupedAssetPreview } from "./GroupedAssetPreview";
+import { AssetStudioContextBar } from "./AssetStudioContextBar";
+import { AssetPublishConfirmDialog } from "./AssetPublishConfirmDialog";
 
 import { ItemSetSelector } from "./ItemSetSelector";
 
@@ -104,7 +106,9 @@ export function AssetStudioPage({
   const [promptProgress, setPromptProgress] = useState<{ current: number; total: number; label: string } | null>(
     null,
   );
-  const [plannedMasterBatchId, setPlannedMasterBatchId] = useState<string>("");
+  const [currentBatchId, setCurrentBatchId] = useState<string>("");
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [publishRetrying, setPublishRetrying] = useState(false);
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeId);
 
   useEffect(() => {
@@ -182,6 +186,7 @@ export function AssetStudioPage({
         status: "pending",
       })),
     );
+    setCurrentBatchId("");
   }
 
   async function generatePrompts(regenerate = false) {
@@ -234,6 +239,53 @@ export function AssetStudioPage({
       setPromptGenerating(false);
       setPromptProgress(null);
     }
+  }
+
+  async function retryAssetIndices(indices: number[]) {
+    if (indices.length === 0) {
+      notify.warning("当前筛选下没有可重试项");
+      return;
+    }
+    setPublishRetrying(true);
+    const loadingToast = notify.loading(`正在重试 ${indices.length} 项…`);
+    try {
+      for (const index of indices) {
+        const id = assets[index]?.assetId;
+        if (id) {
+          await fetch(`/api/assets/${id}/retry`, { method: "POST" });
+        }
+        await generateOne(index);
+      }
+      notify.success("筛选重试完成", `已处理 ${indices.length} 项`);
+      if (currentBatchId) await openBatch(currentBatchId);
+    } catch (e) {
+      notify.error("重试失败", e instanceof Error ? e.message : "请稍后重试");
+    } finally {
+      notify.dismiss(loadingToast);
+      setPublishRetrying(false);
+    }
+  }
+
+  function navigateToLevelGenerator() {
+    const selectedBatch = currentBatchId;
+    if (!selectedBatch) {
+      notify.warning("请先创建并绑定资源批次");
+      return;
+    }
+    const query = new URLSearchParams();
+    if (activeWorkspaceId) query.set("workspace", activeWorkspaceId);
+    query.set("assetBatch", selectedBatch);
+    router.push(`/level-generator?${query.toString()}`);
+    setPublishDialogOpen(false);
+  }
+
+  function requestPublish() {
+    const selectedBatch = currentBatchId;
+    if (!selectedBatch) {
+      notify.warning("请先创建并绑定资源批次");
+      return;
+    }
+    setPublishDialogOpen(true);
   }
 
   async function generateOne(index: number) {
@@ -322,6 +374,7 @@ export function AssetStudioPage({
     }
     await refreshBatches();
     if (payload.data.batchId) {
+      setCurrentBatchId(payload.data.batchId);
       await openBatch(payload.data.batchId);
     }
     } catch (e) {
@@ -351,16 +404,22 @@ export function AssetStudioPage({
       done: batch.successCount,
       failed: batch.failedCount,
     });
+    setCurrentBatchId(id);
   }
 
   async function deleteBatch(id: string) {
     await fetch(`/api/assets/batches/${id}`, { method: "DELETE" });
+    if (currentBatchId === id) {
+      setCurrentBatchId("");
+      setAssets([]);
+      setProgress({ total: 0, done: 0, failed: 0 });
+    }
     await refreshBatches();
   }
 
   async function exportZip() {
-    if (batches.length === 0) return;
-    const batchId = batches[0].id;
+    const batchId = currentBatchId || batches[0]?.id;
+    if (!batchId) return;
     const response = await fetch(`/api/assets/batches/${batchId}/export-zip`, { method: "POST" });
     if (!response.ok) return;
     const blob = await response.blob();
@@ -373,8 +432,9 @@ export function AssetStudioPage({
   }
 
   async function exportMapping() {
-    if (batches.length === 0) return;
-    const response = await fetch(`/api/assets/batches/${batches[0].id}/mapping`);
+    const batchId = currentBatchId || batches[0]?.id;
+    if (!batchId) return;
+    const response = await fetch(`/api/assets/batches/${batchId}/mapping`);
     const payload = await response.json();
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -386,6 +446,27 @@ export function AssetStudioPage({
   }
 
   const editingAsset = editingIndex == null ? null : assets[editingIndex];
+  const stepStats = useMemo(() => {
+    const total = assets.length;
+    const done = assets.filter((a) => a.status === "done").length;
+    const failed = assets.filter((a) => a.status === "failed").length;
+    const missing = assets.filter((a) => !a.imageUrl).length;
+    return { total, done, failed, missing };
+  }, [assets]);
+
+  const stepDone = useMemo(
+    () => ({
+      style: Boolean(globalArtStyle.trim()),
+      master: Boolean(currentBatchId),
+      variant: stepStats.total > 0 && stepStats.done + stepStats.failed > 0,
+      publish: Boolean(currentBatchId) && stepStats.missing === 0,
+    }),
+    [globalArtStyle, currentBatchId, stepStats],
+  );
+  const publishCoverage =
+    stepStats.total > 0 ? Math.round((stepStats.done / stepStats.total) * 100) : 0;
+  const currentBatchMeta = batches.find((b) => b.id === currentBatchId);
+
   const detailInfo = useMemo(() => {
     if (!detail) return undefined;
     const targets = currentItems.filter((item) => item.role === "target").length;
@@ -403,6 +484,18 @@ export function AssetStudioPage({
   return (
     <div className="w-full min-w-0 space-y-4">
       <GeminiStatusCompact mode="image" imageModel={imageModel} available={imageGenerationReady} />
+
+      <AssetStudioContextBar
+        itemSetName={detail?.name}
+        itemCount={currentItems.length}
+        batches={batches}
+        currentBatchId={currentBatchId}
+        onBatchChange={(batchId) => {
+          setCurrentBatchId(batchId);
+          if (batchId) void openBatch(batchId);
+        }}
+        stats={stepStats}
+      />
 
       {error ? (
         <Alert variant="destructive">
@@ -438,7 +531,7 @@ export function AssetStudioPage({
       ) : null}
 
       <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] xl:items-start">
-        <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+        <div className="space-y-4 2xl:sticky 2xl:top-4 2xl:self-start">
         <ItemSetSelector
           itemSets={itemSets}
           selectedId={selectedSetId}
@@ -484,26 +577,30 @@ export function AssetStudioPage({
             setAssets((prev) => prev.map((asset) => ({ ...asset, prompt: "", status: "pending" })))
           }
         />
-        <ItemMasterWorkbench
-          selectedSetId={selectedSetId}
-          itemSetName={detail?.name}
-          currentItems={currentItems}
-          globalArtStyle={globalArtStyle}
-          negativePrompt={negativePrompt}
-          imageSize={imageSize}
-          backgroundMode={backgroundMode}
-          onPlanned={(batchId) => setPlannedMasterBatchId(batchId)}
-        />
         </div>
 
         <div className="space-y-4 min-w-0">
       <Tabs defaultValue="variant">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="style">1) 风格设置</TabsTrigger>
-          <TabsTrigger value="master">2) 母版工作台</TabsTrigger>
-          <TabsTrigger value="variant">3) 变体批量</TabsTrigger>
-          <TabsTrigger value="publish">4) 预览发布</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 gap-2 md:grid-cols-4">
+          <TabsTrigger value="style">1) 风格设置 {stepDone.style ? "✓" : ""}</TabsTrigger>
+          <TabsTrigger value="master">2) 母版工作台 {stepDone.master ? "✓" : ""}</TabsTrigger>
+          <TabsTrigger value="variant">3) 变体批量 {stepDone.variant ? "✓" : ""}</TabsTrigger>
+          <TabsTrigger value="publish">4) 预览发布 {stepDone.publish ? "✓" : ""}</TabsTrigger>
         </TabsList>
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <Card>
+            <CardContent className="pt-4 text-sm">总资源：{stepStats.total}</CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 text-sm">成功：{stepStats.done}</CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 text-sm">失败：{stepStats.failed}</CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 text-sm">缺图：{stepStats.missing}</CardContent>
+          </Card>
+        </div>
         <TabsContent value="style" className="mt-4">
           <Card>
             <CardHeader><CardTitle className="text-lg">风格设置</CardTitle></CardHeader>
@@ -513,12 +610,19 @@ export function AssetStudioPage({
           </Card>
         </TabsContent>
         <TabsContent value="master" className="mt-4">
-          <Card>
-            <CardHeader><CardTitle className="text-lg">母版门禁</CardTitle></CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              每个物品组必须先生成并确认母版，确认后才可批量生成颜色变体。操作入口在左侧母版工作台。
-            </CardContent>
-          </Card>
+          <ItemMasterWorkbench
+            selectedSetId={selectedSetId}
+            itemSetName={detail?.name}
+            currentItems={currentItems}
+            globalArtStyle={globalArtStyle}
+            negativePrompt={negativePrompt}
+            imageSize={imageSize}
+            backgroundMode={backgroundMode}
+            onPlanned={(batchId) => {
+              setCurrentBatchId(batchId);
+              void openBatch(batchId);
+            }}
+          />
         </TabsContent>
         <TabsContent value="variant" className="mt-4">
       <Card>
@@ -543,7 +647,7 @@ export function AssetStudioPage({
             <Button variant="outline" onClick={() => void refreshBatches()}>
               刷新批次
             </Button>
-            <Badge variant="outline">母版批次：{plannedMasterBatchId || "未创建"}</Badge>
+            <Badge variant="outline">当前批次：{currentBatchId || "未选择"}</Badge>
             <Button variant="outline" onClick={() => void exportZip()}>
               导出 ZIP
             </Button>
@@ -578,28 +682,36 @@ export function AssetStudioPage({
       </Card>
         </TabsContent>
         <TabsContent value="publish" className="mt-4 space-y-4">
-          <GroupedAssetPreview assets={assets} />
+          <GroupedAssetPreview
+            assets={assets}
+            onRetryFiltered={(indices) => void retryAssetIndices(indices)}
+            retrying={publishRetrying}
+          />
           <Card>
             <CardHeader><CardTitle className="text-lg">发布到关卡生成器</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">发布时会自动携带 `assetBatchId`，并提示缺图数量。</p>
-              <Button
-                onClick={() => {
-                  const selectedBatch = plannedMasterBatchId || batches[0]?.id || "";
-                  if (!selectedBatch) {
-                    notify.warning("请先创建并生成资源批次");
-                    return;
+              <p className="text-sm text-muted-foreground">
+                发布前会校验当前批次覆盖率、缺图与失败数量；存在风险时需二次确认。
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={requestPublish} disabled={!currentBatchId}>
+                  发布到关卡生成器
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={publishRetrying}
+                  onClick={() =>
+                    void retryAssetIndices(
+                      assets
+                        .map((a, i) => ({ a, i }))
+                        .filter(({ a }) => a.status === "failed")
+                        .map(({ i }) => i),
+                    )
                   }
-                  const missing = assets.filter((a) => !a.imageUrl).length;
-                  if (missing > 0) notify.warning(`当前有 ${missing} 张缺图，建议补齐后再发布`);
-                  const query = new URLSearchParams();
-                  if (activeWorkspaceId) query.set("workspace", activeWorkspaceId);
-                  query.set("assetBatch", selectedBatch);
-                  router.push(`/level-generator?${query.toString()}`);
-                }}
-              >
-                发布到关卡生成器
-              </Button>
+                >
+                  重试全部失败项
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -608,6 +720,20 @@ export function AssetStudioPage({
       </div>
 
       <AssetBatchHistory batches={batches} onOpen={(id) => void openBatch(id)} onDelete={(id) => void deleteBatch(id)} />
+
+      <AssetPublishConfirmDialog
+        open={publishDialogOpen}
+        batchName={currentBatchMeta?.name ?? currentBatchId}
+        stats={{
+          total: stepStats.total,
+          done: stepStats.done,
+          failed: stepStats.failed,
+          missing: stepStats.missing,
+          coveragePercent: publishCoverage,
+        }}
+        onCancel={() => setPublishDialogOpen(false)}
+        onConfirm={navigateToLevelGenerator}
+      />
 
       <AssetPromptDialog
         open={editingAsset != null}

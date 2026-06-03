@@ -64,6 +64,29 @@ export function ItemMasterWorkbench(props: Props) {
 
   const activeTemplate = templates.find((t) => t.baseItemName === activeBaseItemName);
   const activeGroup = grouped.find((g) => g.baseItemName === activeBaseItemName);
+  const templateStats = useMemo(() => {
+    const total = templates.length;
+    const approved = templates.filter((t) => t.status === "approved").length;
+    const ready = templates.filter((t) => t.status === "ready").length;
+    const failed = templates.filter((t) => t.status === "failed").length;
+    return { total, approved, ready, failed };
+  }, [templates]);
+
+  function getStatusLabel(status?: MasterTemplate["status"]) {
+    switch (status) {
+      case "approved":
+        return "已通过";
+      case "ready":
+        return "待确认";
+      case "generating":
+        return "生成中";
+      case "failed":
+        return "失败";
+      case "draft":
+      default:
+        return "草稿";
+    }
+  }
 
   async function createPlan() {
     if (!props.selectedSetId) {
@@ -188,9 +211,15 @@ export function ItemMasterWorkbench(props: Props) {
             1) 创建母版计划
           </Button>
           <Badge variant="outline">batch: {batchId || "未创建"}</Badge>
+          <Badge variant="secondary">总组数：{templateStats.total}</Badge>
+          <Badge variant="secondary">已通过：{templateStats.approved}</Badge>
+          <Badge variant="secondary">待确认：{templateStats.ready}</Badge>
+          <Badge variant={templateStats.failed > 0 ? "destructive" : "secondary"}>
+            失败：{templateStats.failed}
+          </Badge>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
           <div className="space-y-2 rounded-md border border-border p-3">
             <p className="text-sm font-medium">物品组</p>
             {grouped.map((g) => {
@@ -205,8 +234,8 @@ export function ItemMasterWorkbench(props: Props) {
                   onClick={() => setActiveBaseItemName(g.baseItemName)}
                 >
                   <span className="truncate">{g.baseItemName}</span>
-                  <Badge variant={t?.status === "approved" ? "default" : "outline"}>
-                    {t?.status ?? "draft"}
+                  <Badge variant={t?.status === "approved" ? "default" : t?.status === "failed" ? "destructive" : "outline"}>
+                    {getStatusLabel(t?.status)}
                   </Badge>
                 </button>
               );
@@ -221,7 +250,7 @@ export function ItemMasterWorkbench(props: Props) {
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="rounded-sm border border-border p-2 text-xs">
                 <p>变体数量：{activeGroup?.items.length ?? 0}</p>
-                <p>母版状态：{activeTemplate?.status ?? "draft"}</p>
+                <p>母版状态：{getStatusLabel(activeTemplate?.status)}</p>
               </div>
               <div className="rounded-sm border border-border p-2 text-xs">
                 <p>shape: {activeTemplate?.shape ?? "-"}</p>
