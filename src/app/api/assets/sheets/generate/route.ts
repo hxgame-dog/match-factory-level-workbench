@@ -8,7 +8,6 @@ import {
   collectActiveColorKeys,
   filterItemsByBaseName,
 } from "@/lib/assets/variantSheetHelpers";
-import { loadImageBytesFromStoredPath } from "@/lib/assets/saveReferenceImage";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
@@ -53,13 +52,10 @@ export async function POST(request: Request) {
       : groupItems[0];
 
     const styleProfile = batch.styleProfile;
-    const refBytes = await loadImageBytesFromStoredPath(
-      styleProfile?.referenceImageUrl,
-      styleProfile?.referenceLocalPath,
-    );
-    if (!refBytes) {
+    const globalArtStyle = batch.globalArtStyle ?? styleProfile?.stylePrompt ?? "";
+    if (!globalArtStyle.trim()) {
       return NextResponse.json(
-        { success: false, error: "请先在风格设置中上传并分析参考图，以持久化风格参考" },
+        { success: false, error: "请先在风格设置中上传并分析参考图，得到美术风格描述" },
         { status: 400 },
       );
     }
@@ -73,8 +69,9 @@ export async function POST(request: Request) {
         shape: anchor.shape ?? undefined,
         size: anchor.size ?? undefined,
         pattern: anchor.pattern ?? undefined,
+        color2: anchor.color2 ?? undefined,
       },
-      globalArtStyle: batch.globalArtStyle ?? "",
+      globalArtStyle,
       negativePrompt: input.negativePrompt ?? styleProfile?.negativePrompt ?? undefined,
       activeColorKeys,
     });
@@ -104,8 +101,6 @@ export async function POST(request: Request) {
         prompt: sheetPrompt,
         negativePrompt: input.negativePrompt ?? styleProfile?.negativePrompt ?? undefined,
         sheetSize,
-        referenceImageBytes: refBytes,
-        referenceMimeType: "image/png",
         baseItemName: input.baseItemName,
       });
     }

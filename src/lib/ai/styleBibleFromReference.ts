@@ -30,9 +30,9 @@ function parseStyleBibleText(raw: string): {
   } catch {
     return {
       stylePrompt:
-        "stylized 3D cartoon mobile puzzle game item asset, soft toy-like material, clean shape, centered object, orthographic camera, consistent studio lighting, simple readable silhouette, large round eyes, minimal face, clean background, no text, no watermark",
+        "3D 卡通手游道具美术风格，哑光塑料/软玩具质感，圆润干净的造型，柔和均匀的影棚布光，正交镜头，清晰可读的轮廓，明亮饱和的配色，大而圆的眼睛、简洁可爱的表情，纯净背景，无文字、无水印",
       negativePrompt:
-        "text, watermark, logo, human, character, complex background, messy scene, realistic photo, horror, gore, weapon, low quality, blurry, distorted object",
+        "文字, 水印, logo, 真人, 角色, 复杂背景, 杂乱场景, 写实照片, 恐怖, 血腥, 武器, 低清晰度, 模糊, 变形",
       styleBibleJson: { parseError: true, rawPreview: raw.slice(0, 200) },
     };
   }
@@ -64,10 +64,13 @@ async function callVisionModel(
   const base64 = referenceBytes.toString("base64");
   const hint = userHint ? `用户补充：${userHint}` : "";
   const prompt = [
-    "你是 3D 手游道具出图风格顾问。根据用户上传的参考图，提取一段可复用的英文 Style Prompt 和负面词。输出需满足：",
-    "1) Style Prompt：50-120 个英文单词，强调 single object、centered、clean/transparent background、一致材质（哑光塑料感/软玩具感）、光照、镜头、轮廓、眼睛/脸部特征（如有）、无文字无水印。",
-    "2) Negative Prompt：给出避免出现文字/水印/复杂背景/真人/低清晰度等的英文负面词。",
-    "3) styleBibleJson：用 JSON 描述关键视觉要素（材质、光照、镜头、禁用项、轮廓与配色范围）。",
+    "你是 3D 手游道具出图的美术风格顾问。请只从参考图中提取【美术风格】，用于后续生成其它道具。",
+    "重要：绝对不要描述参考图里出现的具体物体、题材或物种（例如不要写鱼、河豚、动物、水果等），只描述风格本身。",
+    "需要提取的风格要素：渲染方式（3D/卡通）、材质与质感（如哑光塑料、软玩具、黏土）、光照（方向/柔和度/影棚感）、镜头（正交/透视）、描边、轮廓与体块、配色倾向、眼睛与表情的处理风格、背景处理。",
+    "输出需满足：",
+    "1) stylePrompt：一段【中文】风格描述（60-150 字），可直接拼接到其它道具的出图提示词中，只含风格、不含任何具体物体。",
+    "2) negativePrompt：中文负面词，避免文字/水印/复杂背景/真人/写实照片/低清晰度等。",
+    "3) styleBibleJson：用 JSON 描述关键风格要素（material、lighting、camera、outline、colorTendency、eyeStyle、background、forbidden）。",
     hint,
     "输出严格 JSON（无 Markdown），字段：stylePrompt, negativePrompt, styleBibleJson。",
   ]
@@ -109,9 +112,9 @@ export async function generateStyleBibleFromReference(params: Params): Promise<{
   if (params.useMock) {
     return {
       stylePrompt:
-        "stylized 3D cartoon mobile puzzle game item asset, soft toy-like material, clean shape, centered object, orthographic camera, consistent studio lighting, simple readable silhouette, large round eyes, minimal face, clean background, no text, no watermark",
+        "3D 卡通手游道具美术风格，哑光塑料/软玩具质感，圆润干净的造型，柔和均匀的影棚布光，正交镜头，清晰可读的轮廓，明亮饱和的配色，大而圆的眼睛、简洁可爱的表情，纯净背景，无文字、无水印",
       negativePrompt:
-        "text, watermark, logo, human, character, complex background, messy scene, realistic photo, horror, gore, weapon, low quality, blurry, distorted object",
+        "文字, 水印, logo, 真人, 角色, 复杂背景, 杂乱场景, 写实照片, 恐怖, 血腥, 武器, 低清晰度, 模糊, 变形",
       styleBibleJson: { mode: "mock" },
       modelUsed: "mock",
     };

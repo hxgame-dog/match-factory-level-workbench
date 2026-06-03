@@ -74,9 +74,9 @@ type Props = {
 };
 
 const DEFAULT_STYLE =
-  "stylized 3D cartoon mobile puzzle game item asset, soft toy-like material, clean shape, centered object, orthographic camera, consistent studio lighting, simple readable silhouette, suitable for Match 3D object collection game";
+  "3D 卡通手游道具美术风格，哑光塑料/软玩具质感，圆润干净的造型，柔和均匀的影棚布光，正交镜头，清晰可读的轮廓，明亮饱和的配色，大而圆的眼睛、简洁可爱的表情，纯净背景，适合三消收集类手游，无文字、无水印";
 const DEFAULT_NEGATIVE =
-  "text, watermark, logo, human, character, complex background, messy scene, realistic photo, horror, gore, weapon, low quality, blurry, distorted object";
+  "文字, 水印, logo, 真人, 角色, 复杂背景, 杂乱场景, 写实照片, 恐怖, 血腥, 武器, 低清晰度, 模糊, 变形";
 
 export function AssetStudioPage({
   itemSets: initSets,

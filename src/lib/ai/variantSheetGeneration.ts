@@ -6,17 +6,19 @@ export type GenerateVariantSheetInput = {
   prompt: string;
   negativePrompt?: string;
   sheetSize?: string;
-  referenceImageBytes: Buffer;
-  referenceMimeType: string;
   baseItemName: string;
+  /** 可选：仅当需要把参考图作为风格锚点时传入；默认纯提示词出图，避免照搬参考图物体 */
+  referenceImageBytes?: Buffer;
+  referenceMimeType?: string;
 };
 
 export async function generateVariantSheetImage(
   input: GenerateVariantSheetInput,
 ): Promise<{ imageUrl: string; localPath: string; model: string }> {
-  const mime = input.referenceMimeType || "image/png";
-  const dataUrl = `data:${mime};base64,${input.referenceImageBytes.toString("base64")}`;
   const sheetSize = input.sheetSize ?? "2048x1024";
+  const dataUrl = input.referenceImageBytes
+    ? `data:${input.referenceMimeType || "image/png"};base64,${input.referenceImageBytes.toString("base64")}`
+    : undefined;
 
   const out = await generateGeminiImage({
     apiKey: input.apiKey,
