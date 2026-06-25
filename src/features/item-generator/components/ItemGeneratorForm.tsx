@@ -166,9 +166,20 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
           colorCount,
         }),
       });
-      const payload = await response.json();
+      // 函数超时/崩溃时平台会返回非 JSON 文本，直接 response.json() 会把真实错误吞成 “Unexpected token”
+      const raw = await response.text();
+      let payload: { success?: boolean; error?: string; data?: unknown };
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 200);
+        if (response.status === 504 || /timeout/i.test(snippet)) {
+          throw new Error(`生成超时（服务器 ${response.status}）：种类数较多时单次请求可能超过函数时限，请减少种类数后重试。原始信息：${snippet}`);
+        }
+        throw new Error(`服务器返回异常（${response.status}）：${snippet || "无响应内容"}`);
+      }
       if (!response.ok || !payload.success) {
-        throw new Error(payload.error ?? "生成失败");
+        throw new Error(payload.error ?? `生成失败（${response.status}）`);
       }
       setResult(payload.data as GenerateItemsResult);
       setDirty(false);
