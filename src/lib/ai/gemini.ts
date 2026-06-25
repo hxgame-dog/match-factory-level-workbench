@@ -20,6 +20,7 @@ import type {
   DiagnoseLevelResult,
   GenerateAssetPromptInput,
   GenerateAssetPromptResult,
+  GenerateItemChunkInput,
   GenerateItemsInput,
   GenerateItemsResult,
 } from "@/types/ai";
@@ -40,7 +41,11 @@ import { generateLevelPrompt } from "./prompts/generateLevelPrompt";
 import { buildMockFreeItems, finalizeFreeGeneratedItems } from "./finalizeFreeGeneratedItems";
 import { generateItemTableInBatches } from "./generateItemTableInBatches";
 import { generateItemsPrompt } from "./prompts/generateItemsPrompt";
-import { computeExpectedTotal } from "@/lib/items/itemGenerationLimits";
+import {
+  ITEM_GENERATION_CHUNK_SIZE,
+  computeExpectedTotal,
+  usesColorExpansion,
+} from "@/lib/items/itemGenerationLimits";
 import { geminiPlaytestAdviceResultSchema } from "@/lib/validators/playtest";
 import { geminiAnalyticsAdviceResultSchema } from "@/lib/validators/analytics";
 
@@ -266,6 +271,88 @@ export async function generateItemTable(
     });
     throw new Error(`AI 道具生成失败: ${message}`);
   }
+}
+
+function buildMockChunk(input: GenerateItemChunkInput): GenerateItemsResult {
+  const conventionalColors = ["red", "orange", "blue", "green", "yellow", "purple", "pink", "gray"];
+  const patterns = ["纯色", "纵纹", "斑点"];
+  const offset = input.batchIndex * ITEM_GENERATION_CHUNK_SIZE;
+  const items = Array.from({ length: input.chunkTypeCount }, (_, i) => {
+    const n = offset + i + 1;
+    return {
+      name: `mock_item_${n}`,
+      displayName: `示例道具${n}`,
+      category1: "mock_category",
+      color1: usesColorExpansion(input.colorCount)
+        ? undefined
+        : conventionalColors[n % conventionalColors.length],
+      color2: "cream",
+      pattern: patterns[n % patterns.length],
+      moveSpeed: (n % 5) + 1,
+      count: 9,
+      isNew: true,
+      imagePrompt: `single stylized 3D cartoon ${input.description} game item ${n}, centered, clean background`,
+      reason: `Mock 基础造型 ${n}`,
+      riskTags: [] as string[],
+    };
+  });
+  return {
+    summary: `Mock：第 ${input.batchIndex + 1}/${input.batchTotal} 批，共 ${items.length} 种基础造型`,
+    warnings: ["当前为 Mock 输出，未调用 Gemini。"],
+    items,
+  };
+}
+
+/** 前端编排分批：仅生成一批基础造型（≤ChunkSize 种），不展开颜色、不编号 */
+export async function generateItemChunk(
+  input: GenerateItemChunkInput,
+): Promise<GenerateItemsResult> {
+  const runtime = await resolveRuntime();
+  if (env.AI_MOCK_MODE && !runtime.hasApiKey) {
+    return buildMockChunk(input);
+  }
+
+  const prompt = generateItemsPrompt({
+    setName: input.setName,
+    description: input.description,
+    itemTypeCount: input.chunkTypeCount,
+    colorCount: input.colorCount,
+    batchIndex: input.batchIndex,
+    batchTotal: input.batchTotal,
+    existingNames: input.existingNames,
+  });
+  const text = await generateText(prompt, { runtime });
+  const raw = parseJsonSafe<Partial<GenerateItemsResult>>(text);
+  return {
+    summary: raw.summary ?? "",
+    warnings: Array.isArray(raw.warnings) ? raw.warnings : [],
+    items: Array.isArray(raw.items) ? raw.items : [],
+  };
+}
+
+/** 前端编排分批：合并所有批次后做颜色展开、顺序编号与校验 */
+export function finalizeGeneratedItemTable(input: {
+  itemTypeCount: number;
+  colorCount: number;
+  summary: string;
+  warnings: string[];
+  items: GenerateItemsResult["items"];
+}): GenerateItemsResult {
+  const expectedTotal = computeExpectedTotal(input.itemTypeCount, input.colorCount);
+  const resultSchema = createGenerateItemsResultSchema(
+    expectedTotal,
+    input.itemTypeCount,
+    input.colorCount,
+  );
+  const finalized = finalizeFreeGeneratedItems(
+    {
+      summary: input.summary || `共生成 ${input.items.length} 种物品（目标 ${input.itemTypeCount} 种）`,
+      warnings: input.warnings,
+      items: input.items,
+    },
+    { itemTypeCount: input.itemTypeCount, colorCount: input.colorCount },
+  );
+  return resultSchema.parse(finalized);
 }
 
 export async function diagnoseLevel(

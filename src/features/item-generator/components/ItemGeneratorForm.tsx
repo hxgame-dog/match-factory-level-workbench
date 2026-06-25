@@ -17,6 +17,7 @@ import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { createDefaultGeneratedItemRow } from "@/lib/items/defaultGeneratedItemRow";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import {
+  ITEM_GENERATION_CHUNK_SIZE,
   MAX_ITEM_TYPES,
   computeExpectedTotal,
   validateGenerationParams,
@@ -156,32 +157,11 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     setError(null);
     const loadingToast = notify.loading("正在生成道具表，请稍候…");
     try {
-      const response = await fetch("/api/ai/items/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          setName,
-          description,
-          itemTypeCount,
-          colorCount,
-        }),
-      });
-      // 函数超时/崩溃时平台会返回非 JSON 文本，直接 response.json() 会把真实错误吞成 “Unexpected token”
-      const raw = await response.text();
-      let payload: { success?: boolean; error?: string; data?: unknown };
-      try {
-        payload = JSON.parse(raw);
-      } catch {
-        const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 200);
-        if (response.status === 504 || /timeout/i.test(snippet)) {
-          throw new Error(`生成超时（服务器 ${response.status}）：种类数较多时单次请求可能超过函数时限，请减少种类数后重试。原始信息：${snippet}`);
-        }
-        throw new Error(`服务器返回异常（${response.status}）：${snippet || "无响应内容"}`);
-      }
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.error ?? `生成失败（${response.status}）`);
-      }
-      setResult(payload.data as GenerateItemsResult);
+      const data =
+        itemTypeCount <= ITEM_GENERATION_CHUNK_SIZE
+          ? await generateInSingleRequest()
+          : await generateInClientBatches(loadingToast);
+      setResult(data);
       setDirty(false);
       setSavedSetId(null);
       notify.success("道具表已生成", "记得点击「保存」绑定为当前工作区，便于后续出图与关卡设计。");
@@ -193,6 +173,86 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       notify.dismiss(loadingToast);
       setLoading(false);
     }
+  }
+
+  /** 解析响应：函数超时/崩溃时平台返回非 JSON 文本，避免被吞成 “Unexpected token” */
+  async function parseJsonResponse(response: Response) {
+    const raw = await response.text();
+    let payload: { success?: boolean; error?: string; data?: unknown };
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 200);
+      if (response.status === 504 || /timeout/i.test(snippet)) {
+        throw new Error(`请求超时（服务器 ${response.status}）：本批耗时过长，请稍后重试。原始信息：${snippet}`);
+      }
+      throw new Error(`服务器返回异常（${response.status}）：${snippet || "无响应内容"}`);
+    }
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.error ?? `请求失败（${response.status}）`);
+    }
+    return payload.data;
+  }
+
+  async function generateInSingleRequest(): Promise<GenerateItemsResult> {
+    const response = await fetch("/api/ai/items/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ setName, description, itemTypeCount, colorCount }),
+    });
+    return (await parseJsonResponse(response)) as GenerateItemsResult;
+  }
+
+  /** 大种类数：前端编排逐批调用，规避单请求超时，并展示进度 */
+  async function generateInClientBatches(toastId: string | number): Promise<GenerateItemsResult> {
+    const batchTotal = Math.ceil(itemTypeCount / ITEM_GENERATION_CHUNK_SIZE);
+    const stripColor = (name: string) =>
+      name.replace(/_(red|orange|yellow|green|blue|purple|pink|gray)$/i, "");
+
+    const mergedItems: GenerateItemsResult["items"] = [];
+    const existingNames: string[] = [];
+    const warnings: string[] = [
+      `物品种类数 ${itemTypeCount} 较多，已分 ${batchTotal} 批生成（每批约 ${ITEM_GENERATION_CHUNK_SIZE} 种）`,
+    ];
+    let summary = "";
+
+    for (let batchIndex = 0; batchIndex < batchTotal; batchIndex += 1) {
+      notify.loading(`正在生成第 ${batchIndex + 1}/${batchTotal} 批，请稍候…（已得 ${mergedItems.length} 种）`, toastId);
+      const remaining = itemTypeCount - batchIndex * ITEM_GENERATION_CHUNK_SIZE;
+      const chunkTypeCount = Math.min(ITEM_GENERATION_CHUNK_SIZE, remaining);
+
+      const response = await fetch("/api/ai/items/generate-chunk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          setName,
+          description,
+          colorCount,
+          chunkTypeCount,
+          batchIndex,
+          batchTotal,
+          existingNames: existingNames.slice(-200),
+        }),
+      });
+      const chunk = (await parseJsonResponse(response)) as GenerateItemsResult;
+      if (!summary && chunk.summary) summary = chunk.summary;
+      if (Array.isArray(chunk.warnings)) warnings.push(...chunk.warnings);
+
+      for (const item of chunk.items) {
+        const slug = stripColor(item.name);
+        if (existingNames.includes(slug)) continue;
+        existingNames.push(slug);
+        mergedItems.push(item);
+      }
+    }
+
+    notify.loading(`正在整理与编号 ${mergedItems.length} 种物品…`, toastId);
+    const finalizeResponse = await fetch("/api/ai/items/finalize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemTypeCount, colorCount, summary, warnings, items: mergedItems }),
+    });
+    return (await parseJsonResponse(finalizeResponse)) as GenerateItemsResult;
   }
 
   async function onSave() {

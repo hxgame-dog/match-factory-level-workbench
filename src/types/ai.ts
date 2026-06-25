@@ -7,6 +7,17 @@ export type GenerateItemsInput = {
   colorCount: number;
 };
 
+/** 前端编排分批：单批生成输入 */
+export type GenerateItemChunkInput = {
+  setName: string;
+  description: string;
+  colorCount: number;
+  chunkTypeCount: number;
+  batchIndex: number;
+  batchTotal: number;
+  existingNames: string[];
+};
+
 export type GenerateItemsResult = {
   summary: string;
   warnings: string[];

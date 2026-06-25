@@ -14,8 +14,8 @@ export const notify = {
   info(message: string, description?: string) {
     toast.info(message, description ? { description } : undefined);
   },
-  loading(message: string) {
-    return toast.loading(message);
+  loading(message: string, id?: string | number) {
+    return toast.loading(message, id !== undefined ? { id } : undefined);
   },
   dismiss(id?: string | number) {
     toast.dismiss(id);

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import {
+  ITEM_GENERATION_CHUNK_SIZE,
   MAX_ITEM_TYPES,
   MAX_TOTAL_ROWS,
   usesColorExpansion,
@@ -64,6 +65,26 @@ export const generateItemsInputSchema = z
 
 export const generateItemsResultSchema = z.object({
   summary: z.string().min(1),
+  warnings: z.array(z.string()).default([]),
+  items: z.array(generatedItemSchema).min(1, "items 不能为空"),
+});
+
+/** 前端编排分批：单批生成输入（每批仅生成 ≤ChunkSize 种基础造型） */
+export const generateItemChunkInputSchema = z.object({
+  setName: z.string().min(1, "道具集名称不能为空"),
+  description: z.string().min(1, "请填写生成描述"),
+  colorCount: z.number().int().min(0).max(STANDARD_COLOR_PALETTE.length),
+  chunkTypeCount: z.number().int().min(1).max(ITEM_GENERATION_CHUNK_SIZE),
+  batchIndex: z.number().int().min(0),
+  batchTotal: z.number().int().min(1),
+  existingNames: z.array(z.string()).default([]),
+});
+
+/** 前端编排分批：合并所有批次后的最终化输入（展开颜色、编号、校验） */
+export const finalizeItemsInputSchema = z.object({
+  itemTypeCount: z.number().int().min(1).max(MAX_ITEM_TYPES),
+  colorCount: z.number().int().min(0).max(STANDARD_COLOR_PALETTE.length),
+  summary: z.string().default(""),
   warnings: z.array(z.string()).default([]),
   items: z.array(generatedItemSchema).min(1, "items 不能为空"),
 });
