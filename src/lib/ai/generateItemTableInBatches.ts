@@ -4,6 +4,9 @@ import {
 } from "@/lib/items/itemGenerationLimits";
 import type { GenerateItemsInput, GenerateItemsResult } from "@/types/ai";
 
+/** 每波并发的批次数，平衡墙钟时间与 Gemini 速率限制 */
+const BATCH_CONCURRENCY = 4;
+
 type GenerateChunkFn = (
   chunkInput: GenerateItemsInput,
   options: { batchIndex: number; batchTotal: number; existingNames: string[] },
@@ -27,23 +30,38 @@ export async function generateItemTableInBatches(
   const existingNames: string[] = [];
   let summary = "";
 
-  for (let batchIndex = 0; batchIndex < batchTotal; batchIndex += 1) {
-    const remaining = itemTypeCount - batchIndex * ITEM_GENERATION_CHUNK_SIZE;
-    const chunkTypeCount = Math.min(ITEM_GENERATION_CHUNK_SIZE, remaining);
-    const chunkInput: GenerateItemsInput = { ...input, itemTypeCount: chunkTypeCount };
+  // 按波次并发，缩短墙钟时间，避免函数超时；同时保留批次间去重提示
+  for (let waveStart = 0; waveStart < batchTotal; waveStart += BATCH_CONCURRENCY) {
+    const waveEnd = Math.min(waveStart + BATCH_CONCURRENCY, batchTotal);
+    const snapshotNames = [...existingNames];
 
-    const chunk = await generateChunk(chunkInput, { batchIndex, batchTotal, existingNames });
-    if (!summary && chunk.summary) summary = chunk.summary;
-    warnings.push(...chunk.warnings);
+    const waveChunks = await Promise.all(
+      Array.from({ length: waveEnd - waveStart }, (_, offset) => {
+        const batchIndex = waveStart + offset;
+        const remaining = itemTypeCount - batchIndex * ITEM_GENERATION_CHUNK_SIZE;
+        const chunkTypeCount = Math.min(ITEM_GENERATION_CHUNK_SIZE, remaining);
+        const chunkInput: GenerateItemsInput = { ...input, itemTypeCount: chunkTypeCount };
+        return generateChunk(chunkInput, {
+          batchIndex,
+          batchTotal,
+          existingNames: snapshotNames,
+        });
+      }),
+    );
 
-    for (const item of chunk.items) {
-      const slug = item.name.replace(/_(red|orange|yellow|green|blue|purple|pink|gray)$/i, "");
-      if (existingNames.includes(slug)) {
-        warnings.push(`跳过重复种类：${slug}`);
-        continue;
+    for (const chunk of waveChunks) {
+      if (!summary && chunk.summary) summary = chunk.summary;
+      warnings.push(...chunk.warnings);
+
+      for (const item of chunk.items) {
+        const slug = item.name.replace(/_(red|orange|yellow|green|blue|purple|pink|gray)$/i, "");
+        if (existingNames.includes(slug)) {
+          warnings.push(`跳过重复种类：${slug}`);
+          continue;
+        }
+        existingNames.push(slug);
+        mergedItems.push(item);
       }
-      existingNames.push(slug);
-      mergedItems.push(item);
     }
   }
 
