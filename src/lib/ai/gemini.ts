@@ -38,7 +38,9 @@ import { analyticsFeedbackAdvicePrompt } from "./prompts/analyticsFeedbackAdvice
 import { generateAssetPromptText } from "./prompts/generateAssetPrompt";
 import { generateLevelPrompt } from "./prompts/generateLevelPrompt";
 import { buildMockFreeItems, finalizeFreeGeneratedItems } from "./finalizeFreeGeneratedItems";
+import { generateItemTableInBatches } from "./generateItemTableInBatches";
 import { generateItemsPrompt } from "./prompts/generateItemsPrompt";
+import { computeExpectedTotal } from "@/lib/items/itemGenerationLimits";
 import { geminiPlaytestAdviceResultSchema } from "@/lib/validators/playtest";
 import { geminiAnalyticsAdviceResultSchema } from "@/lib/validators/analytics";
 
@@ -198,8 +200,12 @@ export async function generateItemTable(
   input: GenerateItemsInput,
 ): Promise<GenerateItemsResult> {
   const validInput = generateItemsInputSchema.parse(input);
-  const expectedTotal = validInput.itemTypeCount * validInput.colorCount;
-  const resultSchema = createGenerateItemsResultSchema(expectedTotal, validInput.itemTypeCount);
+  const expectedTotal = computeExpectedTotal(validInput.itemTypeCount, validInput.colorCount);
+  const resultSchema = createGenerateItemsResultSchema(
+    expectedTotal,
+    validInput.itemTypeCount,
+    validInput.colorCount,
+  );
 
   try {
     const runtime = await resolveRuntime();
@@ -220,10 +226,18 @@ export async function generateItemTable(
       return mock;
     }
 
-    const prompt = generateItemsPrompt(validInput);
-    const text = await generateText(prompt, { runtime });
-    const parsed = parseJsonSafe<GenerateItemsResult>(text);
-    const finalized = finalizeFreeGeneratedItems(parsed, validInput);
+    const rawMerged = await generateItemTableInBatches(validInput, async (chunkInput, batch) => {
+      const prompt = generateItemsPrompt({
+        ...chunkInput,
+        batchIndex: batch.batchIndex,
+        batchTotal: batch.batchTotal,
+        existingNames: batch.existingNames,
+      });
+      const text = await generateText(prompt, { runtime });
+      return parseJsonSafe<GenerateItemsResult>(text);
+    });
+
+    const finalized = finalizeFreeGeneratedItems(rawMerged, validInput);
     const validated = resultSchema.parse(finalized);
 
     await prisma.aiGenerationLog.create({
@@ -231,8 +245,8 @@ export async function generateItemTable(
         type: "item_table",
         provider: env.AI_PROVIDER,
         model: env.GEMINI_TEXT_MODEL,
-        prompt,
-        resultJson: JSON.stringify(validated),
+        prompt: validInput.description,
+        resultJson: JSON.stringify({ itemCount: validated.items.length, expectedTotal }),
         status: "success",
       },
     });

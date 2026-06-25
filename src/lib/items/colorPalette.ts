@@ -11,7 +11,8 @@ export const STANDARD_COLOR_PALETTE = [
 ] as const;
 
 export function getActiveColors(colorCount: number) {
-  const n = Math.min(Math.max(1, colorCount), STANDARD_COLOR_PALETTE.length);
+  if (colorCount <= 0) return [];
+  const n = Math.min(colorCount, STANDARD_COLOR_PALETTE.length);
   return STANDARD_COLOR_PALETTE.slice(0, n);
 }
 

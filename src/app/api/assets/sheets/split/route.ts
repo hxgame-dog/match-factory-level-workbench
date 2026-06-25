@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     const useMock = env.AI_MOCK_MODE;
     let successCount = 0;
-    let failedCount = 0;
+    const failedCount = 0;
     let skippedCount = 0;
 
     for (const cell of splits) {

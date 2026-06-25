@@ -6,14 +6,17 @@ export type GeneratedItemSetPayload = z.infer<typeof generatedItemSetPayloadSche
 
 export function toDbGeneratedItemSetFields(payload: GeneratedItemSetPayload) {
   const categories = [...new Set(payload.items.map((item) => item.category1))];
-  const totalItemCount = payload.itemTypeCount * payload.colorCount;
+  const totalItemCount =
+    payload.colorCount <= 0
+      ? payload.itemTypeCount
+      : payload.itemTypeCount * payload.colorCount;
   return {
     name: payload.name,
     theme: payload.description,
     prompt: payload.description,
     totalItemCount,
     targetTypeCount: payload.itemTypeCount,
-    targetCountEach: payload.colorCount,
+    targetCountEach: payload.colorCount <= 0 ? 1 : payload.colorCount,
     distractorTypeCount: 0,
     difficultyIntent: "normal",
     constraints: JSON.stringify({

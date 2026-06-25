@@ -16,6 +16,11 @@ import { parseStoredGenerationConfig } from "@/lib/generatedItemSetPayload";
 import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { createDefaultGeneratedItemRow } from "@/lib/items/defaultGeneratedItemRow";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
+import {
+  MAX_ITEM_TYPES,
+  computeExpectedTotal,
+  validateGenerationParams,
+} from "@/lib/items/itemGenerationLimits";
 import { zh } from "@/lib/i18n/zh";
 import { notify } from "@/lib/ui/notify";
 import { useItemGeneratorStore } from "@/stores/itemGeneratorStore";
@@ -81,11 +86,12 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
 
   const { filteredWithIndex } = useGeneratedItemsFilter(result?.items ?? []);
 
-  const expectedTotal = itemTypeCount * colorCount;
-  const colorLabels = useMemo(
-    () => STANDARD_COLOR_PALETTE.slice(0, colorCount).map((c) => c.label).join("、"),
-    [colorCount],
-  );
+  const expectedTotal = computeExpectedTotal(itemTypeCount, colorCount);
+  const validationError = validateGenerationParams(itemTypeCount, colorCount);
+  const colorLabels = useMemo(() => {
+    if (colorCount <= 0) return "不展开变体，各物种使用常规主色（color1）";
+    return STANDARD_COLOR_PALETTE.slice(0, colorCount).map((c) => c.label).join("、");
+  }, [colorCount]);
   const summary = useMemo(() => result?.summary ?? "", [result]);
   const cloneTemplate = filteredWithIndex[0]?.item ?? null;
 
@@ -394,7 +400,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
                 <Input
                   type="number"
                   min={1}
-                  max={150}
+                  max={MAX_ITEM_TYPES}
                   value={itemTypeCount}
                   onChange={(e) => setItemTypeCount(Number(e.target.value))}
                 />
@@ -402,7 +408,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
               <FormField label={t.fields.colorCount.label} hint={t.fields.colorCount.hint}>
                 <Input
                   type="number"
-                  min={1}
+                  min={0}
                   max={8}
                   value={colorCount}
                   onChange={(e) => setColorCount(Number(e.target.value))}
@@ -412,17 +418,24 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
 
             <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
               <p>
-                预计生成 <span className="font-medium text-foreground">{expectedTotal}</span> 条（{itemTypeCount} 种 ×{" "}
-                {colorCount} 色）
+                预计生成 <span className="font-medium text-foreground">{expectedTotal}</span> 条
+                {colorCount <= 0 ? (
+                  <>（{itemTypeCount} 种，各 1 条常规色）</>
+                ) : (
+                  <>（{itemTypeCount} 种 × {colorCount} 色）</>
+                )}
               </p>
-              <p className="mt-1">颜色：{colorLabels}</p>
+              <p className="mt-1">{colorCount <= 0 ? "颜色策略" : "颜色"}：{colorLabels}</p>
+              {itemTypeCount > 60 ? (
+                <p className="mt-1 text-amber-700">种类数较多时将自动分批调用 AI 生成</p>
+              ) : null}
             </div>
 
-            <Button className="w-full" onClick={() => void onGenerate()} disabled={loading || expectedTotal > 1000}>
+            <Button className="w-full" onClick={() => void onGenerate()} disabled={loading || Boolean(validationError)}>
               {loading ? t.actions.generating : t.actions.generate}
             </Button>
-            {expectedTotal > 1000 ? (
-              <p className="text-xs text-destructive">种类数 × 颜色数不能超过 1000</p>
+            {validationError ? (
+              <p className="text-xs text-destructive">{validationError}</p>
             ) : null}
           </CardContent>
         </Card>
@@ -434,7 +447,12 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
               {result ? (
                 <CardDescription className="mt-1 space-y-1">
                   <span>
-                    共 {result.items.length} 条 · 约 {itemTypeCount} 种 × {colorCount} 色
+                    共 {result.items.length} 条
+                    {colorCount <= 0 ? (
+                      <> · {itemTypeCount} 种（常规主色）</>
+                    ) : (
+                      <> · 约 {itemTypeCount} 种 × {colorCount} 色</>
+                    )}
                   </span>
                   {autoLoaded && defaultItemSetId === savedSetId ? (
                     <span className="block text-xs text-muted-foreground">已载入默认道具集</span>
@@ -490,7 +508,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
                 title={t.previewEmptyTitle}
                 description={t.previewEmptyDesc}
                 action={
-                  <Button onClick={() => void onGenerate()} disabled={loading || expectedTotal > 1000}>
+                  <Button onClick={() => void onGenerate()} disabled={loading || Boolean(validationError)}>
                     {loading ? t.actions.generating : t.actions.generate}
                   </Button>
                 }
