@@ -17,7 +17,11 @@ import { assignSequentialItemIds } from "@/lib/items/assignSequentialItemIds";
 import { createDefaultGeneratedItemRow } from "@/lib/items/defaultGeneratedItemRow";
 import { STANDARD_COLOR_PALETTE } from "@/lib/items/colorPalette";
 import {
-  ITEM_GENERATION_CHUNK_SIZE,
+  ANIMAL_CHAPTER_PLANS,
+  buildChapterDescription,
+  type ChapterPlan,
+} from "@/lib/items/chapterPlans";
+import {
   MAX_ITEM_TYPES,
   computeExpectedTotal,
   validateGenerationParams,
@@ -29,7 +33,9 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { GenerateItemsResult } from "@/types/ai";
 import type { GeneratedItemSetListItem } from "@/types/generatedItemSet";
 
+import { generateItemTableClient } from "../lib/generateItemTableClient";
 import { BatchAddItemsDialog } from "./BatchAddItemsDialog";
+import { ChapterBatchGenerator } from "./ChapterBatchGenerator";
 import { FormField } from "./FormField";
 import { GeneratedItemSetHistory } from "./GeneratedItemSetHistory";
 import { GeneratedItemsDimensionTable } from "./GeneratedItemsDimensionTable";
@@ -68,6 +74,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
   const [description, setDescription] = useState("海里、河里的鱼、虾、贝类等，卡通 3D 风格，适合三消关卡");
   const [itemTypeCount, setItemTypeCount] = useState(12);
   const [colorCount, setColorCount] = useState(8);
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -152,15 +159,35 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
     void onOpenHistory(targetId);
   }, [workspaceFromUrl, defaultItemSetId, onOpenHistory, result]);
 
+  function applyChapterPlan(plan: ChapterPlan) {
+    setSelectedChapterId(plan.id);
+    setSetName(plan.setName);
+    setDescription(buildChapterDescription(plan));
+    setItemTypeCount(plan.addedCount);
+    setColorCount(plan.colorCount);
+    setError(null);
+    notify.info(
+      `已套用「${plan.name}」章节方案`,
+      `种类数 ${plan.addedCount}、颜色数 ${plan.colorCount}，确认后点「生成」即可逐章生成。`,
+    );
+  }
+
   async function onGenerate() {
     setLoading(true);
     setError(null);
     const loadingToast = notify.loading("正在生成道具表，请稍候…");
     try {
-      const data =
-        itemTypeCount <= ITEM_GENERATION_CHUNK_SIZE
-          ? await generateInSingleRequest()
-          : await generateInClientBatches(loadingToast);
+      const data = await generateItemTableClient(
+        { setName, description, itemTypeCount, colorCount },
+        (p) => {
+          notify.loading(
+            p.phase === "finalize"
+              ? `正在整理与编号 ${p.collected} 种物品…`
+              : `正在生成第 ${p.batchIndex + 1}/${p.batchTotal} 批，请稍候…（已得 ${p.collected} 种）`,
+            loadingToast,
+          );
+        },
+      );
       setResult(data);
       setDirty(false);
       setSavedSetId(null);
@@ -173,86 +200,6 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
       notify.dismiss(loadingToast);
       setLoading(false);
     }
-  }
-
-  /** 解析响应：函数超时/崩溃时平台返回非 JSON 文本，避免被吞成 “Unexpected token” */
-  async function parseJsonResponse(response: Response) {
-    const raw = await response.text();
-    let payload: { success?: boolean; error?: string; data?: unknown };
-    try {
-      payload = JSON.parse(raw);
-    } catch {
-      const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 200);
-      if (response.status === 504 || /timeout/i.test(snippet)) {
-        throw new Error(`请求超时（服务器 ${response.status}）：本批耗时过长，请稍后重试。原始信息：${snippet}`);
-      }
-      throw new Error(`服务器返回异常（${response.status}）：${snippet || "无响应内容"}`);
-    }
-    if (!response.ok || !payload.success) {
-      throw new Error(payload.error ?? `请求失败（${response.status}）`);
-    }
-    return payload.data;
-  }
-
-  async function generateInSingleRequest(): Promise<GenerateItemsResult> {
-    const response = await fetch("/api/ai/items/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ setName, description, itemTypeCount, colorCount }),
-    });
-    return (await parseJsonResponse(response)) as GenerateItemsResult;
-  }
-
-  /** 大种类数：前端编排逐批调用，规避单请求超时，并展示进度 */
-  async function generateInClientBatches(toastId: string | number): Promise<GenerateItemsResult> {
-    const batchTotal = Math.ceil(itemTypeCount / ITEM_GENERATION_CHUNK_SIZE);
-    const stripColor = (name: string) =>
-      name.replace(/_(red|orange|yellow|green|blue|purple|pink|gray)$/i, "");
-
-    const mergedItems: GenerateItemsResult["items"] = [];
-    const existingNames: string[] = [];
-    const warnings: string[] = [
-      `物品种类数 ${itemTypeCount} 较多，已分 ${batchTotal} 批生成（每批约 ${ITEM_GENERATION_CHUNK_SIZE} 种）`,
-    ];
-    let summary = "";
-
-    for (let batchIndex = 0; batchIndex < batchTotal; batchIndex += 1) {
-      notify.loading(`正在生成第 ${batchIndex + 1}/${batchTotal} 批，请稍候…（已得 ${mergedItems.length} 种）`, toastId);
-      const remaining = itemTypeCount - batchIndex * ITEM_GENERATION_CHUNK_SIZE;
-      const chunkTypeCount = Math.min(ITEM_GENERATION_CHUNK_SIZE, remaining);
-
-      const response = await fetch("/api/ai/items/generate-chunk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          setName,
-          description,
-          colorCount,
-          chunkTypeCount,
-          batchIndex,
-          batchTotal,
-          existingNames: existingNames.slice(-220),
-        }),
-      });
-      const chunk = (await parseJsonResponse(response)) as GenerateItemsResult;
-      if (!summary && chunk.summary) summary = chunk.summary;
-      if (Array.isArray(chunk.warnings)) warnings.push(...chunk.warnings);
-
-      for (const item of chunk.items) {
-        const slug = stripColor(item.name);
-        if (existingNames.includes(slug)) continue;
-        existingNames.push(slug);
-        mergedItems.push(item);
-      }
-    }
-
-    notify.loading(`正在整理与编号 ${mergedItems.length} 种物品…`, toastId);
-    const finalizeResponse = await fetch("/api/ai/items/finalize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemTypeCount, colorCount, summary, warnings, items: mergedItems }),
-    });
-    return (await parseJsonResponse(finalizeResponse)) as GenerateItemsResult;
   }
 
   async function onSave() {
@@ -446,6 +393,12 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
 
   return (
     <div className="space-y-4">
+      <ChapterBatchGenerator
+        onChapterSaved={(id, name) => {
+          setActiveWorkspace(id, name);
+          void loadHistory();
+        }}
+      />
       <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:items-start">
         <Card className="xl:sticky xl:top-4">
           <CardHeader className="border-b border-border bg-muted/30">
@@ -453,6 +406,36 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
             <CardDescription>{t.configDesc}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
+            <FormField
+              label="章节方案预设（动物主题）"
+              hint="一键套用四章节规划，逐章单独生成；套用后可微调描述与数量"
+            >
+              <div className="grid grid-cols-2 gap-2">
+                {ANIMAL_CHAPTER_PLANS.map((plan) => {
+                  const active = selectedChapterId === plan.id;
+                  return (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => applyChapterPlan(plan)}
+                      className={`flex flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors ${
+                        active
+                          ? "border-primary bg-primary/5 ring-1 ring-primary"
+                          : "border-border hover:border-primary/50 hover:bg-muted/50"
+                      }`}
+                    >
+                      <span className="text-sm font-medium text-foreground">
+                        {plan.icon} {plan.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        新增 {plan.addedCount} 种 · {plan.subtitle}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </FormField>
+
             <FormField label={t.fields.setName.label} hint={t.fields.setName.hint}>
               <Input value={setName} onChange={(e) => setSetName(e.target.value)} placeholder="例如：海洋生物道具集" />
             </FormField>
@@ -460,7 +443,10 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
             <FormField label={t.fields.description.label} hint={t.fields.description.hint}>
               <Textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setSelectedChapterId(null);
+                }}
                 className="min-h-24"
                 placeholder="描述主题、风格、物种范围…"
               />
@@ -473,7 +459,10 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
                   min={1}
                   max={MAX_ITEM_TYPES}
                   value={itemTypeCount}
-                  onChange={(e) => setItemTypeCount(Number(e.target.value))}
+                  onChange={(e) => {
+                    setItemTypeCount(Number(e.target.value));
+                    setSelectedChapterId(null);
+                  }}
                 />
               </FormField>
               <FormField label={t.fields.colorCount.label} hint={t.fields.colorCount.hint}>
@@ -482,7 +471,10 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
                   min={0}
                   max={8}
                   value={colorCount}
-                  onChange={(e) => setColorCount(Number(e.target.value))}
+                  onChange={(e) => {
+                    setColorCount(Number(e.target.value));
+                    setSelectedChapterId(null);
+                  }}
                 />
               </FormField>
             </div>

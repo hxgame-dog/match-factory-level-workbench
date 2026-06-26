@@ -10,6 +10,8 @@ const STATUS_MAP: Record<
   failed: { label: "失败", variant: "destructive" },
   error: { label: "错误", variant: "destructive" },
   pending: { label: "待处理", variant: "outline" },
+  queued: { label: "排队中", variant: "outline" },
+  saved: { label: "已保存", variant: "default", className: "bg-emerald-600 hover:bg-emerald-600" },
   generating: { label: "生成中", variant: "secondary", className: "bg-blue-50 text-blue-800" },
   prompt_ready: { label: "Prompt 就绪", variant: "secondary" },
   skipped: { label: "已跳过", variant: "outline" },
