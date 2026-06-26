@@ -338,12 +338,8 @@ export function finalizeGeneratedItemTable(input: {
   warnings: string[];
   items: GenerateItemsResult["items"];
 }): GenerateItemsResult {
-  const expectedTotal = computeExpectedTotal(input.itemTypeCount, input.colorCount);
-  const resultSchema = createGenerateItemsResultSchema(
-    expectedTotal,
-    input.itemTypeCount,
-    input.colorCount,
-  );
+  // 分批编排时，同主题难以凑齐目标种类数（去重后会少于目标），此处只做结构校验，
+  // 数量不足由 finalizeFreeGeneratedItems 降级为警告，不再硬性拒绝，避免丢弃已生成结果。
   const finalized = finalizeFreeGeneratedItems(
     {
       summary: input.summary || `共生成 ${input.items.length} 种物品（目标 ${input.itemTypeCount} 种）`,
@@ -352,7 +348,7 @@ export function finalizeGeneratedItemTable(input: {
     },
     { itemTypeCount: input.itemTypeCount, colorCount: input.colorCount },
   );
-  return resultSchema.parse(finalized);
+  return finalized;
 }
 
 export async function diagnoseLevel(

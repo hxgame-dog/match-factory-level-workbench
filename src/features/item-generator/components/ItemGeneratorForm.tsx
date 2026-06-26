@@ -231,7 +231,7 @@ export function ItemGeneratorForm({ initialHistory }: Props) {
           chunkTypeCount,
           batchIndex,
           batchTotal,
-          existingNames: existingNames.slice(-200),
+          existingNames: existingNames.slice(-220),
         }),
       });
       const chunk = (await parseJsonResponse(response)) as GenerateItemsResult;

@@ -18,7 +18,7 @@ export function generateItemsPrompt(input: GenerateItemsPromptOptions): string {
       : "";
   const existingHint =
     input.existingNames && input.existingNames.length > 0
-      ? `\n已有种类 slug（勿重复）：${input.existingNames.slice(-80).join(", ")}${input.existingNames.length > 80 ? "…" : ""}`
+      ? `\n已有种类 slug（务必避开，不要重复）：${input.existingNames.slice(-220).join(", ")}${input.existingNames.length > 220 ? "…" : ""}`
       : "";
 
   const outputSchemaExample = usesColorExpansion(input.colorCount)
